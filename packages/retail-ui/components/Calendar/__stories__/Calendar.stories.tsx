@@ -26,7 +26,7 @@ storiesOf('Calendar', module)
       holidays[index] = element;
     }
 
-    return <Calendar />;
+    return <Calendar holidays={holidays as any} />;
   });
 
 const initialDate = { year: 2018, month: 0, date: 1 };

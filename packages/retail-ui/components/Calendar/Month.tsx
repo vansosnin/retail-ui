@@ -24,6 +24,12 @@ interface MonthProps {
   isHoliday?: (day: CDS.CalendarDateShape & { isWeekend: boolean }) => boolean;
 }
 
+export enum FirstDayWeek {
+  Monday = 0,
+  Sunday = 1,
+  Saturday = 2,
+}
+
 export class Month extends React.Component<MonthProps> {
   private _monthSelect: DateSelect | null = null;
   private _yearSelect: DateSelect | null = null;
@@ -152,7 +158,7 @@ class MonthDayGrid extends React.Component<MonthDayGridProps> {
       <div>
         <div
           style={{
-            width: this.props.offset * config.DAY_HEIGHT,
+            width: (this.props.offset + FirstDayWeek.Sunday) * config.DAY_HEIGHT,
             display: 'inline-block',
           }}
         />

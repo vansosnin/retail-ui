@@ -1,12 +1,14 @@
 import * as React from 'react';
 import Calendar, { CalendarDateShape } from '../Calendar';
 import shallowEqual from 'fbjs/lib/shallowEqual';
+import { locale } from '../LocaleProvider/decorators';
 
 import { formatDate } from './DatePickerHelpers';
 
 import styles from './Picker.less';
 import { Nullable } from '../../typings/utility-types';
 import { isLess, isGreater } from '../Calendar/CalendarDateShape';
+import { DatePickerLocaleHelper, DatePickerLocale } from './locale';
 
 interface Props {
   maxDate?: CalendarDateShape;
@@ -32,8 +34,11 @@ const getTodayCalendarDate = () => {
   };
 };
 
+@locale('DatePicker', DatePickerLocaleHelper)
 export default class Picker extends React.Component<Props, State> {
   private _calendar: Calendar | null = null;
+
+  private readonly locale!: DatePickerLocale;
 
   constructor(props: Props) {
     super(props);
@@ -80,7 +85,7 @@ export default class Picker extends React.Component<Props, State> {
   private _renderTodayLink() {
     return (
       <button className={styles.todayWrapper} onClick={this._handleSelectToday} tabIndex={-1}>
-        Сегодня {formatDate(this.state.today)}
+        {this.locale.today} {formatDate(this.state.today)}
       </button>
     );
   }

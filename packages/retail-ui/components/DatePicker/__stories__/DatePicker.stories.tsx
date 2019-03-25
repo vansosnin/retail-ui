@@ -1,12 +1,14 @@
+import { action } from '@storybook/addon-actions';
+import { storiesOf } from '@storybook/react';
+import * as React from 'react';
 // tslint:disable:jsx-no-lambda no-console
 import Button from '../../Button/index';
 import Gapped from '../../Gapped/index';
 import MockDate from '../../internal/MockDate';
-import * as React from 'react';
-import { storiesOf } from '@storybook/react';
-import { action } from '@storybook/addon-actions';
-import DatePicker from '../DatePicker';
+import { LangCodes } from '../../LocaleProvider';
+import LocaleProvider from '../../LocaleProvider/LocaleProvider';
 import Tooltip from '../../Tooltip/index';
+import DatePicker from '../DatePicker';
 
 class DatePickerWithError extends React.Component<any, any> {
   public state = {
@@ -75,16 +77,17 @@ class DatePickerWithError extends React.Component<any, any> {
 const dateForMock = new Date('2017-01-02');
 
 storiesOf('DatePicker', module)
-  .addDecorator(story =>
-    process.env.NODE_ENV === 'test' ? (
-      <div>
-        <h2>Mocked date {dateForMock.toDateString()}</h2>
-        <MockDate date={dateForMock} />
-        {story()}
-      </div>
-    ) : (
-      <div>{story()}</div>
-    ),
+  .addDecorator(
+    story =>
+      process.env.NODE_ENV === 'test' ? (
+        <div>
+          <h2>Mocked date {dateForMock.toDateString()}</h2>
+          <MockDate date={dateForMock} />
+          {story()}
+        </div>
+      ) : (
+        <div>{story()}</div>
+      ),
   )
   .add('with mouseevent handlers', () => (
     <div style={{ paddingTop: 200 }}>
@@ -105,4 +108,19 @@ storiesOf('DatePicker', module)
     <div style={{ paddingTop: 200 }}>
       <DatePicker value="02.07.2017" minDate="02.07.2017" maxDate="30.01.2018" onChange={action('change')} />
     </div>
-  ));
+  ))
+  .add('DatePicker LocaleProvider', () => {
+    return (
+      <div style={{ paddingTop: 200 }}>
+        <LocaleProvider langCode={LangCodes.en_EN}>
+          <DatePicker
+            value="02.07.2017"
+            minDate="02.07.2017"
+            maxDate="30.01.2020"
+            onChange={action('change')}
+            enableTodayLink={true}
+          />
+        </LocaleProvider>
+      </div>
+    );
+  });

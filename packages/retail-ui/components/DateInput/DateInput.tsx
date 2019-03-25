@@ -2,13 +2,22 @@ import * as React from 'react';
 import classNames from 'classnames';
 
 import CalendarIcon from '@skbkontur/react-icons/Calendar';
+import { defaultDateComponentsOrder, defaultDateComponentsSeparator } from '../../lib/date/constants';
+import {
+  DateCustom,
+  } from '../../lib/date/DateCustom';
+import { DateHelper } from '../../lib/date/DateHelper';
+import { DateComponentsOrder, DateComponentsSeparator, DateComponentsType } from '../../lib/date/types';
 
 import { CalendarDateShape } from '../Calendar/CalendarDateShape';
 import { parseDateString } from '../DatePicker/DatePickerHelpers';
-import { tryGetValidDateShape } from '../DatePicker/DateShape';
+import { DateShape, tryGetValidDateShape } from '../DatePicker/DateShape';
+import { DatePickerLocaleHelper } from '../DatePicker/locale';
 import { isIE, isEdge } from '../ensureOldIEClassName';
 import Input from '../Input';
 import InputLikeText from '../internal/InputLikeText';
+import { LangCodes } from '../LocaleProvider';
+import { locale } from '../LocaleProvider/decorators';
 
 import { parseValue, formatDate } from './DateInputHelpers/dateFormat';
 import { fillEmptyParts } from './DateInputHelpers/fillEmptyParts';
@@ -74,6 +83,8 @@ export interface DateInputProps {
   onFocus?: (x0: React.FocusEvent<HTMLElement>) => void;
   onChange?: (x0: { target: { value: string } }, x1: string) => void;
   onKeyDown?: (x0: React.KeyboardEvent<HTMLElement>) => void;
+  dateComponentsOrder?: DateComponentsOrder;
+  dateComponentsSeparator?: DateComponentsSeparator;
 }
 
 export type DateInputSetStateCallBack = (
@@ -81,16 +92,22 @@ export type DateInputSetStateCallBack = (
   props?: DateInputProps,
 ) => DateInputState | Pick<DateInputState, keyof DateInputState> | null;
 
+@locale('DatePicker', DatePickerLocaleHelper)
 class DateInput extends React.Component<DateInputProps, DateInputState> {
   public static defaultProps = {
     size: 'small',
     width: 125,
+    dateComponentsOrder: defaultDateComponentsOrder,
+    dateComponentsSeparator: defaultDateComponentsSeparator,
   };
 
+  private langCode!: LangCodes;
   private input: Input | null = null;
   private inputlikeText: InputLikeText | null = null;
   private divInnerNode: HTMLElement | null = null;
   private isFocused: boolean = false;
+
+  private readonly dateCustom: DateCustom;
 
   constructor(props: DateInputProps) {
     super(props);
@@ -103,10 +120,17 @@ class DateInput extends React.Component<DateInputProps, DateInputState> {
       notify: false,
       dateWasChanged: false,
     };
+
+    this.dateCustom = new DateCustom(props.dateComponentsOrder, props.dateComponentsSeparator);
+    this.dateCustom.parseValue(props.value);
   }
 
   public componentWillReceiveProps(nextProps: DateInputProps) {
     if (this.props !== nextProps) {
+      this.dateCustom
+        .parseValue(nextProps.value)
+        .setOrder(nextProps.dateComponentsOrder!)
+        .setSeparator(nextProps.dateComponentsSeparator!);
       this.deriveStateFromValue(nextProps.value);
     }
     if (this.props.minDate !== nextProps.minDate) {
@@ -124,6 +148,10 @@ class DateInput extends React.Component<DateInputProps, DateInputState> {
       prevState.year !== this.state.year
     ) {
       this.setState({ dateWasChanged: true });
+      this.dateCustom.setDate(this.state.date);
+      this.dateCustom.setMonth(this.state.month);
+      this.dateCustom.setYear(this.state.year);
+
       this.emitChange();
     }
 
@@ -220,7 +248,8 @@ class DateInput extends React.Component<DateInputProps, DateInputState> {
   }
 
   private renderInputLikeText() {
-    const { date, month, year, selected } = this.state;
+    console.log('langCode', this.langCode);
+    const { selected } = this.state;
     const isMaskHidden = this.checkIfMaskHidden();
     return (
       <InputLikeText
@@ -243,20 +272,17 @@ class DateInput extends React.Component<DateInputProps, DateInputState> {
             onDoubleClick={this.createSelectionHandler(DateParts.All)}
             className={styles.root}
           >
-            <DatePart selected={selected === DateParts.Date} onMouseDown={this.createSelectionHandler(DateParts.Date)}>
-              <MaskedValue value={date} length={2} />
-            </DatePart>
-            <span className={classNames(styles.delimiter, month && styles.filled)}>.</span>
-            <DatePart
-              selected={selected === DateParts.Month}
-              onMouseDown={this.createSelectionHandler(DateParts.Month)}
-            >
-              <MaskedValue value={month} length={2} />
-            </DatePart>
-            <span className={classNames(styles.delimiter, year && styles.filled)}>.</span>
-            <DatePart selected={selected === DateParts.Year} onMouseDown={this.createSelectionHandler(DateParts.Year)}>
-              <MaskedValue value={year} length={4} />
-            </DatePart>
+            {DateHelper.dateToFragments(this.dateCustom, { withSeparator: true }).map(({ type, value }, index) => {
+              return type === DateComponentsType.Separator ? (
+                <span key={type + index.toString()} className={styles.delimiter}>
+                  {value}
+                </span>
+              ) : (
+                <DatePart key={type} selected={selected === type} onMouseDown={this.createSelectionHandler(type)}>
+                  <MaskedValue value={value} length={value.length} />
+                </DatePart>
+              );
+            })}
           </div>
         )}
       </InputLikeText>
@@ -471,7 +497,15 @@ class DateInput extends React.Component<DateInputProps, DateInputState> {
   }
 
   private updateDatePartBy(step: number) {
-    this.setState(updateDatePartBy(step));
+    this.setState(prevState => {
+      const nextState = updateDatePartBy(step)(prevState);
+      const { year = null, month = null, date = null } = nextState;
+      this.dateCustom.setDate(date);
+      this.dateCustom.setMonth(month);
+      this.dateCustom.setYear(year);
+
+      return nextState;
+    });
   }
 
   private inputValue(key: string) {
