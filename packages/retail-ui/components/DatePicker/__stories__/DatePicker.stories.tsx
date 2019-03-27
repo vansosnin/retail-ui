@@ -1,6 +1,9 @@
 import { action } from '@storybook/addon-actions';
 import { storiesOf } from '@storybook/react';
 import * as React from 'react';
+import { DateCustom } from '../../../lib/date/DateCustom';
+import DateCustomTransformer from '../../../lib/date/DateCustomTransformer';
+import { DateComponentsOrder, DateComponentsSeparator } from '../../../lib/date/types';
 // tslint:disable:jsx-no-lambda no-console
 import Button from '../../Button/index';
 import Gapped from '../../Gapped/index';
@@ -77,17 +80,16 @@ class DatePickerWithError extends React.Component<any, any> {
 const dateForMock = new Date('2017-01-02');
 
 storiesOf('DatePicker', module)
-  .addDecorator(
-    story =>
-      process.env.NODE_ENV === 'test' ? (
-        <div>
-          <h2>Mocked date {dateForMock.toDateString()}</h2>
-          <MockDate date={dateForMock} />
-          {story()}
-        </div>
-      ) : (
-        <div>{story()}</div>
-      ),
+  .addDecorator(story =>
+    process.env.NODE_ENV === 'test' ? (
+      <div>
+        <h2>Mocked date {dateForMock.toDateString()}</h2>
+        <MockDate date={dateForMock} />
+        {story()}
+      </div>
+    ) : (
+      <div>{story()}</div>
+    ),
   )
   .add('with mouseevent handlers', () => (
     <div style={{ paddingTop: 200 }}>
@@ -110,6 +112,31 @@ storiesOf('DatePicker', module)
     </div>
   ))
   .add('DatePicker LocaleProvider', () => {
+    const format = 'yyyy/mm/dd';
+    const fullDate = {
+      date: 1,
+      month: 9,
+      year: 2019,
+    };
+    const value = `2019/09/01`;
+
+    const DVF = new DateCustom(DateComponentsOrder.MDY, DateComponentsSeparator.Dash);
+    const DVF2 = new DateCustom(DateComponentsOrder.MDY, DateComponentsSeparator.Dash);
+    const DVF3 = new DateCustom(DateComponentsOrder.MDY, DateComponentsSeparator.Dash);
+    const DVFLEAP = new DateCustom(DateComponentsOrder.YMD);
+    DVF.setComponents(DateCustomTransformer.parseValueToDate('09 02 2011'));
+    DVF2.setComponents(DateCustomTransformer.parseValueToDate('08 21 2012'));
+    DVF3.setComponents(DateCustomTransformer.parseValueToDate('09 02 2013'));
+    DVFLEAP.parseValue('2016 02 29');
+    console.log(DVF.checkInRange(DVF2, DVF3));
+
+    window.DVF = DVF;
+    window.DVF2 = DVF2;
+    window.DVF3 = DVF3;
+    window.DVFLEAP = DVFLEAP;
+
+    window.DateCustomTransformer = DateCustomTransformer;
+
     return (
       <div style={{ paddingTop: 200 }}>
         <LocaleProvider langCode={LangCodes.en_EN}>

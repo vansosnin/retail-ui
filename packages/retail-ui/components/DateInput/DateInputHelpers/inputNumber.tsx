@@ -1,39 +1,42 @@
-import { DateInputState, DateParts } from '../DateInput';
-import { clearDatePart } from './clearDatePart';
-import { UnknownDatePart } from './UnknownDatePart';
+import { DateCustom } from '../../../lib/date/DateCustom';
+import { DateComponentsType } from '../../../lib/date/types';
 import { Shape } from '../../../typings/utility-types';
+import { DateInputState } from '../DateInput';
+import { clearDatePart } from './clearDatePart';
 
-export const inputNumber = (key: string) => {
+export const inputNumber = (key: string, dateCustom: DateCustom, updateDateComponents: () => void) => {
   return (state: DateInputState): Shape<DateInputState> => {
-    switch (state.selected) {
-      case DateParts.Date:
-        return updateDate(key, state);
-      case DateParts.Month:
-        return updateMonth(key, state);
-      case DateParts.Year:
-        return updateYear(key, state);
-      case DateParts.All:
-        const tempState = { ...state, ...clearDatePart(state) };
-        return { ...tempState, ...inputNumber(key)(tempState) };
+    switch (state.selectedDateComponent) {
+      case DateComponentsType.Date:
+        return updateDate(key, state, dateCustom, updateDateComponents);
+      case DateComponentsType.Month:
+        return updateMonth(key, state, dateCustom, updateDateComponents);
+      case DateComponentsType.Year:
+        return updateYear(key, state, dateCustom, updateDateComponents);
+      case DateComponentsType.All:
       default:
-        throw new UnknownDatePart();
+        const tempState = { ...state, ...clearDatePart(state) };
+        return { ...tempState, ...inputNumber(key, dateCustom, updateDateComponents)(tempState) };
     }
   };
 };
 
-const updateDate = (key: string, state: DateInputState): Shape<DateInputState> => {
+const updateDate = (key: string, state: DateInputState, dateCustom: DateCustom, updateDateComponents: () => void): Shape<DateInputState> => {
   const { date, editingCharIndex } = state;
+  dateCustom.setDate(key);
+  updateDateComponents();
+  return null;
   if (editingCharIndex === 0) {
     if (key > '3') {
       return {
         date: '0' + key,
-        selected: 1,
         editingCharIndex: 0,
+
+        selectedDateComponent: DateComponentsType.Month,
       } as Shape<DateInputState>;
     }
     return {
       date: key,
-      selected: 0,
       editingCharIndex: 1,
     } as Shape<DateInputState>;
   }
@@ -44,24 +47,28 @@ const updateDate = (key: string, state: DateInputState): Shape<DateInputState> =
   }
   return {
     date: d.toString().padStart(2, '0'),
-    selected: 1,
     editingCharIndex: 0,
+
+    selectedDateComponent: DateComponentsType.Month,
   } as Shape<DateInputState>;
 };
 
-const updateMonth = (key: string, state: DateInputState) => {
+const updateMonth = (key: string, state: DateInputState, dateCustom: DateCustom, updateDateComponents: () => void) => {
   const { month, editingCharIndex } = state;
+  dateCustom.setMonth(key);
+  updateDateComponents();
+  return null;
   if (editingCharIndex === 0) {
     if (key > '1') {
       return {
         month: '0' + key,
-        selected: 2,
         editingCharIndex: 0,
+
+        selectedDateComponent: DateComponentsType.Year,
       } as Shape<DateInputState>;
     }
     return {
       month: key,
-      selected: 1,
       editingCharIndex: 1,
     } as Shape<DateInputState>;
   }
@@ -71,22 +78,24 @@ const updateMonth = (key: string, state: DateInputState) => {
   }
   return {
     month: m.toString().padStart(2, '0'),
-    selected: 2,
     editingCharIndex: 0,
+
+    selectedDateComponent: DateComponentsType.Year,
   } as Shape<DateInputState>;
 };
 
-const updateYear = (key: string, state: DateInputState) => {
+const updateYear = (key: string, state: DateInputState, dateCustom: DateCustom, updateDateComponents: () => void) => {
   const { year, editingCharIndex } = state;
+  dateCustom.setYear(key);
+  updateDateComponents();
+  return null;
   if (editingCharIndex === 0) {
     return {
       year: key,
-      selected: 2,
       editingCharIndex: 1,
     } as Shape<DateInputState>;
   }
   return {
     year: ((year || '') + key).slice(-4),
-    selected: 2,
   } as Shape<DateInputState>;
 };

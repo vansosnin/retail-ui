@@ -1,4 +1,5 @@
 import { DateShape } from '../../components/DatePicker/DateShape';
+import { Nullable } from '../../typings/utility-types';
 
 export enum DateComponentsOrder {
   DMY = 'DMY',
@@ -21,9 +22,10 @@ export enum DateComponentsType {
   Separator = 4,
 }
 
-export interface DateFragment {
+export interface DateCustomFragment {
   type: DateComponentsType;
-  value: string;
+  value: Nullable<number | string>;
+  length: number;
 }
 
 export type DateComponents = DateShape;
@@ -32,4 +34,10 @@ export interface DateComponentsWithPad {
   date: string;
   month: string;
   year: string;
+}
+
+export enum DateComponentsActionType {
+  Set,
+  Shift,
+  Clear,
 }

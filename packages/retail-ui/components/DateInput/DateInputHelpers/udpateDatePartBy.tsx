@@ -1,9 +1,7 @@
-import { DateInputState } from '../DateInput';
-
-import { DateParts } from '../DateInput';
-import { UnknownDatePart } from './UnknownDatePart';
-import { CalendarDateShape } from '../../Calendar/CalendarDateShape';
+import { DateComponentsType } from '../../../lib/date/types';
 import { Nullable, Shape } from '../../../typings/utility-types';
+import { CalendarDateShape } from '../../Calendar/CalendarDateShape';
+import { DateInputState } from '../DateInput';
 
 const udpateDatePartBy = (
   step: number,
@@ -36,30 +34,29 @@ const udpateDatePartBy = (
 
 export const updateDatePartBy = (step: number) => {
   return (state: DateInputState): Shape<DateInputState> => {
-    const { selected, date, month, year, minDate, maxDate } = state;
-    switch (selected) {
-      case DateParts.All:
-      case DateParts.Date: {
-        const { min, max, circulate } = getMinMaxDate(minDate, maxDate, Number(month), Number(year));
-        const { value, notify } = udpateDatePartBy(step, date, min, max, 2, circulate);
-        return {
-          date: value,
-          selected: DateParts.Date,
-          notify,
-        } as Shape<DateInputState>;
-      }
-      case DateParts.Month: {
+    const { selectedDateComponent, date, month, year, minDate, maxDate } = state;
+    switch (selectedDateComponent) {
+      case DateComponentsType.Month: {
         const { min, max, circulate } = getMinMaxMonth(minDate, maxDate, Number(year));
         const { value, notify } = udpateDatePartBy(step, month, min, max, 2, circulate);
         return { month: value, notify } as Shape<DateInputState>;
       }
-      case DateParts.Year: {
+      case DateComponentsType.Year: {
         const { min, max, circulate } = getMinMaxYear(minDate, maxDate);
         const { value, notify } = udpateDatePartBy(step, year, min, max, 4, circulate);
         return { year: value, notify } as Shape<DateInputState>;
       }
-      default:
-        throw new UnknownDatePart();
+      case DateComponentsType.All:
+      case DateComponentsType.Date:
+      default: {
+        const { min, max, circulate } = getMinMaxDate(minDate, maxDate, Number(month), Number(year));
+        const { value, notify } = udpateDatePartBy(step, date, min, max, 2, circulate);
+        return {
+          date: value,
+          selectedDateComponent: DateComponentsType.Date,
+          notify,
+        } as Shape<DateInputState>;
+      }
     }
   };
 };

@@ -1,43 +1,40 @@
-import * as React from 'react';
-import classNames from 'classnames';
-
 import CalendarIcon from '@skbkontur/react-icons/Calendar';
+import classNames from 'classnames';
+import * as React from 'react';
 import { defaultDateComponentsOrder, defaultDateComponentsSeparator } from '../../lib/date/constants';
-import {
-  DateCustom,
-  } from '../../lib/date/DateCustom';
-import { DateHelper } from '../../lib/date/DateHelper';
-import { DateComponentsOrder, DateComponentsSeparator, DateComponentsType } from '../../lib/date/types';
+import { DateCustom } from '../../lib/date/DateCustom';
+import DateCustomTransformer from '../../lib/date/DateCustomTransformer';
+import { DateComponents, DateComponentsOrder, DateComponentsSeparator, DateComponentsType } from '../../lib/date/types';
+import Upgrades from '../../lib/Upgrades';
+
+import { Nullable } from '../../typings/utility-types';
 
 import { CalendarDateShape } from '../Calendar/CalendarDateShape';
 import { parseDateString } from '../DatePicker/DatePickerHelpers';
-import { DateShape, tryGetValidDateShape } from '../DatePicker/DateShape';
+import { tryGetValidDateShape } from '../DatePicker/DateShape';
 import { DatePickerLocaleHelper } from '../DatePicker/locale';
-import { isIE, isEdge } from '../ensureOldIEClassName';
+import { isEdge, isIE } from '../ensureOldIEClassName';
 import Input from '../Input';
 import InputLikeText from '../internal/InputLikeText';
 import { LangCodes } from '../LocaleProvider';
 import { locale } from '../LocaleProvider/decorators';
-
-import { parseValue, formatDate } from './DateInputHelpers/dateFormat';
-import { fillEmptyParts } from './DateInputHelpers/fillEmptyParts';
-import { maskChar } from './DateInputHelpers/maskChar';
-import { extractAction, Actions } from './DateInputKeyboardActions';
+import styles from './DateInput.less';
 import {
   clearDatePart,
-  updateDatePartBy,
   inputNumber,
   moveSelectionBy,
   setSelection,
   tryParseDateString,
+  updateDatePartBy,
 } from './DateInputHelpers';
+
+import { formatDate, parseValue } from './DateInputHelpers/dateFormat';
+import { fillEmptyParts } from './DateInputHelpers/fillEmptyParts';
+import { maskChar } from './DateInputHelpers/maskChar';
+import { Actions, extractAction } from './DateInputKeyboardActions';
 import { DatePart } from './DatePart';
 import { MaskedValue } from './MaskedValue';
-import { selectNodeContents, removeAllSelections } from './SelectionHelpers';
-import Upgrades from '../../lib/Upgrades';
-
-import { Nullable } from '../../typings/utility-types';
-import styles from './DateInput.less';
+import { removeAllSelections, selectNodeContents } from './SelectionHelpers';
 
 export const DateInputConfig = {
   polyfillInput: !isIE && !isEdge,
@@ -58,7 +55,6 @@ const DatePartRanges: { [key: number]: [number, number] } = {
 };
 
 export interface DateInputState {
-  selected: number | null;
   editingCharIndex: number;
   date: string | null;
   month: string | null;
@@ -67,6 +63,11 @@ export interface DateInputState {
   maxDate: Nullable<CalendarDateShape>;
   notify: boolean;
   dateWasChanged: boolean;
+
+  selectedDateComponent: DateComponentsType | null;
+  dateComponents: DateComponents;
+  inputMode: boolean;
+  inputStarted: boolean;
 }
 
 export interface DateInputProps {
@@ -111,26 +112,31 @@ class DateInput extends React.Component<DateInputProps, DateInputState> {
 
   constructor(props: DateInputProps) {
     super(props);
+    this.dateCustom = new DateCustom(props.dateComponentsOrder, props.dateComponentsSeparator).parseValue(props.value);
+
     this.state = {
-      selected: null,
       editingCharIndex: 0,
       ...parseValue(props.value),
       minDate: tryGetCalendarDateShape(props.minDate),
       maxDate: tryGetCalendarDateShape(props.maxDate),
       notify: false,
       dateWasChanged: false,
-    };
 
-    this.dateCustom = new DateCustom(props.dateComponentsOrder, props.dateComponentsSeparator);
-    this.dateCustom.parseValue(props.value);
+      selectedDateComponent: null,
+      dateComponents: this.dateCustom.getComponents(),
+      inputMode: false,
+      inputStarted: false,
+    };
   }
 
   public componentWillReceiveProps(nextProps: DateInputProps) {
     if (this.props !== nextProps) {
       this.dateCustom
-        .parseValue(nextProps.value)
-        .setOrder(nextProps.dateComponentsOrder!)
-        .setSeparator(nextProps.dateComponentsSeparator!);
+        .parseValue(nextProps.value || this.props.value)
+        .setOrder(nextProps.dateComponentsOrder || this.props.dateComponentsOrder)
+        .setSeparator(nextProps.dateComponentsSeparator || this.props.dateComponentsSeparator);
+
+      this.updateDateComponents();
       this.deriveStateFromValue(nextProps.value);
     }
     if (this.props.minDate !== nextProps.minDate) {
@@ -143,23 +149,20 @@ class DateInput extends React.Component<DateInputProps, DateInputState> {
 
   public componentDidUpdate(prevProps: DateInputProps, prevState: DateInputState) {
     if (
-      prevState.date !== this.state.date ||
-      prevState.month !== this.state.month ||
-      prevState.year !== this.state.year
+      prevState.dateComponents.date !== this.state.dateComponents.date ||
+      prevState.dateComponents.month !== this.state.dateComponents.month ||
+      prevState.dateComponents.year !== this.state.dateComponents.year
     ) {
       this.setState({ dateWasChanged: true });
-      this.dateCustom.setDate(this.state.date);
-      this.dateCustom.setMonth(this.state.month);
-      this.dateCustom.setYear(this.state.year);
 
       this.emitChange();
     }
 
-    if (prevState.selected !== this.state.selected) {
+    if (prevState.selectedDateComponent !== this.state.selectedDateComponent) {
       this.setState({ dateWasChanged: false });
     }
 
-    if (this.state.selected === DateParts.All) {
+    if (this.state.selectedDateComponent === DateComponentsType.All) {
       this.selectAll();
     } else {
       this.selectDatePartInInput();
@@ -249,7 +252,7 @@ class DateInput extends React.Component<DateInputProps, DateInputState> {
 
   private renderInputLikeText() {
     console.log('langCode', this.langCode);
-    const { selected } = this.state;
+    const { selectedDateComponent, inputMode } = this.state;
     const isMaskHidden = this.checkIfMaskHidden();
     return (
       <InputLikeText
@@ -272,17 +275,26 @@ class DateInput extends React.Component<DateInputProps, DateInputState> {
             onDoubleClick={this.createSelectionHandler(DateParts.All)}
             className={styles.root}
           >
-            {DateHelper.dateToFragments(this.dateCustom, { withSeparator: true }).map(({ type, value }, index) => {
-              return type === DateComponentsType.Separator ? (
-                <span key={type + index.toString()} className={styles.delimiter}>
-                  {value}
-                </span>
-              ) : (
-                <DatePart key={type} selected={selected === type} onMouseDown={this.createSelectionHandler(type)}>
-                  <MaskedValue value={value} length={value.length} />
-                </DatePart>
-              );
-            })}
+            {DateCustomTransformer.dateToFragments(this.dateCustom, { withSeparator: true, isPad: !inputMode }).map(
+              ({ type, value, length }, index) => {
+                value = String(
+                  inputMode && selectedDateComponent === type ? value : DateCustomTransformer.padStart(value, length),
+                );
+                return type === DateComponentsType.Separator ? (
+                  <span key={type + index.toString()} className={styles.delimiter}>
+                    {value}
+                  </span>
+                ) : (
+                  <DatePart
+                    key={type}
+                    selected={selectedDateComponent === type}
+                    onMouseDown={this.createSelectionHandler(type)}
+                  >
+                    <MaskedValue value={value} length={length} />
+                  </DatePart>
+                );
+              },
+            )}
           </div>
         )}
       </InputLikeText>
@@ -392,7 +404,10 @@ class DateInput extends React.Component<DateInputProps, DateInputState> {
     }
 
     if (action === Actions.Digit) {
-      this.inputValue(event.key);
+      event.persist();
+      this.dateCustom.inputNumber(event, this.state.selectedDateComponent);
+      this.updateDateComponents();
+      // this.inputValue(event.key);
     }
 
     if (action === Actions.ClearSelection) {
@@ -416,7 +431,7 @@ class DateInput extends React.Component<DateInputProps, DateInputState> {
     e.preventDefault();
     const parsed = tryParseDateString(e.clipboardData.getData('text'));
     if (parsed) {
-      this.setState({ ...parsed, selected: DateParts.All });
+      this.setState({ ...parsed, selectedDateComponent: DateComponentsType.All });
     }
   };
 
@@ -436,20 +451,22 @@ class DateInput extends React.Component<DateInputProps, DateInputState> {
       return;
     }
 
-    const { selected } = this.state;
-    if (selected == null) {
+    const { selectedDateComponent } = this.state;
+    if (selectedDateComponent == null) {
       removeAllSelections();
       return;
     }
 
-    const [start, end] = DatePartRanges[selected];
+    const [start, end] = DatePartRanges[selectedDateComponent];
     if (this.input) {
       this.input.setSelectionRange(start, end);
     }
   }
 
   private checkIfMaskHidden() {
-    return ![this.state.date, this.state.month, this.state.year].some(Boolean) && this.state.selected == null;
+    return (
+      ![this.state.date, this.state.month, this.state.year].some(Boolean) && this.state.selectedDateComponent == null
+    );
   }
 
   private deriveStateFromValue(value: Nullable<string>) {
@@ -509,7 +526,12 @@ class DateInput extends React.Component<DateInputProps, DateInputState> {
   }
 
   private inputValue(key: string) {
-    this.setState(inputNumber(key));
+    this.setState({ inputMode: true }, () => {
+      inputNumber(key, this.dateCustom, this.updateDateComponents)({
+        selectedDateComponent: this.state.selectedDateComponent,
+      });
+    });
+    // this.setState(inputNumber(key));
   }
 
   private moveSelection(step: number) {
@@ -535,6 +557,14 @@ class DateInput extends React.Component<DateInputProps, DateInputState> {
     this.blink();
     this.setState({ notify: false });
   }
+
+  private setSelectedDateComponent(selectedDateComponent: DateComponentsType) {
+    this.setState({ selectedDateComponent });
+  }
+
+  private updateDateComponents = () => {
+    this.setState({ dateComponents: this.dateCustom.getComponents() });
+  };
 
   private renderIcon = () => {
     const iconStyles = classNames({
