@@ -1,29 +1,17 @@
-import { Nullable } from '../../typings/utility-types';
 import { MAX_DATE, MAX_MONTH, MAX_YEAR, MIN_DATE, MIN_MONTH, MIN_YEAR } from './constants';
-import { DateComponentsActionType, DateComponentsType } from './types';
+import DateCustomValidator from './DateCustomValidator';
+import { DateComponent, DateCustomActionType, DateComponentsType } from './types';
 
 export default class DateCustomSetter {
-  public static leapYear = (year: number): boolean => (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
-
-  public static getMaxDaysInMonth(month: number, yearForFebruary?: number): number {
-    if (month === 2) {
-      return yearForFebruary && DateCustomSetter.leapYear(yearForFebruary) ? 29 : 28;
-    }
-    if (month <= 7) {
-      return month % 2 === 0 ? 30 : 31;
-    }
-    return month % 2 === 0 ? 31 : 30;
-  }
-
   public static calcYear(
-    actionType: DateComponentsActionType,
-    value: Nullable<number>,
-    prevValue: Nullable<number>,
+    actionType: DateCustomActionType,
+    value: number | null,
+    prevValue: number | null,
     isDiff?: boolean,
     isLoop?: boolean,
-  ): Nullable<number> {
+  ): DateComponent {
     return DateCustomSetter.getNewValueDateComponent(
-      DateComponentsType.Date,
+      DateComponentsType.Year,
       actionType,
       value,
       prevValue,
@@ -35,14 +23,14 @@ export default class DateCustomSetter {
   }
 
   public static calcMonth(
-    actionType: DateComponentsActionType,
-    value: Nullable<number>,
-    prevValue: Nullable<number>,
+    actionType: DateCustomActionType,
+    value: number | null,
+    prevValue: number | null,
     isDiff?: boolean,
     isLoop?: boolean,
-  ): Nullable<number> {
+  ): DateComponent {
     return DateCustomSetter.getNewValueDateComponent(
-      DateComponentsType.Date,
+      DateComponentsType.Month,
       actionType,
       value,
       prevValue,
@@ -54,15 +42,15 @@ export default class DateCustomSetter {
   }
 
   public static calcDate(
-    actionType: DateComponentsActionType,
-    value: Nullable<number>,
-    prevValue: Nullable<number>,
-    year: Nullable<number>,
-    month: Nullable<number>,
+    actionType: DateCustomActionType,
+    value: number | null,
+    prevValue: number | null,
+    year: number | null,
+    month: number | null,
     isDiff?: boolean,
     isLoop?: boolean,
-  ): Nullable<number> {
-    const maxDate = year && month ? DateCustomSetter.getMaxDaysInMonth(month, year) : MAX_DATE;
+  ): DateComponent {
+    const maxDate = year && month ? DateCustomValidator.getMaxDaysInMonth(month, year) : MAX_DATE;
     return DateCustomSetter.getNewValueDateComponent(
       DateComponentsType.Date,
       actionType,
@@ -77,27 +65,22 @@ export default class DateCustomSetter {
 
   public static getNewValueDateComponent(
     componentsType: DateComponentsType,
-    actionType: DateComponentsActionType,
-    value: Nullable<number>,
-    prevValue: Nullable<number>,
+    actionType: DateCustomActionType,
+    value: number | null,
+    prevValue: number | null,
     min: number,
     max: number,
     isDiff?: boolean,
     isLoop?: boolean,
-  ): Nullable<number> {
-    if (typeof value !== 'number') {
+  ): DateComponent {
+    if (value === null) {
       return null;
     }
-    switch (actionType) {
-      case DateComponentsActionType.Set:
-        return DateCustomSetter.calcNewValueDateComponent(value, min, max, false, false);
-
-      case DateComponentsActionType.Shift:
-        if (!prevValue) {
-          return prevValue;
-        }
-        return DateCustomSetter.calcNewValueDateComponent(prevValue + value, min, max, isDiff, isLoop);
+    if (actionType === DateCustomActionType.Shift) {
+      value = prevValue === null ? value : prevValue + value;
+      return DateCustomSetter.calcNewValueDateComponent(value, min, max, isDiff, isLoop);
     }
+    return DateCustomSetter.calcNewValueDateComponent(value, min, max, false, false);
   }
 
   public static calcNewValueDateComponent = (
@@ -106,7 +89,7 @@ export default class DateCustomSetter {
     max: number,
     isDiff: boolean = false,
     isLoop: boolean = true,
-  ): Nullable<number> => {
+  ): DateComponent => {
     if (!isLoop) {
       return value < min ? min : value > max ? max : value;
     }

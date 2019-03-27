@@ -1,38 +1,33 @@
-import { Nullable } from '../../typings/utility-types';
-import { CHAR_MASK, CHAR_PAD, defaultDateComponentsOrder, LENGTH_DATE, LENGTH_MONTH, LENGTH_YEAR } from './constants';
+import { CHAR_PAD, defaultDateComponentsOrder, LENGTH_DATE, LENGTH_MONTH, LENGTH_YEAR } from './constants';
 import { DateCustom } from './DateCustom';
-import { DateComponents, DateComponentsOrder, DateComponentsType, DateCustomFragment } from './types';
+import {
+  DateComponents, DateComponentsNumber,
+  DateComponentsOrder,
+  DateComponentsType,
+  DateCustomFragment,
+  DateToFragmentsSettings,
+} from './types';
 
 export default class DateCustomTransformer {
-  public static cache: {
-    dates: { [key: string]: DateComponents };
-    values: Map<DateComponents, string>;
-    numbers: Map<DateComponents, number>;
-  } = {
-    dates: {},
-    values: new Map(),
-    numbers: new Map(),
-  };
+  public static padStart = (value: number | string | null, length: number): string =>
+    String(value || '').padStart(length, CHAR_PAD);
 
-  public static padStart = (value: Nullable<number | string>, length: number): string =>
-    String(value || '').padStart(length, value ? CHAR_PAD : CHAR_MASK);
-
-  public static padYear = (year: Nullable<number | string>): string => DateCustomTransformer.padStart(year, LENGTH_YEAR);
-  public static padMonth = (month: Nullable<number | string>): string => DateCustomTransformer.padStart(month, LENGTH_MONTH);
-  public static padDate = (date: Nullable<number | string>): string => DateCustomTransformer.padStart(date, LENGTH_DATE);
-
-  public static max = (datesCustom: DateCustom[]): DateCustom =>
-    datesCustom.sort((a, b) => b.getNumber() - a.getNumber())[0];
+  public static padYear = (year: number | string | null): string => DateCustomTransformer.padStart(year, LENGTH_YEAR);
+  public static padMonth = (month: number | string | null): string =>
+    DateCustomTransformer.padStart(month, LENGTH_MONTH);
+  public static padDate = (date: number | string | null): string => DateCustomTransformer.padStart(date, LENGTH_DATE);
 
   public static dateToFragments = (
     dateCustom: DateCustom,
-    {
+    settings: DateToFragmentsSettings = {},
+  ): DateCustomFragment[] => {
+    const {
       order = dateCustom.getOrder(),
+      components = dateCustom.getComponents(),
+      separator = dateCustom.getSeparator(),
       withSeparator = false,
       isPad = true,
-    }: { order?: DateComponentsOrder; withSeparator?: boolean; isPad?: boolean } = {},
-  ): DateCustomFragment[] => {
-    const components = dateCustom.getComponents();
+    } = settings;
     const year: DateCustomFragment = {
       type: DateComponentsType.Year,
       value: isPad ? DateCustomTransformer.padYear(components.year) : components.year,
@@ -59,20 +54,20 @@ export default class DateCustomTransformer {
     }
 
     if (withSeparator) {
-      const separator: DateCustomFragment = {
+      const separatorFragment: DateCustomFragment = {
         type: DateComponentsType.Separator,
-        value: dateCustom.getSeparator(),
+        value: separator,
         length: 1,
       };
-      fragments.splice(1, 0, separator);
-      fragments.splice(3, 0, separator);
+      fragments.splice(1, 0, separatorFragment);
+      fragments.splice(3, 0, separatorFragment);
     }
 
     return fragments;
   };
 
   public static parseValueToDate(
-    value: Nullable<string>,
+    value: string | null,
     order: DateComponentsOrder = defaultDateComponentsOrder,
   ): DateComponents {
     const dateComponents: DateComponents = {
@@ -82,9 +77,6 @@ export default class DateCustomTransformer {
     };
     if (!value) {
       return dateComponents;
-    }
-    if (DateCustomTransformer.cache.dates[value]) {
-      return { ...DateCustomTransformer.cache.dates[value] };
     }
 
     const match = DateCustomTransformer.getRegExpForParse(order).exec(value);
@@ -99,24 +91,17 @@ export default class DateCustomTransformer {
         ({ 2: dateComponents.year, 1: dateComponents.month, 0: dateComponents.date } = matchFinished);
       }
     }
-    DateCustomTransformer.cache.dates[value] = dateComponents;
     return dateComponents;
   }
 
   public static dateToValue(dateCustom: DateCustom): string {
     const components = dateCustom.getComponents();
-    const _value = DateCustomTransformer.cache.values.get(components);
-    if (_value !== undefined) {
-      return _value;
-    }
-    if (!components || !dateCustom.isValid) {
+    if (!components || !dateCustom.validate()) {
       return '';
     }
-    const string = DateCustomTransformer.dateToFragments(dateCustom, { withSeparator: true })
+    return DateCustomTransformer.dateToFragments(dateCustom, { withSeparator: true })
       .map(({ value }) => value)
       .join('');
-    DateCustomTransformer.cache.values.set(components, string);
-    return string;
   }
 
   /**
@@ -124,18 +109,16 @@ export default class DateCustomTransformer {
    * Предназначено для быстрого сравнивания дат `<=>`
    */
   public static dateToNumber(dateCustom: DateCustom): number {
-    const components = dateCustom.getComponents();
-    let number = DateCustomTransformer.cache.numbers.get(components);
-    if (number !== undefined) {
-      return number;
-    }
-    number = Number(
+    return Number(
       DateCustomTransformer.dateToFragments(dateCustom, { order: DateComponentsOrder.YMD })
         .map(({ value }) => value)
         .join(''),
     );
-    DateCustomTransformer.cache.numbers.set(components, number);
-    return number;
+  }
+
+  public static dateComponentsToNumber(dateCustom: DateCustom): DateComponentsNumber {
+    const { year, month, date } = dateCustom.getComponents();
+    return { year: Number(year), month: Number(month), date: Number(date )};
   }
 
   public static getRegExpForParse(order: DateComponentsOrder): RegExp {

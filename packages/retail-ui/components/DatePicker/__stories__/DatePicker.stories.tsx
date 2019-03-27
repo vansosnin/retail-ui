@@ -128,7 +128,7 @@ storiesOf('DatePicker', module)
     DVF2.setComponents(DateCustomTransformer.parseValueToDate('08 21 2012'));
     DVF3.setComponents(DateCustomTransformer.parseValueToDate('09 02 2013'));
     DVFLEAP.parseValue('2016 02 29');
-    console.log(DVF.checkInRange(DVF2, DVF3));
+    console.log(DVF.checkRange(DVF2, DVF3));
 
     window.DVF = DVF;
     window.DVF2 = DVF2;
