@@ -1,7 +1,19 @@
-import { CHAR_PAD, defaultDateComponentsOrder, LENGTH_DATE, LENGTH_MONTH, LENGTH_YEAR } from './constants';
-import { DateCustom } from './DateCustom';
 import {
-  DateComponents, DateComponentsNumber,
+  CHAR_PAD,
+  defaultDateComponentsOrder,
+  emptyDateComponents,
+  LENGTH_DATE,
+  LENGTH_MONTH,
+  LENGTH_YEAR,
+  RE_ORDER_DMY,
+  RE_ORDER_MDY,
+  RE_ORDER_YMD,
+} from './constants';
+import { DateCustom } from './DateCustom';
+import DateCustomValidator from './DateCustomValidator';
+import {
+  DateComponents,
+  DateComponentsNumber,
   DateComponentsOrder,
   DateComponentsType,
   DateCustomFragment,
@@ -26,23 +38,36 @@ export default class DateCustomTransformer {
       components = dateCustom.getComponents(),
       separator = dateCustom.getSeparator(),
       withSeparator = false,
-      isPad = true,
+      withPad = true,
+      withValidation = false,
     } = settings;
     const year: DateCustomFragment = {
       type: DateComponentsType.Year,
-      value: isPad ? DateCustomTransformer.padYear(components.year) : components.year,
+      value: components.year,
       length: LENGTH_YEAR,
     };
     const month: DateCustomFragment = {
       type: DateComponentsType.Month,
-      value: isPad ? DateCustomTransformer.padMonth(components.month) : components.month,
+      value: components.month,
       length: LENGTH_MONTH,
     };
     const date: DateCustomFragment = {
       type: DateComponentsType.Date,
-      value: isPad ? DateCustomTransformer.padDate(components.date) : components.date,
+      value: components.date,
       length: LENGTH_DATE,
     };
+
+    if (withPad) {
+      year.value = DateCustomTransformer.padYear(components.year);
+      month.value = DateCustomTransformer.padMonth(components.month);
+      date.value = DateCustomTransformer.padDate(components.date);
+    }
+
+    if (withValidation) {
+      year.isValid = DateCustomValidator.checkRangePiecemeal(DateComponentsType.Year, dateCustom);
+      month.isValid = DateCustomValidator.checkRangePiecemeal(DateComponentsType.Month, dateCustom);
+      date.isValid = DateCustomValidator.checkRangePiecemeal(DateComponentsType.Date, dateCustom);
+    }
 
     const fragments: DateCustomFragment[] = [];
     if (order === DateComponentsOrder.YMD) {
@@ -70,11 +95,7 @@ export default class DateCustomTransformer {
     value: string | null,
     order: DateComponentsOrder = defaultDateComponentsOrder,
   ): DateComponents {
-    const dateComponents: DateComponents = {
-      year: null,
-      month: null,
-      date: null,
-    };
+    const dateComponents: DateComponents = { ...emptyDateComponents };
     if (!value) {
       return dateComponents;
     }
@@ -110,24 +131,25 @@ export default class DateCustomTransformer {
    */
   public static dateToNumber(dateCustom: DateCustom): number {
     return Number(
-      DateCustomTransformer.dateToFragments(dateCustom, { order: DateComponentsOrder.YMD })
+      DateCustomTransformer.dateToFragments(dateCustom, { order: DateComponentsOrder.YMD, withValidation: false })
         .map(({ value }) => value)
         .join(''),
     );
   }
 
-  public static dateComponentsToNumber(dateCustom: DateCustom): DateComponentsNumber {
+  public static dateComponentsToNumber(dateCustom: DateCustom | null): DateComponentsNumber {
+    if (dateCustom === null) {
+      return { year: 0, month: 0, date: 0 };
+    }
     const { year, month, date } = dateCustom.getComponents();
-    return { year: Number(year), month: Number(month), date: Number(date )};
+    return { year: Number(year), month: Number(month), date: Number(date) };
   }
 
   public static getRegExpForParse(order: DateComponentsOrder): RegExp {
-    const res = `(?:\\.|\\/|\\-|\\s)`;
-    if (order === DateComponentsOrder.MDY) {
-      return new RegExp(`(\\d{1,${LENGTH_MONTH}})?${res}?(\\d{1,${LENGTH_DATE}})?${res}?(\\d{1,${LENGTH_YEAR}})?`);
-    } else if (order === DateComponentsOrder.DMY) {
-      return new RegExp(`(\\d{1,${LENGTH_DATE}})?${res}?(\\d{1,${LENGTH_MONTH}})?${res}?(\\d{1,${LENGTH_YEAR}})?`);
-    }
-    return new RegExp(`(\\d{1,${LENGTH_YEAR}})?${res}?(\\d{1,${LENGTH_MONTH}})?${res}?(\\d{1,${LENGTH_DATE}})?`);
+    return order === DateComponentsOrder.MDY
+      ? RE_ORDER_MDY
+      : order === DateComponentsOrder.DMY
+        ? RE_ORDER_DMY
+        : RE_ORDER_YMD;
   }
 }

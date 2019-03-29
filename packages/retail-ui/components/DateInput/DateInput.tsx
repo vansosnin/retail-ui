@@ -107,8 +107,16 @@ class DateInput extends React.Component<DateInputProps, DateInputState> {
     super(props);
     this.dateCustom = new DateCustom(props.dateComponentsOrder, props.dateComponentsSeparator)
       .parseValue(props.value)
-      .setRangeStart(new DateCustom(props.dateComponentsOrder, props.dateComponentsSeparator).parseValue(props.minDate))
-      .setRangeEnd(new DateCustom(props.dateComponentsOrder, props.dateComponentsSeparator).parseValue(props.maxDate));
+      .setRangeStart(
+        props.minDate
+          ? new DateCustom(props.dateComponentsOrder, props.dateComponentsSeparator).parseValue(props.minDate)
+          : null,
+      )
+      .setRangeEnd(
+        props.maxDate
+          ? new DateCustom(props.dateComponentsOrder, props.dateComponentsSeparator).parseValue(props.maxDate)
+          : null,
+      );
 
     this.state = {
       editingCharIndex: 0,
@@ -250,6 +258,7 @@ class DateInput extends React.Component<DateInputProps, DateInputState> {
     console.log('langCode', this.langCode);
     const { selectedDateComponent, inputMode, dateComponents } = this.state;
     const isMaskHidden = this.checkIfMaskHidden();
+    const isValid = this.dateCustom.validate();
     return (
       <InputLikeText
         width={this.props.width}
@@ -274,8 +283,9 @@ class DateInput extends React.Component<DateInputProps, DateInputState> {
             {DateCustomTransformer.dateToFragments(this.dateCustom, {
               components: dateComponents,
               withSeparator: true,
-              isPad: !inputMode,
-            }).map(({ type, value, length }, index) => {
+              withPad: !inputMode,
+              withValidation: true,
+            }).map(({ type, value, length, isValid: isValidFragment }, index) => {
               value = String(
                 inputMode && selectedDateComponent === type
                   ? value || ''
@@ -287,6 +297,8 @@ class DateInput extends React.Component<DateInputProps, DateInputState> {
                 </span>
               ) : (
                 <DatePart
+                  isValid={isValid}
+                  isValidFragment={isValidFragment}
                   key={type}
                   selected={selectedDateComponent === type}
                   onMouseDown={this.createSelectionHandler(type)}

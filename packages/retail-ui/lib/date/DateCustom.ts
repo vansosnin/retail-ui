@@ -1,28 +1,25 @@
 import { defaultDateComponentsOrder, defaultDateComponentsSeparator, emptyDateComponents } from './constants';
+import DateCustomGetter from './DateCustomGetter';
 import DateCustomSetter from './DateCustomSetter';
 import DateCustomTransformer from './DateCustomTransformer';
 import DateCustomValidator from './DateCustomValidator';
 import {
+  ChangeValueDateComponentSettings,
   DateComponent,
   DateComponents,
-  DateCustomActionType,
   DateComponentsOrder,
   DateComponentsSeparator,
   DateComponentsType,
+  DateComponentWrite,
+  DateComponentActionType,
   DateCustomFragment,
   DateToFragmentsSettings,
 } from './types';
 
-interface SettingsShiftValueDateComponents {
-  // Учитывать разницу при преуменьшении/превышении итогового значения от допустимого минимального/максимального
-  isDiff?: boolean;
-  isLoop?: boolean;
-}
-
 export class DateCustom {
   private order: DateComponentsOrder;
   private separator: DateComponentsSeparator;
-  private components: DateComponents = emptyDateComponents;
+  private components: DateComponents = { ...emptyDateComponents };
 
   private start: DateCustom | null = null;
   private end: DateCustom | null = null;
@@ -59,97 +56,69 @@ export class DateCustom {
     return this.components.date;
   }
 
-  public toString(): string {
-    return DateCustomTransformer.dateToValue(this);
+  public getRangeStart(): DateCustom | null {
+    return this.start;
   }
 
-  public parseValue(value: string | null = ''): DateCustom {
-    this.setComponents(DateCustomTransformer.parseValueToDate(value, this.order));
+  public getRangeEnd(): DateCustom | null {
+    return this.end;
+  }
+
+  public setOrder(order: DateComponentsOrder): DateCustom {
+    this.order = order;
     return this;
   }
 
-  public setOrder(order: DateComponentsOrder | null): DateCustom {
-    if (order) {
-      this.order = order;
-    }
+  public setSeparator(separator: DateComponentsSeparator): DateCustom {
+    this.separator = separator;
     return this;
   }
 
-  public setSeparator(separator: DateComponentsSeparator | null): DateCustom {
-    if (separator) {
-      this.separator = separator;
-    }
+  public setComponents(components: DateComponents | null): DateCustom {
+    this.components = components || {...emptyDateComponents};
     return this;
   }
 
-  public setComponents(components: DateComponents): DateCustom {
-    this.components = components;
-    return this;
-  }
-
-  public setYear(year: number | string | null, { isDiff, isLoop }: SettingsShiftValueDateComponents = {}): DateCustom {
+  public setYear(year: DateComponentWrite, { isLoop }: ChangeValueDateComponentSettings = {}): DateCustom {
     year = year ? Number(year) : null;
-    const { year: prevValue } = this.components;
-    const nextYear = DateCustomSetter.calcYear(DateCustomActionType.Set, year, prevValue, isDiff, isLoop);
-    if (this.validate(DateComponentsType.Date, nextYear)) {
-      this.components.year = nextYear;
+    if (year === this.components.year) {
+      return this;
     }
-    return this.shiftDate(0, { isDiff, isLoop: false });
+    this.components.year = DateCustomGetter.calcYear(this, DateComponentActionType.Set, year, { isLoop });
+    return this;
   }
 
-  public setMonth(
-    month: number | string | null,
-    { isDiff, isLoop }: SettingsShiftValueDateComponents = {},
-  ): DateCustom {
+  public setMonth(month: DateComponentWrite, { isLoop }: ChangeValueDateComponentSettings = {}): DateCustom {
     month = month ? Number(month) : null;
-    const { month: prevValue } = this.components;
-    const nextMonth = DateCustomSetter.calcMonth(DateCustomActionType.Set, month, prevValue, isDiff, isLoop);
-    if (this.validate(DateComponentsType.Date, nextMonth)) {
-      this.components.month = nextMonth;
+    if (month === this.components.month) {
+      return this;
     }
-    return this.shiftDate(0, { isDiff, isLoop: false });
+    this.components.month = DateCustomGetter.calcMonth(this, DateComponentActionType.Set, month, { isLoop });
+    return this;
   }
 
-  public setDate(date: number | string | null, { isDiff, isLoop }: SettingsShiftValueDateComponents = {}): DateCustom {
+  public setDate(date: DateComponentWrite, { isLoop }: ChangeValueDateComponentSettings = {}): DateCustom {
     date = date ? Number(date) : null;
     if (date === this.components.date) {
       return this;
     }
-    const { year, month, date: prevValue } = this.components;
-    const nextDate = DateCustomSetter.calcDate(DateCustomActionType.Set, date, prevValue, year, month, isDiff, isLoop);
-    if (this.validate(DateComponentsType.Date, nextDate)) {
-      this.components.year = nextDate;
-    }
+    this.components.date = DateCustomGetter.calcDate(this, DateComponentActionType.Set, date, { isLoop });
     return this;
   }
 
-  public shiftYear(step: number, { isDiff, isLoop }: SettingsShiftValueDateComponents = {}): DateCustom {
-    const { year } = this.components;
-    const textYear = DateCustomSetter.calcYear(DateCustomActionType.Shift, step, year, isDiff, isLoop);
-    if (this.validate(DateComponentsType.Year, textYear)) {
-      this.components.year = textYear;
-    }
-
-    return this.shiftDate(0, { isDiff, isLoop: false });
+  public shiftYear(step: number, { isLoop }: ChangeValueDateComponentSettings = {}): DateCustom {
+    this.components.year = DateCustomGetter.calcYear(this, DateComponentActionType.Shift, step, { isLoop });
+    return this;
   }
 
-  public shiftMonth(step: number, { isDiff, isLoop }: SettingsShiftValueDateComponents = {}): DateCustom {
-    const { month } = this.components;
-    const nextMonth = DateCustomSetter.calcMonth(DateCustomActionType.Shift, step, month, isDiff, isLoop);
-    if (this.validate(DateComponentsType.Month, nextMonth)) {
-      this.components.month = nextMonth;
-    }
+  public shiftMonth(step: number, { isLoop }: ChangeValueDateComponentSettings = {}): DateCustom {
+    this.components.month = DateCustomGetter.calcMonth(this, DateComponentActionType.Shift, step, { isLoop });
 
-    return this.shiftDate(0, { isDiff, isLoop: false });
+    return this;
   }
 
-  public shiftDate(step: number, { isDiff, isLoop }: SettingsShiftValueDateComponents = {}): DateCustom {
-    const { year, month, date } = this.components;
-    const nextDate = DateCustomSetter.calcDate(DateCustomActionType.Shift, step, date, year, month, isDiff, isLoop);
-    if (this.validate(DateComponentsType.Date, nextDate)) {
-      this.components.date = nextDate;
-    }
-
+  public shiftDate(step: number, { isLoop }: ChangeValueDateComponentSettings = {}): DateCustom {
+    this.components.date = DateCustomGetter.calcDate(this, DateComponentActionType.Shift, step, { isLoop });
     return this;
   }
 
@@ -163,6 +132,41 @@ export class DateCustom {
     return this;
   }
 
+  public get(type: DateComponentsType | null): DateComponent | DateComponents {
+    return (type !== null && DateCustomGetter.getValueDateComponent(this, type)) || null;
+  }
+
+  public set(
+    type: DateComponentsType | null,
+    value: DateComponent,
+    settingsChange: ChangeValueDateComponentSettings = {},
+  ): DateCustom {
+    return (type !== null && DateCustomSetter.setValueDateComponent(this, type, value, settingsChange)) || this;
+  }
+
+  public shift(type: DateComponentsType | null, step: number): DateCustom {
+    return (type !== null && DateCustomSetter.shiftValueDateComponent(this, type, step)) || this;
+  }
+
+  public parseValue(value: string | null = ''): DateCustom {
+    this.setComponents(DateCustomTransformer.parseValueToDate(value, this.order));
+    return this;
+  }
+
+  public validate(type?: DateComponentsType, nextValue?: DateComponent): boolean {
+    let self: DateCustom = this;
+    if (type !== undefined && nextValue !== undefined) {
+      const clone = this.clone();
+      clone.set(type, nextValue);
+      self = clone;
+    }
+    const checkRange =
+      type !== undefined
+        ? DateCustomValidator.checkRangePiecemeal(type, self)
+        : DateCustomValidator.checkRangeFully(self);
+    return DateCustomValidator.compareWithNativeDate(this) && checkRange;
+  }
+
   public toNumber(): number {
     return DateCustomTransformer.dateToNumber(this);
   }
@@ -171,70 +175,14 @@ export class DateCustom {
     return DateCustomTransformer.dateToFragments(this, settings);
   }
 
-  public get(type: DateComponentsType | null): DateComponent | DateComponents {
-    if (type === DateComponentsType.Year) {
-      return this.components.year;
-    } else if (type === DateComponentsType.Month) {
-      return this.components.month;
-    } else if (type === DateComponentsType.Date) {
-      return this.components.date;
-    } else if (type === DateComponentsType.All) {
-      return this.components;
-    }
-    return null;
-  }
-
-  public set(type: DateComponentsType | null, value: DateComponent, notTest: boolean = false): boolean {
-    value = value ? Number(value) : null;
-    const prevValue = this.toNumber();
-    if (type === DateComponentsType.Year) {
-      notTest ? (this.components.year = value) : this.setYear(value);
-    } else if (type === DateComponentsType.Month) {
-      notTest ? (this.components.month = value) : this.setMonth(value);
-    } else if (type === DateComponentsType.Date) {
-      notTest ? (this.components.date = value) : this.setDate(value);
-    } else if (type === DateComponentsType.All) {
-      notTest ? (this.components.date = value) : this.setComponents(emptyDateComponents);
-    }
-    return this.toNumber() === prevValue;
-  }
-
-  public shift(type: DateComponentsType | null, value: number): boolean {
-    const prevValue = this.toNumber();
-    if (type === DateComponentsType.Year) {
-      this.shiftYear(value);
-    } else if (type === DateComponentsType.Month) {
-      this.shiftMonth(value);
-    } else if (type === DateComponentsType.Date) {
-      this.shiftDate(value);
-    } else if (type === DateComponentsType.All) {
-      this.shiftDate(value);
-    }
-    return this.toNumber() === prevValue;
+  public toString(): string {
+    return DateCustomTransformer.dateToValue(this);
   }
 
   public clone(): DateCustom {
     return new DateCustom(this.order, this.separator)
       .setComponents({ ...this.components })
-      .setRangeStart(this.start && Object.assign(Object.create(this.start), this.start))
-      .setRangeEnd(this.end && Object.assign(Object.create(this.end), this.end));
-  }
-
-  public validate(type?: DateComponentsType, nextValue?: DateComponent): boolean {
-    let self: DateCustom = this;
-    if (type !== undefined && nextValue !== undefined) {
-      const clone = this.clone();
-      clone.set(type, nextValue, true);
-      self = clone;
-    }
-    const checkRange =
-      type !== undefined
-        ? DateCustomValidator.checkRangePiecemeal(type, self, this.start, this.end)
-        : DateCustomValidator.checkRangeFully(self, this.start, this.end);
-    console.log('checkRangePiecemeal', checkRange);
-    return (
-      DateCustomValidator.compareWithNativeDate(this) &&
-      checkRange
-    );
+      .setRangeStart(this.start && this.start.clone())
+      .setRangeEnd(this.end && this.end.clone());
   }
 }

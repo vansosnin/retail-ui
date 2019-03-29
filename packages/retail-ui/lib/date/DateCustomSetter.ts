@@ -1,99 +1,38 @@
-import { MAX_DATE, MAX_MONTH, MAX_YEAR, MIN_DATE, MIN_MONTH, MIN_YEAR } from './constants';
-import DateCustomValidator from './DateCustomValidator';
-import { DateComponent, DateCustomActionType, DateComponentsType } from './types';
+import { DateCustom } from './DateCustom';
+import { DateComponent, DateComponentsType, ChangeValueDateComponentSettings, DateComponents } from './types';
 
 export default class DateCustomSetter {
-  public static calcYear(
-    actionType: DateCustomActionType,
-    value: number | null,
-    prevValue: number | null,
-    isDiff?: boolean,
-    isLoop?: boolean,
-  ): DateComponent {
-    return DateCustomSetter.getNewValueDateComponent(
-      DateComponentsType.Year,
-      actionType,
-      value,
-      prevValue,
-      MIN_YEAR,
-      MAX_YEAR,
-      isDiff,
-      isLoop,
-    );
-  }
-
-  public static calcMonth(
-    actionType: DateCustomActionType,
-    value: number | null,
-    prevValue: number | null,
-    isDiff?: boolean,
-    isLoop?: boolean,
-  ): DateComponent {
-    return DateCustomSetter.getNewValueDateComponent(
-      DateComponentsType.Month,
-      actionType,
-      value,
-      prevValue,
-      MIN_MONTH,
-      MAX_MONTH,
-      isDiff,
-      isLoop,
-    );
-  }
-
-  public static calcDate(
-    actionType: DateCustomActionType,
-    value: number | null,
-    prevValue: number | null,
-    year: number | null,
-    month: number | null,
-    isDiff?: boolean,
-    isLoop?: boolean,
-  ): DateComponent {
-    const maxDate = year && month ? DateCustomValidator.getMaxDaysInMonth(month, year) : MAX_DATE;
-    return DateCustomSetter.getNewValueDateComponent(
-      DateComponentsType.Date,
-      actionType,
-      value,
-      prevValue,
-      MIN_DATE,
-      maxDate,
-      isDiff,
-      isLoop,
-    );
-  }
-
-  public static getNewValueDateComponent(
-    componentsType: DateComponentsType,
-    actionType: DateCustomActionType,
-    value: number | null,
-    prevValue: number | null,
-    min: number,
-    max: number,
-    isDiff?: boolean,
-    isLoop?: boolean,
-  ): DateComponent {
-    if (value === null) {
-      return null;
+  public static setValueDateComponent(
+    dateCustom: DateCustom,
+    type: DateComponentsType,
+    nextValue: DateComponent | DateComponents,
+    settingsChange: ChangeValueDateComponentSettings,
+  ): DateCustom {
+    if (type === DateComponentsType.All) {
+      dateCustom.setComponents(nextValue as DateComponents);
+      return dateCustom
     }
-    if (actionType === DateCustomActionType.Shift) {
-      value = prevValue === null ? value : prevValue + value;
-      return DateCustomSetter.calcNewValueDateComponent(value, min, max, isDiff, isLoop);
+    nextValue = nextValue !== null ? Number(nextValue) : null;
+    if (type === DateComponentsType.Year) {
+      dateCustom.setYear(nextValue, settingsChange);
+    } else if (type === DateComponentsType.Month) {
+      dateCustom.setMonth(nextValue, settingsChange);
+    } else if (type === DateComponentsType.Date) {
+      dateCustom.setDate(nextValue, settingsChange);
     }
-    return DateCustomSetter.calcNewValueDateComponent(value, min, max, false, false);
+    return dateCustom;
   }
 
-  public static calcNewValueDateComponent = (
-    value: number,
-    min: number,
-    max: number,
-    isDiff: boolean = false,
-    isLoop: boolean = true,
-  ): DateComponent => {
-    if (!isLoop) {
-      return value < min ? min : value > max ? max : value;
+  public static shiftValueDateComponent(dateCustom: DateCustom, type: DateComponentsType, step: number): DateCustom {
+    if (type === DateComponentsType.Year) {
+      dateCustom.shiftYear(step);
+    } else if (type === DateComponentsType.Month) {
+      dateCustom.shiftMonth(step);
+    } else if (type === DateComponentsType.Date) {
+      dateCustom.shiftDate(step);
+    } else if (type === DateComponentsType.All) {
+      dateCustom.shiftDate(step);
     }
-    const diff = !isDiff ? 0 : (value < min ? min - value : value - max) - 1;
-    return value < min ? max - diff : value > max ? min + diff : value;
-  };
+    return dateCustom;
+  }
 }

@@ -12,15 +12,17 @@ storiesOf('DateInput', module)
       YMD - Slash
       <DateInput
         value="2012.10.21"
-        maxDate="2012.11.28"
+        minDate="2009.08.15"
         dateComponentsOrder={DateComponentsOrder.YMD}
         dateComponentsSeparator={DateComponentsSeparator.Slash}
       />
       <br/>
       MDY - Dash
       <DateInput
-        value="12.21.2012"
-        dateComponentsOrder={DateComponentsOrder.MDY}
+        value="21.12.2012"
+        maxDate="10.03.2012"
+        minDate="15.08.2009"
+        dateComponentsOrder={DateComponentsOrder.DMY}
         dateComponentsSeparator={DateComponentsSeparator.Dash}
       />
     </div>

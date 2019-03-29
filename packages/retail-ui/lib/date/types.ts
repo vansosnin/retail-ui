@@ -22,8 +22,9 @@ export enum DateComponentsType {
 
 export interface DateCustomFragment {
   type: DateComponentsType;
-  value: DateComponent | string;
+  value: DateComponentWrite;
   length: number;
+  isValid?: boolean;
 }
 
 export interface DateComponents {
@@ -33,9 +34,9 @@ export interface DateComponents {
 }
 
 export interface DateComponentsWrite {
-  date: DateComponent | string;
-  month: DateComponent | string;
-  year: DateComponent | string;
+  date: DateComponentWrite;
+  month: DateComponentWrite;
+  year: DateComponentWrite;
 }
 
 export interface DateComponentsNumber {
@@ -50,18 +51,25 @@ export interface DateComponentsWithPad {
   year: string;
 }
 
-export enum DateCustomActionType {
+export enum DateComponentActionType {
   Set,
   Shift,
   Clear,
 }
 
 export type DateComponent = number | null;
+export type DateComponentWrite = number | string | null;
 
 export interface DateToFragmentsSettings {
   order?: DateComponentsOrder;
   components?: DateComponentsWrite;
   separator?: DateComponentsSeparator;
   withSeparator?: boolean;
-  isPad?: boolean;
+  withPad?: boolean;
+  withValidation?: boolean;
+}
+
+export interface ChangeValueDateComponentSettings {
+  isLoop?: boolean;
+  isRange?: boolean;
 }

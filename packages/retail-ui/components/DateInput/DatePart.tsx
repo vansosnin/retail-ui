@@ -3,6 +3,7 @@ import { selectNodeContents } from './SelectionHelpers';
 
 export interface DatePartProps {
   selected?: boolean;
+  isValid?: boolean;
   children?: React.ReactNode;
   onDoubleClick?: (event: React.MouseEvent<HTMLSpanElement>) => void;
   onMouseDown?: (event: React.MouseEvent<HTMLSpanElement>) => void;
@@ -20,8 +21,9 @@ export class DatePart extends React.Component<DatePartProps> {
   }
 
   public render() {
+    const style = this.props.isValid === false ? {color: 'red'} : {};
     return (
-      <span ref={el => (this._node = el)} onMouseDown={this.props.onMouseDown} onDoubleClick={this.props.onDoubleClick}>
+      <span style={style} ref={el => (this._node = el)} onMouseDown={this.props.onMouseDown} onDoubleClick={this.props.onDoubleClick}>
         {this.props.children}
       </span>
     );
