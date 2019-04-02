@@ -1,28 +1,39 @@
-import { MAX_DATE, MAX_MONTH, MAX_YEAR, MIN_DATE, MIN_MONTH, MIN_YEAR } from './constants';
-import { DateCustom } from './DateCustom';
-import DateCustomTransformer from './DateCustomTransformer';
-import { DateComponentType } from './types';
+import DateCustomGetter from './DateCustomGetter';
+import { DateComponentType, DateCustomComponents, DateCustomComponentsRaw } from './types';
 
 export default class DateCustomValidator {
-  public static checkForNull(dateCustom: DateCustom) {
-    const { year, month, date } = dateCustom.getComponents();
+  public static checkForNull({ year, month, date }: DateCustomComponentsRaw, type?: DateComponentType) {
+    if (type !== undefined) {
+      if (type === DateComponentType.Year) {
+        return year !== null;
+      } else if (type === DateComponentType.Month) {
+        return month !== null;
+      }
+      return date !== null;
+    }
     return !(year === null || month === null || date === null);
   }
 
-  public static checkLimits(dateCustom: DateCustom): boolean {
-    const { year, month, date } = DateCustomTransformer.dateComponentsToNumber(dateCustom);
+  public static checkLimits({ year, month, date }: DateCustomComponents<number>, type?: DateComponentType): boolean {
+    if (type !== undefined) {
+      const value = type === DateComponentType.Year ? year : type === DateComponentType.Month ? month : date;
+
+      return (
+        value >= DateCustomGetter.getDefaultMin(type) &&
+        value <= DateCustomGetter.getDefaultMax(type)
+      );
+    }
     return (
-      year >= MIN_YEAR &&
-      year <= MAX_YEAR &&
-      month >= MIN_MONTH &&
-      month <= MAX_MONTH &&
-      date >= MIN_DATE &&
-      date <= MAX_DATE
+      year >= DateCustomGetter.getDefaultMin(DateComponentType.Year) &&
+      year <= DateCustomGetter.getDefaultMax(DateComponentType.Year) &&
+      month >= DateCustomGetter.getDefaultMin(DateComponentType.Month) &&
+      month <= DateCustomGetter.getDefaultMax(DateComponentType.Month) &&
+      date >= DateCustomGetter.getDefaultMin(DateComponentType.Date) &&
+      date <= DateCustomGetter.getDefaultMax(DateComponentType.Date)
     );
   }
 
-  public static compareWithNativeDate(dateCustom: DateCustom): boolean {
-    const { year, month, date } = DateCustomTransformer.dateComponentsToNumber(dateCustom);
+  public static compareWithNativeDate({ year, month, date }: DateCustomComponents<number>): boolean {
     const nativeDate: Date = new Date(Date.UTC(year, month - 1, date));
 
     return (
@@ -30,35 +41,27 @@ export default class DateCustomValidator {
     );
   }
 
-  public static checkRangeFully(dateCustom: DateCustom): boolean {
-    const start = dateCustom.getRangeStart();
-    const end = dateCustom.getRangeEnd();
-    if (start === null && end === null) {
+  public static checkRangeFully(date: number, startDate: number | null, endDate: number | null): boolean {
+    if (startDate === null && endDate === null) {
       return true;
     }
-    const date = dateCustom.toNumber();
-    const startDate = start ? start.toNumber() : -Infinity;
-    const endDate = end ? end.toNumber() : Infinity;
+    startDate = startDate || -Infinity;
+    endDate = endDate || Infinity;
     return date >= startDate && date <= endDate;
   }
 
-  public static checkRangePiecemeal(type: DateComponentType, dateCustom: DateCustom): boolean {
-    const start = dateCustom.getRangeStart();
-    const end = dateCustom.getRangeEnd();
-    if (start === null && end === null) {
+  public static checkRangePiecemeal(
+    type: DateComponentType,
+    { year, month, date }: DateCustomComponents<number>,
+    startComponents: DateCustomComponents<number> | null,
+    endComponents: DateCustomComponents<number> | null,
+  ): boolean {
+    if (startComponents === null && endComponents === null) {
       return true;
     }
-    const { year, month, date } = DateCustomTransformer.dateComponentsToNumber(dateCustom);
-    const {
-      year: startYear = -Infinity,
-      month: startMonth = -Infinity,
-      date: startDate = -Infinity,
-    } = DateCustomTransformer.dateComponentsToNumber(start);
-    const {
-      year: endYear = Infinity,
-      month: endMonth = Infinity,
-      date: endDate = Infinity,
-    } = DateCustomTransformer.dateComponentsToNumber(end);
+    const { year: startYear = -Infinity, month: startMonth = -Infinity, date: startDate = -Infinity } =
+      startComponents || {};
+    const { year: endYear = Infinity, month: endMonth = Infinity, date: endDate = Infinity } = endComponents || {};
 
     if (type === DateComponentType.Year) {
       return !(year < startYear || year > endYear);

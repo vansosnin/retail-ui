@@ -1,6 +1,6 @@
 import {
   CHAR_PAD,
-  defaultDateComponentsOrder,
+  defaultDateComponentsOrder, defaultDateComponentsSeparator,
   emptyDateComponents,
   LENGTH_DATE,
   LENGTH_MONTH,
@@ -9,8 +9,6 @@ import {
   RE_ORDER_MDY,
   RE_ORDER_YMD,
 } from './constants';
-import { DateCustom } from './DateCustom';
-import DateCustomValidator from './DateCustomValidator';
 import {
   DateCustomComponents,
   DateComponentsNumber,
@@ -18,7 +16,7 @@ import {
   DateComponentType,
   DateCustomComponentRaw,
   DateCustomFragment,
-  DateCustomToFragmentsSettings,
+  DateCustomToFragmentsSettings, DateCustomComponentsRaw,
 } from './types';
 
 export default class DateCustomTransformer {
@@ -30,29 +28,28 @@ export default class DateCustomTransformer {
   public static padDate = (date: DateCustomComponentRaw): string => DateCustomTransformer.padStart(date, LENGTH_DATE);
 
   public static dateToFragments = (
-    dateCustom: DateCustom,
+    components: DateCustomComponents,
     settings: DateCustomToFragmentsSettings = {},
   ): DateCustomFragment[] => {
     const {
-      order = dateCustom.getOrder(),
-      separator = dateCustom.getSeparator(),
+      order = defaultDateComponentsOrder,
+      separator = defaultDateComponentsSeparator,
       withSeparator = false,
       withPad = true,
-      withValidation = false,
     } = settings;
     const year: DateCustomFragment = {
       type: DateComponentType.Year,
-      value: dateCustom.getYear(),
+      value: components.year,
       length: LENGTH_YEAR,
     };
     const month: DateCustomFragment = {
       type: DateComponentType.Month,
-      value: dateCustom.getMonth(),
+      value: components.month,
       length: LENGTH_MONTH,
     };
     const date: DateCustomFragment = {
       type: DateComponentType.Date,
-      value: dateCustom.getDate(),
+      value: components.date,
       length: LENGTH_DATE,
     };
 
@@ -60,12 +57,6 @@ export default class DateCustomTransformer {
       year.valueWithPad = DateCustomTransformer.padYear(year.value);
       month.valueWithPad = DateCustomTransformer.padMonth(month.value);
       date.valueWithPad = DateCustomTransformer.padDate(date.value);
-    }
-
-    if (withValidation) {
-      year.isValid = DateCustomValidator.checkRangePiecemeal(DateComponentType.Year, dateCustom);
-      month.isValid = DateCustomValidator.checkRangePiecemeal(DateComponentType.Month, dateCustom);
-      date.isValid = DateCustomValidator.checkRangePiecemeal(DateComponentType.Date, dateCustom);
     }
 
     const fragments: DateCustomFragment[] = [];
@@ -102,7 +93,7 @@ export default class DateCustomTransformer {
     const match = DateCustomTransformer.getRegExpForParse(order).exec(value);
 
     if (match) {
-      const matchFinished = match.slice(1).map(item => (item ? Number(item) : null));
+      const matchFinished = match.slice(1).map(item => (item !== null && Number(item) || null));
       if (order === DateCustomOrder.YMD) {
         ({ 0: dateComponents.year, 1: dateComponents.month, 2: dateComponents.date } = matchFinished);
       } else if (order === DateCustomOrder.MDY) {
@@ -114,32 +105,11 @@ export default class DateCustomTransformer {
     return dateComponents;
   }
 
-  public static dateToString(dateCustom: DateCustom): string {
-    if (!DateCustomValidator.checkForNull(dateCustom)) {
-      return '';
-    }
-    return DateCustomTransformer.dateToFragments(dateCustom, { withSeparator: true })
-      .map(({ value }) => value)
-      .join('');
-  }
-
-  /**
-   * Перевод даты в числовое представление (**НЕ** аналог `timestamp`)
-   * Предназначено для быстрого сравнивания дат `<=>`
-   */
-  public static dateToNumber(dateCustom: DateCustom): number {
-    return Number(
-      DateCustomTransformer.dateToFragments(dateCustom, { order: DateCustomOrder.YMD, withValidation: false })
-        .map(({ valueWithPad }) => valueWithPad)
-        .join(''),
-    );
-  }
-
-  public static dateComponentsToNumber(dateCustom: DateCustom | null): DateComponentsNumber {
-    if (dateCustom === null) {
+  public static dateComponentsStringToNumber(componentsRaw: DateCustomComponentsRaw | null): DateComponentsNumber {
+    if (componentsRaw === null) {
       return { year: 0, month: 0, date: 0 };
     }
-    const { year, month, date } = dateCustom.getComponentsRaw();
+    const { year, month, date } = componentsRaw;
     return { year: Number(year), month: Number(month), date: Number(date) };
   }
 

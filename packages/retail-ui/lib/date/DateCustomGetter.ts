@@ -1,6 +1,6 @@
 import { MAX_DATE, MAX_MONTH, MAX_YEAR, MIN_DATE, MIN_MONTH, MIN_YEAR } from './constants';
 import { DateCustom } from './DateCustom';
-import { DateComponentType, DateCustomComponentsRaw, DateCustomComponentRaw } from './types';
+import { DateComponentType, DateCustomComponentsRaw, DateCustomComponentRaw, DateCustomComponents } from './types';
 
 export default class DateCustomGetter {
   public static max = (datesCustom: DateCustom[]): DateCustom =>
@@ -37,7 +37,7 @@ export default class DateCustomGetter {
     return null;
   }
 
-  public static getDefaultMinValueDateComponent(type: DateComponentType): number {
+  public static getDefaultMin(type: DateComponentType): number {
     if (type === DateComponentType.Year) {
       return MIN_YEAR;
     } else if (type === DateComponentType.Month) {
@@ -48,16 +48,16 @@ export default class DateCustomGetter {
     return MIN_DATE;
   }
 
-  public static getDefaultMaxValueDateComponent(type: DateComponentType, dateCustom?: DateCustom): number {
+  public static getDefaultMax(type: DateComponentType, components?: DateCustomComponents,): number {
     if (type === DateComponentType.Year) {
       return MAX_YEAR;
     } else if (type === DateComponentType.Month) {
       return MAX_MONTH;
     } else if (type === DateComponentType.Date) {
-      if (!dateCustom) {
+      if (components === undefined) {
         return MAX_DATE;
       }
-      const { year, month } = dateCustom.getComponents();
+      const { year, month } = components;
       return year && month ? DateCustomGetter.getMaxDaysInMonth(month, year) : MAX_DATE;
     }
     return MAX_DATE;

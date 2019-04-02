@@ -1,8 +1,8 @@
 
-export interface DateCustomComponents {
-  date: DateCustomComponent;
-  month: DateCustomComponent;
-  year: DateCustomComponent;
+export interface DateCustomComponents<T = DateCustomComponent> {
+  date: T;
+  month: T;
+  year: T;
 }
 
 export enum DateCustomOrder {
@@ -54,7 +54,6 @@ export interface DateCustomToFragmentsSettings {
   separator?: DateCustomSeparator;
   withSeparator?: boolean;
   withPad?: boolean;
-  withValidation?: boolean;
 }
 
 export interface DateCustomChangeValueDateComponentSettings {

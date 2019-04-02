@@ -1,7 +1,7 @@
 import CalendarIcon from '@skbkontur/react-icons/Calendar';
 import classNames from 'classnames';
 import * as React from 'react';
-import { defaultDateComponentsOrder, defaultDateComponentsSeparator } from '../../lib/date/constants';
+import { defaultDateComponentsOrder, defaultDateComponentsSeparator, MAX_MONTH } from '../../lib/date/constants';
 import { DateCustom } from '../../lib/date/DateCustom';
 import DateCustomTransformer from '../../lib/date/DateCustomTransformer';
 import {
@@ -373,7 +373,7 @@ class DateInput extends React.Component<DateInputProps, DateInputState> {
     // both setStates would be batched
     // because this handler was called by
     // react synthetic event
-    this.setState(setSelection(null));
+    // this.setState(setSelection(null));
     this.setState(
       state => {
         const hasDateEntry = state.date || state.month || state.year;
@@ -423,7 +423,12 @@ class DateInput extends React.Component<DateInputProps, DateInputState> {
     }
 
     if (action === Actions.Digit) {
-      this.inputValue(event);
+      event.persist();
+      if (!this.state.inputMode) {
+        this.setState({ inputMode: true }, () => this.inputValue(event));
+      } else {
+        this.inputValue(event);
+      }
     }
 
     if (action === Actions.ClearSelection) {
@@ -445,9 +450,17 @@ class DateInput extends React.Component<DateInputProps, DateInputState> {
 
   private handlePaste = (e: React.ClipboardEvent<HTMLElement>) => {
     e.preventDefault();
-    const parsed = tryParseDateString(e.clipboardData.getData('text'));
-    if (parsed) {
-      this.setState({ ...parsed, selectedDateComponent: DateComponentType.All });
+    const pasted = e.clipboardData.getData('text');
+    if (pasted) {
+      if (this.dateCustom.clone().parseValue(pasted).validate()) {
+        this.dateCustom.parseValue(pasted);
+        this.updateDateComponents();
+      }
+      console.log('pasted',
+        e.clipboardData.getData('text'),
+        this.dateCustom.clone().parseValue(e.clipboardData.getData('text')).validate(),
+      );
+      // this.setState({ ...parsed, selectedDateComponent: DateComponentType.All });
     }
   };
 
@@ -528,23 +541,33 @@ class DateInput extends React.Component<DateInputProps, DateInputState> {
   private clearDatePart() {
     console.log('clearDatePart');
     this.dateCustom.set(this.state.selectedDateComponent, null);
-    this.setState({ inputMode: true });
+    this.setState({
+      inputMode: true,
+      inputStarted: false
+    });
     this.updateDateComponents();
     // this.setState(clearDatePart);
   }
 
   private updateDatePartBy(step: number) {
-    this.setState({ inputMode: false });
+    this.setState({
+      inputMode: false,
+      inputStarted: false,
+    });
     this.dateCustom.shift(this.state.selectedDateComponent, step);
     this.updateDateComponents();
     // this.setState(updateDatePartBy(step));
   }
 
   private inputValue(event: React.KeyboardEvent<HTMLElement>) {
-    event.persist();
+    const key = Number(event.key);
+    console.log('key', key, event.key);
     const type = this.state.selectedDateComponent === null ? DateComponentType.Date : this.state.selectedDateComponent;
     const prevValue = this.dateCustom.get(type);
-    const nextValue = Number(`${prevValue || ''}${event.key}`.slice(-4));
+    let nextValue = Number(`${prevValue || ''}${key}`.slice(-4));
+    if (this.dateCustom.get(type) === null) {
+      this.setState({ inputStarted: true });
+    }
     // this.setState({
     //   inputMode: true,
     //   dateComponents: {
@@ -553,10 +576,22 @@ class DateInput extends React.Component<DateInputProps, DateInputState> {
     //   },
     // });
     this.dateCustom.set(type, nextValue);
+    if (this.state.selectedDateComponent === DateComponentType.Month) {
+      nextValue = this.state.inputStarted ? Number(`${prevValue || ''}${key}`.slice(-2)) : Number(key);
+      console.log('validate', nextValue, this.dateCustom.validate(DateComponentType.Month, nextValue));
+      if (
+        ((this.state.dateComponents.month === null || this.state.dateComponents.month === 0) &&
+          nextValue > 1) ||
+        nextValue > MAX_MONTH
+      ) {
+        this.moveSelection(1);
+        // this.dateCustom.restore();
+      }
+    }
     if (
-      this.state.selectedDateComponent === DateComponentType.Month &&
-      (this.state.dateComponents.month === null || this.state.dateComponents.month === 0) &&
-      event.key > '3'
+      this.state.selectedDateComponent === DateComponentType.Date &&
+      (this.state.dateComponents.date === null || this.state.dateComponents.date === 0) &&
+      key > 3
     ) {
       this.moveSelection(1);
       // this.dateCustom.restore();
@@ -580,23 +615,24 @@ class DateInput extends React.Component<DateInputProps, DateInputState> {
   }
 
   private moveSelection(step: number) {
-    this.setState({ inputMode: false });
     const { selectedDateComponent } = this.state;
     const index = selectedDateComponent === null ? 0 : this.dateCustomTypeOrder.indexOf(selectedDateComponent);
     const nextIndex = index + step;
     if (nextIndex >= 0 && nextIndex < this.dateCustomTypeOrder.length) {
-      this.setState({ selectedDateComponent: this.dateCustomTypeOrder[nextIndex] });
+      this.setState({
+        selectedDateComponent: this.dateCustomTypeOrder[nextIndex],
+        inputMode: false,
+        inputStarted: false,
+      });
     }
     // this.setState(moveSelectionBy(step));
   }
 
   private selectDateComponent(type: DateComponentType | null) {
     const selectedDateComponent =
-      type === DateComponentType.All
-        ? DateComponentType.All
-        : type === null
+      type === null
           ? this.dateCustomTypeOrder[0]
-          : this.dateCustomTypeOrder.indexOf(type);
+          : type;
     this.setState({ selectedDateComponent });
     // this.setState(setSelection(index), cb);
   }
@@ -616,6 +652,10 @@ class DateInput extends React.Component<DateInputProps, DateInputState> {
     this.blink();
     this.setState({ notify: false });
   }
+
+  private disableInputMode = () => {
+    this.setState({ inputMode: false });
+  };
 
   private updateDateComponents = (state: Partial<DateInputState> = {}) => {
     this.setState({
