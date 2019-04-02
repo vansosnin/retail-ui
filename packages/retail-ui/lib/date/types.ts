@@ -1,18 +1,24 @@
 
-export enum DateComponentsOrder {
+export interface DateCustomComponents {
+  date: DateCustomComponent;
+  month: DateCustomComponent;
+  year: DateCustomComponent;
+}
+
+export enum DateCustomOrder {
   DMY = 'DMY',
   YMD = 'YMD',
   MDY = 'MDY',
 }
 
-export enum DateComponentsSeparator {
+export enum DateCustomSeparator {
   Slash = '/',
   Dot = '.',
   Dash = '-',
   Space = ' ',
 }
 
-export enum DateComponentsType {
+export enum DateComponentType {
   Date = 0,
   Month = 1,
   Year = 2,
@@ -21,22 +27,17 @@ export enum DateComponentsType {
 }
 
 export interface DateCustomFragment {
-  type: DateComponentsType;
-  value: DateComponentWrite;
+  type: DateComponentType;
+  value: DateCustomComponentRaw;
   length: number;
+  valueWithPad?: string;
   isValid?: boolean;
 }
 
-export interface DateComponents {
-  date: DateComponent;
-  month: DateComponent;
-  year: DateComponent;
-}
-
-export interface DateComponentsWrite {
-  date: DateComponentWrite;
-  month: DateComponentWrite;
-  year: DateComponentWrite;
+export interface DateCustomComponentsRaw {
+  date: DateCustomComponentRaw;
+  month: DateCustomComponentRaw;
+  year: DateCustomComponentRaw;
 }
 
 export interface DateComponentsNumber {
@@ -45,31 +46,18 @@ export interface DateComponentsNumber {
   year: number;
 }
 
-export interface DateComponentsWithPad {
-  date: string;
-  month: string;
-  year: string;
-}
+export type DateCustomComponent = number | null;
+export type DateCustomComponentRaw = number | string | null;
 
-export enum DateComponentActionType {
-  Set,
-  Shift,
-  Clear,
-}
-
-export type DateComponent = number | null;
-export type DateComponentWrite = number | string | null;
-
-export interface DateToFragmentsSettings {
-  order?: DateComponentsOrder;
-  components?: DateComponentsWrite;
-  separator?: DateComponentsSeparator;
+export interface DateCustomToFragmentsSettings {
+  order?: DateCustomOrder;
+  separator?: DateCustomSeparator;
   withSeparator?: boolean;
   withPad?: boolean;
   withValidation?: boolean;
 }
 
-export interface ChangeValueDateComponentSettings {
+export interface DateCustomChangeValueDateComponentSettings {
   isLoop?: boolean;
   isRange?: boolean;
 }

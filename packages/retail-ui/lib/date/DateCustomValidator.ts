@@ -1,13 +1,28 @@
+import { MAX_DATE, MAX_MONTH, MAX_YEAR, MIN_DATE, MIN_MONTH, MIN_YEAR } from './constants';
 import { DateCustom } from './DateCustom';
 import DateCustomTransformer from './DateCustomTransformer';
-import { DateComponents, DateComponentsType } from './types';
+import { DateComponentType } from './types';
 
 export default class DateCustomValidator {
+  public static checkForNull(dateCustom: DateCustom) {
+    const { year, month, date } = dateCustom.getComponents();
+    return !(year === null || month === null || date === null);
+  }
+
+  public static checkLimits(dateCustom: DateCustom): boolean {
+    const { year, month, date } = DateCustomTransformer.dateComponentsToNumber(dateCustom);
+    return (
+      year >= MIN_YEAR &&
+      year <= MAX_YEAR &&
+      month >= MIN_MONTH &&
+      month <= MAX_MONTH &&
+      date >= MIN_DATE &&
+      date <= MAX_DATE
+    );
+  }
+
   public static compareWithNativeDate(dateCustom: DateCustom): boolean {
-    const { year, month, date }: DateComponents = dateCustom.getComponents();
-    if (year === null || month === null || date === null) {
-      return false;
-    }
+    const { year, month, date } = DateCustomTransformer.dateComponentsToNumber(dateCustom);
     const nativeDate: Date = new Date(Date.UTC(year, month - 1, date));
 
     return (
@@ -21,13 +36,13 @@ export default class DateCustomValidator {
     if (start === null && end === null) {
       return true;
     }
-    const currentNumber = dateCustom.toNumber();
-    const startNumber = start ? start.toNumber() : -Infinity;
-    const endNumber = end ? end.toNumber() : Infinity;
-    return currentNumber >= startNumber && currentNumber <= endNumber;
+    const date = dateCustom.toNumber();
+    const startDate = start ? start.toNumber() : -Infinity;
+    const endDate = end ? end.toNumber() : Infinity;
+    return date >= startDate && date <= endDate;
   }
 
-  public static checkRangePiecemeal(type: DateComponentsType, dateCustom: DateCustom): boolean {
+  public static checkRangePiecemeal(type: DateComponentType, dateCustom: DateCustom): boolean {
     const start = dateCustom.getRangeStart();
     const end = dateCustom.getRangeEnd();
     if (start === null && end === null) {
@@ -45,11 +60,11 @@ export default class DateCustomValidator {
       date: endDate = Infinity,
     } = DateCustomTransformer.dateComponentsToNumber(end);
 
-    if (type === DateComponentsType.Year) {
+    if (type === DateComponentType.Year) {
       return !(year < startYear || year > endYear);
-    } else if (type === DateComponentsType.Month) {
+    } else if (type === DateComponentType.Month) {
       return !((year === startYear && month < startMonth) || (year === endYear && month > endMonth));
-    } else if (type === DateComponentsType.Date) {
+    } else if (type === DateComponentType.Date) {
       return !(
         (year === startYear && month === startMonth && date < startDate) ||
         (year === endYear && month === endMonth && date > endDate)

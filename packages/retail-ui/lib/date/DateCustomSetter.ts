@@ -1,36 +1,38 @@
 import { DateCustom } from './DateCustom';
-import { DateComponent, DateComponentsType, ChangeValueDateComponentSettings, DateComponents } from './types';
+import {
+  DateComponentType,
+  DateCustomComponentRaw,
+  DateCustomComponentsRaw,
+} from './types';
 
 export default class DateCustomSetter {
   public static setValueDateComponent(
     dateCustom: DateCustom,
-    type: DateComponentsType,
-    nextValue: DateComponent | DateComponents,
-    settingsChange: ChangeValueDateComponentSettings,
+    type: DateComponentType,
+    nextValue: DateCustomComponentRaw | DateCustomComponentsRaw,
   ): DateCustom {
-    if (type === DateComponentsType.All) {
-      dateCustom.setComponents(nextValue as DateComponents);
-      return dateCustom
+    if (type === DateComponentType.All) {
+      dateCustom.setComponents(nextValue as DateCustomComponentsRaw);
+      return dateCustom;
     }
-    nextValue = nextValue !== null ? Number(nextValue) : null;
-    if (type === DateComponentsType.Year) {
-      dateCustom.setYear(nextValue, settingsChange);
-    } else if (type === DateComponentsType.Month) {
-      dateCustom.setMonth(nextValue, settingsChange);
-    } else if (type === DateComponentsType.Date) {
-      dateCustom.setDate(nextValue, settingsChange);
+    if (type === DateComponentType.Year) {
+      dateCustom.setYear(nextValue as DateCustomComponentRaw);
+    } else if (type === DateComponentType.Month) {
+      dateCustom.setMonth(nextValue as DateCustomComponentRaw);
+    } else if (type === DateComponentType.Date) {
+      dateCustom.setDate(nextValue as DateCustomComponentRaw);
     }
     return dateCustom;
   }
 
-  public static shiftValueDateComponent(dateCustom: DateCustom, type: DateComponentsType, step: number): DateCustom {
-    if (type === DateComponentsType.Year) {
+  public static shiftValueDateComponent(dateCustom: DateCustom, type: DateComponentType, step: number): DateCustom {
+    if (type === DateComponentType.Year) {
       dateCustom.shiftYear(step);
-    } else if (type === DateComponentsType.Month) {
+    } else if (type === DateComponentType.Month) {
       dateCustom.shiftMonth(step);
-    } else if (type === DateComponentsType.Date) {
+    } else if (type === DateComponentType.Date) {
       dateCustom.shiftDate(step);
-    } else if (type === DateComponentsType.All) {
+    } else if (type === DateComponentType.All) {
       dateCustom.shiftDate(step);
     }
     return dateCustom;

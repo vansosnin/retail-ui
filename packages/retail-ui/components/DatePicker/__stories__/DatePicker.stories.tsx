@@ -3,7 +3,7 @@ import { storiesOf } from '@storybook/react';
 import * as React from 'react';
 import { DateCustom } from '../../../lib/date/DateCustom';
 import DateCustomTransformer from '../../../lib/date/DateCustomTransformer';
-import { DateComponentsOrder, DateComponentsSeparator } from '../../../lib/date/types';
+import { DateCustomOrder, DateCustomSeparator } from '../../../lib/date/types';
 // tslint:disable:jsx-no-lambda no-console
 import Button from '../../Button/index';
 import Gapped from '../../Gapped/index';
@@ -120,10 +120,10 @@ storiesOf('DatePicker', module)
     };
     const value = `2019/09/01`;
 
-    const DVF = new DateCustom(DateComponentsOrder.MDY, DateComponentsSeparator.Dash);
-    const DVF2 = new DateCustom(DateComponentsOrder.MDY, DateComponentsSeparator.Dash);
-    const DVF3 = new DateCustom(DateComponentsOrder.MDY, DateComponentsSeparator.Dash);
-    const DVFLEAP = new DateCustom(DateComponentsOrder.YMD);
+    const DVF = new DateCustom(DateCustomOrder.MDY, DateCustomSeparator.Dash);
+    const DVF2 = new DateCustom(DateCustomOrder.MDY, DateCustomSeparator.Dash);
+    const DVF3 = new DateCustom(DateCustomOrder.MDY, DateCustomSeparator.Dash);
+    const DVFLEAP = new DateCustom(DateCustomOrder.YMD);
     DVF.setComponents(DateCustomTransformer.parseValueToDate('09 02 2011'));
     DVF2.setComponents(DateCustomTransformer.parseValueToDate('08 21 2012'));
     DVF3.setComponents(DateCustomTransformer.parseValueToDate('09 02 2013'));

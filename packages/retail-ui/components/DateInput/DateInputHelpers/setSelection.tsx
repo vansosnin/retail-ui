@@ -1,4 +1,4 @@
-import { DateComponentsType } from '../../../lib/date/types';
+import { DateComponentType } from '../../../lib/date/types';
 import { Shape } from '../../../typings/utility-types';
 
 import { DateInputState, DateParts } from '../DateInput';
@@ -10,22 +10,22 @@ export const setSelection = (index: number | null) => (state: Readonly<DateInput
     selectedDateComponent: index != null ? Math.max(DateParts.Date, Math.min(DateParts.All, index)) : null,
   };
   switch (state.selectedDateComponent || 0) {
-    case DateComponentsType.Date:
+    case DateComponentType.Date:
       return {
         ...commonChanges,
         date: state.date ? state.date.padStart(2, '0') : null,
       } as Shape<DateInputState>;
-    case DateComponentsType.Month:
+    case DateComponentType.Month:
       return {
         ...commonChanges,
         month: state.month ? state.month.padStart(2, '0') : null,
       } as Shape<DateInputState>;
-    case DateComponentsType.Year:
+    case DateComponentType.Year:
       return {
         ...commonChanges,
         year: state.year ? restoreYear(state.year) : null,
       } as Shape<DateInputState>;
-    case DateComponentsType.All:
+    case DateComponentType.All:
     case null:
     default:
       return commonChanges as Shape<DateInputState>;

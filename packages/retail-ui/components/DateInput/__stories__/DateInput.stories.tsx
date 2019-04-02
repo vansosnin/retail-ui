@@ -1,6 +1,6 @@
 import { storiesOf } from '@storybook/react';
 import React from 'react';
-import { DateComponentsOrder, DateComponentsSeparator } from '../../../lib/date/types';
+import { DateCustomOrder, DateCustomSeparator } from '../../../lib/date/types';
 import DateInput from '../DateInput';
 
 storiesOf('DateInput', module)
@@ -11,10 +11,11 @@ storiesOf('DateInput', module)
     <div>
       YMD - Slash
       <DateInput
-        value="2012.10.21"
-        minDate="2009.08.15"
-        dateComponentsOrder={DateComponentsOrder.YMD}
-        dateComponentsSeparator={DateComponentsSeparator.Slash}
+        value="2006.10.21"
+        maxDate="2008.10.21"
+        minDate="2004.08.15"
+        dateComponentsOrder={DateCustomOrder.YMD}
+        dateComponentsSeparator={DateCustomSeparator.Slash}
       />
       <br/>
       MDY - Dash
@@ -22,8 +23,8 @@ storiesOf('DateInput', module)
         value="21.12.2012"
         maxDate="10.03.2012"
         minDate="15.08.2009"
-        dateComponentsOrder={DateComponentsOrder.DMY}
-        dateComponentsSeparator={DateComponentsSeparator.Dash}
+        dateComponentsOrder={DateCustomOrder.DMY}
+        dateComponentsSeparator={DateCustomSeparator.Dash}
       />
     </div>
   ));

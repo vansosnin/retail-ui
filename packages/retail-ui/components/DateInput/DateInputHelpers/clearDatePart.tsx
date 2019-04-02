@@ -1,31 +1,31 @@
-import { DateComponentsType } from '../../../lib/date/types';
+import { DateComponentType } from '../../../lib/date/types';
 import { Shape } from '../../../typings/utility-types';
 import { DateInputState } from '../DateInput';
 
 export const clearDatePart = (state: DateInputState): Shape<DateInputState> => {
   switch (state.selectedDateComponent) {
-    case DateComponentsType.Date:
+    case DateComponentType.Date:
       return {
         date: null,
         editingCharIndex: 0,
       } as Shape<DateInputState>;
-    case DateComponentsType.Month:
+    case DateComponentType.Month:
       return {
         month: null,
         editingCharIndex: 0,
 
         // Handling multiple Backspace presses
-        selectedDateComponent: state.month ? DateComponentsType.Month : DateComponentsType.Date,
+        selectedDateComponent: state.month ? DateComponentType.Month : DateComponentType.Date,
       } as Shape<DateInputState>;
-    case DateComponentsType.Year:
+    case DateComponentType.Year:
       return {
         year: null,
         editingCharIndex: 0,
 
         // Handling multiple Backspace presses
-        selectedDateComponent: state.year ? DateComponentsType.Year : DateComponentsType.Month,
+        selectedDateComponent: state.year ? DateComponentType.Year : DateComponentType.Month,
       } as Shape<DateInputState>;
-    case DateComponentsType.All:
+    case DateComponentType.All:
     default:
       return {
         date: null,
@@ -33,7 +33,7 @@ export const clearDatePart = (state: DateInputState): Shape<DateInputState> => {
         year: null,
         editingCharIndex: 0,
 
-        selectedDateComponent: DateComponentsType.Date,
+        selectedDateComponent: DateComponentType.Date,
       } as Shape<DateInputState>;
   }
 };

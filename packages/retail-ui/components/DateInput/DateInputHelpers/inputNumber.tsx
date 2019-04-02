@@ -1,5 +1,5 @@
 import { DateCustom } from '../../../lib/date/DateCustom';
-import { DateComponentsType } from '../../../lib/date/types';
+import { DateComponentType } from '../../../lib/date/types';
 import { Shape } from '../../../typings/utility-types';
 import { DateInputState } from '../DateInput';
 import { clearDatePart } from './clearDatePart';
@@ -7,13 +7,13 @@ import { clearDatePart } from './clearDatePart';
 export const inputNumber = (key: string, dateCustom: DateCustom, updateDateComponents: () => void) => {
   return (state: DateInputState): Shape<DateInputState> => {
     switch (state.selectedDateComponent) {
-      case DateComponentsType.Date:
+      case DateComponentType.Date:
         return updateDate(key, state, dateCustom, updateDateComponents);
-      case DateComponentsType.Month:
+      case DateComponentType.Month:
         return updateMonth(key, state, dateCustom, updateDateComponents);
-      case DateComponentsType.Year:
+      case DateComponentType.Year:
         return updateYear(key, state, dateCustom, updateDateComponents);
-      case DateComponentsType.All:
+      case DateComponentType.All:
       default:
         const tempState = { ...state, ...clearDatePart(state) };
         return { ...tempState, ...inputNumber(key, dateCustom, updateDateComponents)(tempState) };
@@ -32,7 +32,7 @@ const updateDate = (key: string, state: DateInputState, dateCustom: DateCustom, 
         date: '0' + key,
         editingCharIndex: 0,
 
-        selectedDateComponent: DateComponentsType.Month,
+        selectedDateComponent: DateComponentType.Month,
       } as Shape<DateInputState>;
     }
     return {
@@ -49,7 +49,7 @@ const updateDate = (key: string, state: DateInputState, dateCustom: DateCustom, 
     date: d.toString().padStart(2, '0'),
     editingCharIndex: 0,
 
-    selectedDateComponent: DateComponentsType.Month,
+    selectedDateComponent: DateComponentType.Month,
   } as Shape<DateInputState>;
 };
 
@@ -64,7 +64,7 @@ const updateMonth = (key: string, state: DateInputState, dateCustom: DateCustom,
         month: '0' + key,
         editingCharIndex: 0,
 
-        selectedDateComponent: DateComponentsType.Year,
+        selectedDateComponent: DateComponentType.Year,
       } as Shape<DateInputState>;
     }
     return {
@@ -80,7 +80,7 @@ const updateMonth = (key: string, state: DateInputState, dateCustom: DateCustom,
     month: m.toString().padStart(2, '0'),
     editingCharIndex: 0,
 
-    selectedDateComponent: DateComponentsType.Year,
+    selectedDateComponent: DateComponentType.Year,
   } as Shape<DateInputState>;
 };
 

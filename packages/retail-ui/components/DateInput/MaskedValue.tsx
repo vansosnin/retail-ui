@@ -13,7 +13,7 @@ export const MaskedValue = ({ value, length }: MaskedValueProps) => {
     return <Mask length={length} />;
   }
   const left = value.toString();
-  const right = <Mask length={length - left.length} />;
+  const right = <Mask length={Math.max(length - left.length, 0)} />;
   return (
     <span>
       {left}

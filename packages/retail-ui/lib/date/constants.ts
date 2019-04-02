@@ -1,4 +1,4 @@
-import { DateComponentsOrder, DateComponentsSeparator } from './types';
+import { DateCustomOrder, DateCustomSeparator } from './types';
 
 export const MIN_YEAR = 1900;
 export const MAX_YEAR = 2100;
@@ -21,8 +21,8 @@ export const RE_ORDER_YMD = new RegExp(
   `(\\d{1,${LENGTH_YEAR}})?${RE_SEPARATOR}?(\\d{1,${LENGTH_MONTH}})?${RE_SEPARATOR}?(\\d{1,${LENGTH_DATE}})?`,
 );
 
-export const defaultDateComponentsOrder = DateComponentsOrder.DMY;
-export const defaultDateComponentsSeparator = DateComponentsSeparator.Dot;
+export const defaultDateComponentsOrder = DateCustomOrder.DMY;
+export const defaultDateComponentsSeparator = DateCustomSeparator.Dot;
 export const emptyDateComponents = {
   year: null,
   month: null,
