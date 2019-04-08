@@ -1,6 +1,6 @@
 import { MAX_DATE, MAX_MONTH, MAX_YEAR, MIN_DATE, MIN_MONTH, MIN_YEAR } from './constants';
 import { DateCustom } from './DateCustom';
-import { DateComponentType, DateCustomComponentsRaw, DateCustomComponentRaw, DateCustomComponents } from './types';
+import { DateCustomComponentType, DateCustomComponentsRaw, DateCustomComponentRaw, DateCustomComponents } from './types';
 
 export default class DateCustomGetter {
   public static max = (datesCustom: DateCustom[]): DateCustom =>
@@ -21,34 +21,34 @@ export default class DateCustomGetter {
   }
 
   public static getValueDateComponent(
-    type: DateComponentType | null,
+    type: DateCustomComponentType | null,
     components: DateCustomComponentsRaw
   ): DateCustomComponentRaw {
-    if (type === DateComponentType.Year) {
+    if (type === DateCustomComponentType.Year) {
       return components.year;
-    } else if (type === DateComponentType.Month) {
+    } else if (type === DateCustomComponentType.Month) {
       return components.month;
     }
     return components.date;
   }
 
-  public static getDefaultMin(type: DateComponentType): number {
-    if (type === DateComponentType.Year) {
+  public static getDefaultMin(type: DateCustomComponentType): number {
+    if (type === DateCustomComponentType.Year) {
       return MIN_YEAR;
-    } else if (type === DateComponentType.Month) {
+    } else if (type === DateCustomComponentType.Month) {
       return MIN_MONTH;
-    } else if (type === DateComponentType.Date) {
+    } else if (type === DateCustomComponentType.Date) {
       return MIN_DATE;
     }
     return MIN_DATE;
   }
 
-  public static getDefaultMax(type: DateComponentType, components?: DateCustomComponents): number {
-    if (type === DateComponentType.Year) {
+  public static getDefaultMax(type: DateCustomComponentType, components?: DateCustomComponents): number {
+    if (type === DateCustomComponentType.Year) {
       return MAX_YEAR;
-    } else if (type === DateComponentType.Month) {
+    } else if (type === DateCustomComponentType.Month) {
       return MAX_MONTH;
-    } else if (type === DateComponentType.Date) {
+    } else if (type === DateCustomComponentType.Date) {
       if (components === undefined) {
         return MAX_DATE;
       }

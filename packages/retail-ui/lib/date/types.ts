@@ -12,7 +12,7 @@ export enum DateCustomSeparator {
   Space = ' ',
 }
 
-export enum DateComponentType {
+export enum DateCustomComponentType {
   Date = 0,
   Month = 1,
   Year = 2,
@@ -24,7 +24,7 @@ export type DateCustomComponent = number | null;
 export type DateCustomComponentRaw = number | string | null;
 
 export interface DateCustomFragment {
-  type: DateComponentType;
+  type: DateCustomComponentType;
   value: DateCustomComponentRaw | DateCustomSeparator;
   length: number;
   valueWithPad?: string;
@@ -59,4 +59,11 @@ export interface DateCustomToFragmentsSettings {
 export interface DateCustomChangeValueDateComponentSettings {
   isLoop?: boolean;
   isRange?: boolean;
+}
+
+export enum DateCustomValidateCheck {
+  NotNull,
+  Limits,
+  Native,
+  Range,
 }

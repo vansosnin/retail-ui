@@ -19,5 +19,7 @@ export const selectNodeContents = (node: HTMLElement) => {
 };
 
 export const removeAllSelections = () => {
-  window.getSelection().removeAllRanges();
+  if (typeof window.getSelection === 'function') {
+    window.getSelection().removeAllRanges();
+  }
 };

@@ -3,7 +3,13 @@ import classNames from 'classnames';
 import * as React from 'react';
 import { defaultDateComponentsOrder, defaultDateComponentsSeparator } from '../../lib/date/constants';
 import { DateCustom } from '../../lib/date/DateCustom';
-import { DateComponentType, DateCustomComponent, DateCustomOrder, DateCustomSeparator } from '../../lib/date/types';
+import {
+  DateCustomComponentType,
+  DateCustomComponent,
+  DateCustomOrder,
+  DateCustomSeparator,
+  DateCustomValidateCheck,
+} from '../../lib/date/types';
 import Upgrades from '../../lib/Upgrades';
 
 import { Nullable } from '../../typings/utility-types';
@@ -21,8 +27,8 @@ import { removeAllSelections, selectNodeContents } from './SelectionHelpers';
 export interface DateInputState {
   notify: boolean;
   dateWasChanged: boolean;
-  selected: DateComponentType | null;
-  dateComponents: string;
+  selected: DateCustomComponentType | null;
+  dateValue: string;
   inputMode: boolean;
 }
 
@@ -38,7 +44,7 @@ export interface DateInputProps {
   size?: 'small' | 'large' | 'medium';
   onBlur?: (x0: React.FocusEvent<HTMLElement>) => void;
   onFocus?: (x0: React.FocusEvent<HTMLElement>) => void;
-  onChange?: (x0: { target: { value: string } }, x1: string, x2?: DateCustom) => void;
+  onChange?: (x0: { target: { value: string } }, x1: string) => void;
   onKeyDown?: (x0: React.KeyboardEvent<HTMLElement>) => void;
   dateComponentsOrder?: DateCustomOrder;
   dateComponentsSeparator?: DateCustomSeparator;
@@ -71,7 +77,7 @@ export default class DateInput extends React.PureComponent<DateInputProps, DateI
   private isFocused: boolean = false;
 
   private readonly dateCustom: DateCustom;
-  private readonly dateCustomTypeOrder: DateComponentType[];
+  private readonly dateCustomTypeOrder: DateCustomComponentType[];
 
   constructor(props: DateInputProps) {
     super(props);
@@ -84,7 +90,7 @@ export default class DateInput extends React.PureComponent<DateInputProps, DateI
       dateWasChanged: false,
 
       selected: null,
-      dateComponents: this.dateCustom.toString(),
+      dateValue: this.dateCustom.toString({ withPad: false, withSeparator: false }),
       inputMode: false,
     };
   }
@@ -97,15 +103,15 @@ export default class DateInput extends React.PureComponent<DateInputProps, DateI
   }
 
   public componentDidUpdate(prevProps: DateInputProps, prevState: DateInputState) {
-    if (prevState.dateComponents !== this.state.dateComponents) {
+    if (prevState.dateValue !== this.state.dateValue) {
       this.setState({ dateWasChanged: true });
 
       this.emitChange();
     }
 
-    if (this.state.selected === DateComponentType.All) {
+    if (this.state.selected === DateCustomComponentType.All) {
       this.selectAll();
-    } else if (prevState.selected === DateComponentType.All) {
+    } else if (prevState.selected === DateCustomComponentType.All) {
       removeAllSelections();
     }
 
@@ -139,8 +145,15 @@ export default class DateInput extends React.PureComponent<DateInputProps, DateI
   }
 
   public render() {
-    const { selected, inputMode } = this.state;
+    const { selected, inputMode, dateValue } = this.state;
     const isValid = this.dateCustom.validate();
+    const fragments =
+      !this.isFocused && dateValue === ''
+        ? []
+        : this.dateCustom.toFragments({
+            withSeparator: true,
+            withPad: true,
+          });
 
     return (
       <InputLikeText
@@ -161,42 +174,38 @@ export default class DateInput extends React.PureComponent<DateInputProps, DateI
       >
         {
           <div ref={el => (this.divInnerNode = el)} onDoubleClick={this.onDoubleClick} className={styles.root}>
-            {this.dateCustom
-              .toFragments({
-                withSeparator: true,
-                withPad: true,
-              })
-              .map(({ type, value, length, valueWithPad, isValid: isValidFragment }, index) => {
-                if (type === DateComponentType.Separator) {
-                  return (
-                    <span key={type + index.toString()} className={styles.delimiter}>
-                      {value}
-                    </span>
-                  );
-                } else {
-                  value = value === null || (selected === type && inputMode) ? value : valueWithPad || value;
-                  const classComponent = classNames(styles.component, {
-                    [styles.selected]: selected === type,
-                  });
-                  return (
-                    <span
-                      key={type}
-                      className={classComponent}
-                      onMouseDown={this.onMouseDownComponent(type)}
-                      data-isvalidfragment={isValidFragment}
-                    >
-                      <MaskedValue value={value} length={length} />
-                    </span>
-                  );
-                }
-              })}
+            {fragments.map(({ type, value, length, valueWithPad, isValid: isValidFragment }, index) => {
+              if (type === DateCustomComponentType.Separator) {
+                return (
+                  <span key={type + index.toString()} className={styles.delimiter}>
+                    {value}
+                  </span>
+                );
+              } else {
+                value = value === null || (selected === type && inputMode) ? value : valueWithPad || value;
+                const classComponent = classNames(styles.component, {
+                  [styles.selected]: selected === type,
+                  [styles.invalid]: !isValid,
+                });
+                return (
+                  <span
+                    key={type}
+                    className={classComponent}
+                    onMouseDown={this.onMouseDownComponent(type)}
+                    data-isvalidfragment={isValidFragment}
+                  >
+                    <MaskedValue value={value} length={length} />
+                  </span>
+                );
+              }
+            })}
           </div>
         }
       </InputLikeText>
     );
   }
 
-  private onMouseDownComponent = (type: DateComponentType) => () => this.selectDateComponent(type);
+  private onMouseDownComponent = (type: DateCustomComponentType) => () => this.selectDateComponent(type);
 
   private updateDateCustom(props: DateInputProps) {
     this.dateCustom
@@ -258,7 +267,7 @@ export default class DateInput extends React.PureComponent<DateInputProps, DateI
     // as props.onBlur would be called in async way
     event.persist();
 
-    this.setState({ selected: null }, () => {
+    this.setState({ selected: null, inputMode: false }, () => {
       removeAllSelections();
       if (this.props.onBlur) {
         this.props.onBlur(event);
@@ -305,12 +314,12 @@ export default class DateInput extends React.PureComponent<DateInputProps, DateI
     }
 
     if (action === Actions.ClearSelection) {
-      this.clearDatePart();
+      this.clearDateComponent();
     }
 
     if (action === Actions.FullSelection) {
       event.preventDefault();
-      this.selectDateComponent(DateComponentType.All);
+      this.selectDateComponent(DateCustomComponentType.All);
     }
 
     if (action === Actions.Separator) {
@@ -332,22 +341,22 @@ export default class DateInput extends React.PureComponent<DateInputProps, DateI
   };
 
   private handleSeparatorKey() {
-    if (this.state.dateWasChanged) {
+    if (this.state.inputMode && this.dateCustom.get(this.state.selected) !== null) {
       this.moveSelection(1);
     }
   }
 
   private emitChange() {
-    const value = this.dateCustom.toString(true);
+    const value = this.dateCustom.toString({ withPad: true, withSeparator: true });
     if (this.props.value === value) {
       return;
     }
-    if (this.props.onChange && this.dateCustom.validate()) {
-      this.props.onChange({ target: { value } }, value, this.dateCustom);
+    if (this.props.onChange && this.dateCustom.validate({ levels: [DateCustomValidateCheck.Range] })) {
+      this.props.onChange({ target: { value } }, value);
     }
   }
 
-  private clearDatePart() {
+  private clearDateComponent() {
     this.dateCustom.set(this.state.selected, null);
     this.setState({
       inputMode: true,
@@ -360,7 +369,7 @@ export default class DateInput extends React.PureComponent<DateInputProps, DateI
     this.dateCustom.shift(selected, step);
     this.updateDateComponents({
       inputMode: false,
-      selected: selected === DateComponentType.All ? DateComponentType.Date : selected,
+      selected: selected === DateCustomComponentType.All ? DateCustomComponentType.Date : selected,
     });
   }
 
@@ -372,7 +381,11 @@ export default class DateInput extends React.PureComponent<DateInputProps, DateI
     const inputNumberCallBack = (next: DateCustomComponent, inputMode: boolean) => {
       this.dateCustom.set(type, next);
       if (!inputMode) {
-        if (this.dateCustom.validate()) {
+        if (
+          this.dateCustom.validate({
+            levels: [DateCustomValidateCheck.Native, DateCustomValidateCheck.Range],
+          })
+        ) {
           this.moveSelection(1);
         }
       }
@@ -386,7 +399,7 @@ export default class DateInput extends React.PureComponent<DateInputProps, DateI
     const index = selected === null ? 0 : this.dateCustomTypeOrder.indexOf(selected);
     let nextIndex = index + step;
     removeAllSelections();
-    if (selected === DateComponentType.All) {
+    if (selected === DateCustomComponentType.All) {
       nextIndex = step > 0 ? 0 : this.dateCustomTypeOrder.length - 1;
     }
     if (nextIndex >= 0 && nextIndex < this.dateCustomTypeOrder.length) {
@@ -398,7 +411,7 @@ export default class DateInput extends React.PureComponent<DateInputProps, DateI
     }
   }
 
-  private selectDateComponent = (type: DateComponentType | null) => {
+  private selectDateComponent = (type: DateCustomComponentType | null) => {
     if (this.isFrozen) {
       return;
     }
@@ -424,7 +437,7 @@ export default class DateInput extends React.PureComponent<DateInputProps, DateI
   }
 
   private onDoubleClick = () => {
-    this.selectDateComponent(DateComponentType.All);
+    this.selectDateComponent(DateCustomComponentType.All);
   };
 
   private notify() {
@@ -434,7 +447,7 @@ export default class DateInput extends React.PureComponent<DateInputProps, DateI
 
   private updateDateComponents = (state: Partial<DateInputState> = {}) => {
     this.setState({
-      dateComponents: this.dateCustom.toString(),
+      dateValue: this.dateCustom.toString({ withSeparator: false, withPad: false }),
       ...state,
     } as DateInputState);
   };

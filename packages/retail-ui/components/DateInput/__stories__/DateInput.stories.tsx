@@ -20,9 +20,9 @@ storiesOf('DateInput', module)
       <br/>
       MDY - Dash
       <DateInput
-        value="21.12.2012"
-        maxDate="10.03.2012"
-        minDate="15.08.2009"
+        value=""
+        // maxDate="10.03.2012"
+        // minDate="15.08.2009"
         dateComponentsOrder={DateCustomOrder.DMY}
         dateComponentsSeparator={DateCustomSeparator.Dash}
       />

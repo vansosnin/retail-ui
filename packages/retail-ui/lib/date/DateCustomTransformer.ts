@@ -13,7 +13,7 @@ import {
 } from './constants';
 import DateCustomValidator from './DateCustomValidator';
 import {
-  DateComponentType,
+  DateCustomComponentType,
   DateCustomComponentRaw,
   DateCustomComponents,
   DateCustomComponentsNumber,
@@ -32,6 +32,15 @@ export default class DateCustomTransformer {
     DateCustomTransformer.padStart(month, LENGTH_MONTH);
   public static padDate = (date: DateCustomComponentRaw): string => DateCustomTransformer.padStart(date, LENGTH_DATE);
 
+  public static padDateComponent = (type: DateCustomComponentType, value: DateCustomComponentRaw): string => {
+    if (type === DateCustomComponentType.Year) {
+      return DateCustomTransformer.padYear(value);
+    } else if (type === DateCustomComponentType.Month) {
+      return DateCustomTransformer.padMonth(value);
+    }
+    return DateCustomTransformer.padDate(value);
+  };
+
   public static dateToFragments(
     components: DateCustomComponentsRaw,
     settings: DateCustomToFragmentsSettings = {},
@@ -43,17 +52,17 @@ export default class DateCustomTransformer {
       withPad = false,
     } = settings;
     const year: DateCustomFragment = {
-      type: DateComponentType.Year,
+      type: DateCustomComponentType.Year,
       value: components.year,
       length: LENGTH_YEAR,
     };
     const month: DateCustomFragment = {
-      type: DateComponentType.Month,
+      type: DateCustomComponentType.Month,
       value: components.month,
       length: LENGTH_MONTH,
     };
     const date: DateCustomFragment = {
-      type: DateComponentType.Date,
+      type: DateCustomComponentType.Date,
       value: components.date,
       length: LENGTH_DATE,
     };
@@ -73,16 +82,13 @@ export default class DateCustomTransformer {
       date.valueWithPad = DateCustomTransformer.padDate(date.value);
     }
 
-    // if (withValid) {
-    //   const componentsNumber = DateCustomTransformer.dateComponentsStringToNumber(components);
-      year.isValid = DateCustomValidator.testParseToNumber(year.value);
-      month.isValid = DateCustomValidator.testParseToNumber(month.value);
-      date.isValid = DateCustomValidator.testParseToNumber(date.value);
-    // }
+    year.isValid = DateCustomValidator.testParseToNumber(year.value);
+    month.isValid = DateCustomValidator.testParseToNumber(month.value);
+    date.isValid = DateCustomValidator.testParseToNumber(date.value);
 
     if (withSeparator) {
       const separatorFragment: DateCustomFragment = {
-        type: DateComponentType.Separator,
+        type: DateCustomComponentType.Separator,
         value: separator,
         length: LENGTH_SEPARATOR,
       };
@@ -91,20 +97,23 @@ export default class DateCustomTransformer {
     }
 
     return fragments;
-  };
+  }
 
   public static parseValueToDate(
     value: string | null,
     order: DateCustomOrder = defaultDateComponentsOrder,
-  ): DateCustomComponents {
-    const dateComponents: DateCustomComponents = { ...emptyDateComponents };
+  ): DateCustomComponents | null {
     if (!value) {
-      return dateComponents;
+      return null;
     }
 
     const re =
       order === DateCustomOrder.MDY ? RE_ORDER_MDY : order === DateCustomOrder.DMY ? RE_ORDER_DMY : RE_ORDER_YMD;
+    if (!re.test(value)) {
+      return null;
+    }
     const match = re.exec(value);
+    const dateComponents: DateCustomComponents = { ...emptyDateComponents };
 
     if (match) {
       const matchFinished = match.slice(1).map(item => (item !== null && Number(item)) || null);

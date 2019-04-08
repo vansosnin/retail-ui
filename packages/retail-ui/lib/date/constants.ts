@@ -13,13 +13,13 @@ export const LENGTH_SEPARATOR = 1;
 export const CHAR_PAD = '0';
 export const RE_SEPARATOR = `(?:\\.|\\/|\\-|\\s)`;
 export const RE_ORDER_MDY = new RegExp(
-  `(\\d{1,${LENGTH_MONTH}})?${RE_SEPARATOR}?(\\d{1,${LENGTH_DATE}})?${RE_SEPARATOR}?(\\d{1,${LENGTH_YEAR}})?`,
+  `^(\\d{1,${LENGTH_MONTH}})?${RE_SEPARATOR}?(\\d{1,${LENGTH_DATE}})?${RE_SEPARATOR}?(\\d{1,${LENGTH_YEAR}})?$`,
 );
 export const RE_ORDER_DMY = new RegExp(
-  `(\\d{1,${LENGTH_DATE}})?${RE_SEPARATOR}?(\\d{1,${LENGTH_MONTH}})?${RE_SEPARATOR}?(\\d{1,${LENGTH_YEAR}})?`,
+  `^(\\d{1,${LENGTH_DATE}})?${RE_SEPARATOR}?(\\d{1,${LENGTH_MONTH}})?${RE_SEPARATOR}?(\\d{1,${LENGTH_YEAR}})?$`,
 );
 export const RE_ORDER_YMD = new RegExp(
-  `(\\d{1,${LENGTH_YEAR}})?${RE_SEPARATOR}?(\\d{1,${LENGTH_MONTH}})?${RE_SEPARATOR}?(\\d{1,${LENGTH_DATE}})?`,
+  `^(\\d{1,${LENGTH_YEAR}})?${RE_SEPARATOR}?(\\d{1,${LENGTH_MONTH}})?${RE_SEPARATOR}?(\\d{1,${LENGTH_DATE}})?$`,
 );
 
 export const defaultDateComponentsOrder = DateCustomOrder.DMY;

@@ -1,29 +1,29 @@
 import { DateCustom } from './DateCustom';
 import DateCustomGetter from './DateCustomGetter';
-import { DateComponentType, DateCustomComponent, DateCustomComponentRaw, DateCustomComponents } from './types';
+import { DateCustomComponentType, DateCustomComponent, DateCustomComponentRaw, DateCustomComponents } from './types';
 
 export default class DateCustomCalculator {
   public static calcRangeStartDateComponent(
-    type: DateComponentType,
+    type: DateCustomComponentType,
     { year, month, date }: DateCustomComponents,
     { year: startYear, month: startMonth, date: startDate }: DateCustomComponents,
   ): DateCustomComponent {
-    if (type === DateComponentType.Year) {
+    if (type === DateCustomComponentType.Year) {
       return startYear;
-    } else if (type === DateComponentType.Month) {
+    } else if (type === DateCustomComponentType.Month) {
       return year === startYear ? startMonth : DateCustomGetter.getDefaultMin(type);
     }
     return year === startYear && month === startMonth ? startDate : DateCustomGetter.getDefaultMin(type);
   }
 
   public static calcRangeEndDateComponent(
-    type: DateComponentType,
+    type: DateCustomComponentType,
     { year, month, date }: DateCustomComponents,
     { year: endYear, month: endMonth, date: endDate }: DateCustomComponents,
   ): DateCustomComponent {
-    if (type === DateComponentType.Year) {
+    if (type === DateCustomComponentType.Year) {
       return endYear;
-    } else if (type === DateComponentType.Month) {
+    } else if (type === DateCustomComponentType.Month) {
       return year === endYear ? endMonth : DateCustomGetter.getDefaultMax(type);
     }
     return year === endYear && month === endMonth

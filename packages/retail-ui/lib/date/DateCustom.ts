@@ -5,7 +5,7 @@ import DateCustomSetter from './DateCustomSetter';
 import DateCustomTransformer from './DateCustomTransformer';
 import DateCustomValidator from './DateCustomValidator';
 import {
-  DateComponentType,
+  DateCustomComponentType,
   DateCustomChangeValueDateComponentSettings,
   DateCustomComponent,
   DateCustomComponentRaw,
@@ -15,6 +15,7 @@ import {
   DateCustomOrder,
   DateCustomSeparator,
   DateCustomToFragmentsSettings,
+  DateCustomValidateCheck,
 } from './types';
 
 export class DateCustom {
@@ -50,15 +51,15 @@ export class DateCustom {
   }
 
   public getYear(): DateCustomComponentRaw {
-    return this.components.year /* === null ? null : DateCustomCalculator.restoreYear(this, this.components.year)*/;
+    return this.components.year;
   }
 
   public getMonth(): DateCustomComponentRaw {
-    return this.components.month /* === null ? null : DateCustomCalculator.restoreMonth(this, this.components.month)*/;
+    return this.components.month;
   }
 
   public getDate(): DateCustomComponentRaw {
-    return this.components.date /* === null ? null : DateCustomCalculator.restoreDate(this, this.components.date)*/;
+    return this.components.date;
   }
 
   public getRangeStart(): DateCustom | null {
@@ -100,24 +101,24 @@ export class DateCustom {
   }
 
   public shiftYear(step: number, { isLoop, isRange }: DateCustomChangeValueDateComponentSettings = {}): DateCustom {
-    const min = this.getMinValue(DateComponentType.Year, isRange);
-    const max = this.getMaxValue(DateComponentType.Year, isRange);
+    const min = this.getMinValue(DateCustomComponentType.Year, isRange);
+    const max = this.getMaxValue(DateCustomComponentType.Year, isRange);
     const { year } = this.getComponentsLikeNumber();
     this.components.year = DateCustomCalculator.calcShiftValueDateComponent(step, year, min, max, isLoop);
     return this;
   }
 
   public shiftMonth(step: number, { isLoop, isRange }: DateCustomChangeValueDateComponentSettings = {}): DateCustom {
-    const min = this.getMinValue(DateComponentType.Month, isRange);
-    const max = this.getMaxValue(DateComponentType.Month, isRange);
+    const min = this.getMinValue(DateCustomComponentType.Month, isRange);
+    const max = this.getMaxValue(DateCustomComponentType.Month, isRange);
     const { month } = this.getComponentsLikeNumber();
     this.components.month = DateCustomCalculator.calcShiftValueDateComponent(step, month, min, max, isLoop);
     return this;
   }
 
   public shiftDate(step: number, { isLoop, isRange }: DateCustomChangeValueDateComponentSettings = {}): DateCustom {
-    const min = this.getMinValue(DateComponentType.Date, isRange);
-    const max = this.getMaxValue(DateComponentType.Date, isRange);
+    const min = this.getMinValue(DateCustomComponentType.Date, isRange);
+    const max = this.getMaxValue(DateCustomComponentType.Date, isRange);
     const { date } = this.getComponentsLikeNumber();
     this.components.date = DateCustomCalculator.calcShiftValueDateComponent(step, date, min, max, isLoop);
     return this;
@@ -133,24 +134,33 @@ export class DateCustom {
     return this;
   }
 
-  public get(type: DateComponentType | null): DateCustomComponentRaw {
+  public get(type: DateCustomComponentType | null): DateCustomComponentRaw {
     return (type !== null && DateCustomGetter.getValueDateComponent(type, this.getComponentsRaw())) || null;
   }
 
-  public set(type: DateComponentType | null, value: DateCustomComponentRaw): DateCustom {
+  public set(type: DateCustomComponentType | null, value: DateCustomComponentRaw): DateCustom {
     return (type !== null && DateCustomSetter.setValueDateComponent(this, type, value)) || this;
   }
 
-  public shift(type: DateComponentType | null, step: number): DateCustom {
+  public shift(type: DateCustomComponentType | null, step: number): DateCustom {
     return (type !== null && DateCustomSetter.shiftValueDateComponent(this, type, step)) || this;
   }
 
   public parseValue(value: string | null = ''): DateCustom {
-    this.setComponents(DateCustomTransformer.parseValueToDate(value, this.order));
+    const components = DateCustomTransformer.parseValueToDate(value, this.order) || { ...emptyDateComponents };
+    this.setComponents(components);
     return this;
   }
 
-  public validate(type?: DateComponentType, nextValue?: DateCustomComponent): boolean {
+  public validate({
+    type,
+    nextValue,
+    levels = Object.values(DateCustomValidateCheck),
+  }: {
+    type?: DateCustomComponentType;
+    nextValue?: DateCustomComponent;
+    levels?: DateCustomValidateCheck[];
+  } = {}): boolean {
     let self: DateCustom = this;
     if (type !== undefined) {
       const clone = this.clone();
@@ -159,16 +169,26 @@ export class DateCustom {
       }
       self = clone;
     }
-    if (!DateCustomValidator.checkForNull(self.getComponentsRaw(), type)) {
+    if (
+      levels.includes(DateCustomValidateCheck.NotNull) &&
+      !DateCustomValidator.checkForNull(self.getComponentsRaw(), type)
+    ) {
       return false;
     }
-    if (!DateCustomValidator.checkLimits(self.getComponentsLikeNumber(), type)) {
+    if (
+      levels.includes(DateCustomValidateCheck.Limits) &&
+      !DateCustomValidator.checkLimits(self.getComponentsLikeNumber(), type)
+    ) {
       return false;
     }
-    if (type !== undefined && !DateCustomValidator.compareWithNativeDate(self.getComponentsLikeNumber())) {
+    if (
+      levels.includes(DateCustomValidateCheck.Native) &&
+      type !== undefined &&
+      !DateCustomValidator.compareWithNativeDate(self.getComponentsLikeNumber())
+    ) {
       return false;
     }
-    return type !== undefined
+    return levels.includes(DateCustomValidateCheck.Range) && type !== undefined
       ? DateCustomValidator.checkRangePiecemeal(
           type,
           self.getComponentsLikeNumber(),
@@ -205,9 +225,12 @@ export class DateCustom {
     );
   }
 
-  public toString(withPad: boolean = false): string {
-    return this.toFragments({ withSeparator: true, withPad })
-      .map(({ valueWithPad, value }) => valueWithPad || value)
+  public toString(settings: DateCustomToFragmentsSettings = {}): string {
+    return this.toFragments({ ...{ withPad: true, withSeparator: true }, ...settings })
+      .map(
+        ({ type, valueWithPad, value }) =>
+          settings.withPad && type !== DateCustomComponentType.Separator ? valueWithPad : value,
+      )
       .join('');
   }
 
@@ -232,19 +255,27 @@ export class DateCustom {
     return this;
   }
 
-  private getMinValue(type: DateComponentType, isRange?: boolean): number {
+  private getMinValue(type: DateCustomComponentType, isRange?: boolean): number {
     if (isRange === true && this.start !== null) {
       return Number(
-        DateCustomCalculator.calcRangeStartDateComponent(type, this.getComponentsLikeNumber(), this.start.getComponentsLikeNumber()),
+        DateCustomCalculator.calcRangeStartDateComponent(
+          type,
+          this.getComponentsLikeNumber(),
+          this.start.getComponentsLikeNumber(),
+        ),
       );
     }
     return DateCustomGetter.getDefaultMin(type);
   }
 
-  private getMaxValue(type: DateComponentType, isRange?: boolean): number {
+  private getMaxValue(type: DateCustomComponentType, isRange?: boolean): number {
     if (isRange === true && this.end !== null) {
       return Number(
-        DateCustomCalculator.calcRangeEndDateComponent(type, this.getComponentsLikeNumber(), this.end.getComponentsLikeNumber()),
+        DateCustomCalculator.calcRangeEndDateComponent(
+          type,
+          this.getComponentsLikeNumber(),
+          this.end.getComponentsLikeNumber(),
+        ),
       );
     }
     return DateCustomGetter.getDefaultMax(type, this.getComponentsLikeNumber());

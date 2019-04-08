@@ -1,6 +1,6 @@
 import { DateCustom } from './DateCustom';
 import {
-  DateComponentType,
+  DateCustomComponentType,
   DateCustomComponentRaw,
   DateCustomComponentsRaw,
 } from './types';
@@ -8,31 +8,31 @@ import {
 export default class DateCustomSetter {
   public static setValueDateComponent(
     dateCustom: DateCustom,
-    type: DateComponentType,
+    type: DateCustomComponentType,
     nextValue: DateCustomComponentRaw | DateCustomComponentsRaw,
   ): DateCustom {
-    if (type === DateComponentType.All) {
+    if (type === DateCustomComponentType.All) {
       dateCustom.setComponents(nextValue as DateCustomComponentsRaw);
       return dateCustom;
     }
-    if (type === DateComponentType.Year) {
+    if (type === DateCustomComponentType.Year) {
       dateCustom.setYear(nextValue as DateCustomComponentRaw);
-    } else if (type === DateComponentType.Month) {
+    } else if (type === DateCustomComponentType.Month) {
       dateCustom.setMonth(nextValue as DateCustomComponentRaw);
-    } else if (type === DateComponentType.Date) {
+    } else if (type === DateCustomComponentType.Date) {
       dateCustom.setDate(nextValue as DateCustomComponentRaw);
     }
     return dateCustom;
   }
 
-  public static shiftValueDateComponent(dateCustom: DateCustom, type: DateComponentType, step: number): DateCustom {
-    if (type === DateComponentType.Year) {
+  public static shiftValueDateComponent(dateCustom: DateCustom, type: DateCustomComponentType, step: number): DateCustom {
+    if (type === DateCustomComponentType.Year) {
       dateCustom.shiftYear(step);
-    } else if (type === DateComponentType.Month) {
+    } else if (type === DateCustomComponentType.Month) {
       dateCustom.shiftMonth(step);
-    } else if (type === DateComponentType.Date) {
+    } else if (type === DateCustomComponentType.Date) {
       dateCustom.shiftDate(step);
-    } else if (type === DateComponentType.All) {
+    } else if (type === DateCustomComponentType.All) {
       dateCustom.shiftDate(step);
     }
     return dateCustom;

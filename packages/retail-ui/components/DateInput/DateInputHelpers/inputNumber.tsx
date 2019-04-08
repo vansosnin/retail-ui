@@ -1,31 +1,32 @@
-import { DateComponentType, DateCustomComponent, DateCustomComponentRaw } from '../../../lib/date/types';
+import { LENGTH_DATE, LENGTH_MONTH, LENGTH_YEAR } from '../../../lib/date/constants';
+import { DateCustomComponentType, DateCustomComponent, DateCustomComponentRaw } from '../../../lib/date/types';
 
 export const inputNumber = (
-  type: DateComponentType | null,
+  type: DateCustomComponentType | null,
   prev: DateCustomComponentRaw,
   key: string,
   inputMode: boolean,
   cb: (next: DateCustomComponent, inputMode: boolean) => void,
 ) => {
-  const digit = Number(key);
   let nextInputMode = false;
   let next: any;
   let first: number = 10;
-  let length: number = 4;
-  if (type === DateComponentType.Month) {
+  let length: number = LENGTH_YEAR;
+  if (type === DateCustomComponentType.Month) {
     first = 1;
-    length = 2;
+    length = LENGTH_MONTH;
   }
-  if (type === DateComponentType.Date) {
+  if (type === DateCustomComponentType.Date) {
     first = 3;
-    length = 2;
+    length = LENGTH_DATE;
   }
   if (!inputMode) {
-    next = digit;
-    nextInputMode = digit <= first;
+    next = key;
+    nextInputMode = +key <= first;
   } else {
-    next = String(`${prev === null ? '' : prev}${digit}`).slice(-length);
+    next = `${prev === null ? '' : prev}${key}`.slice(-length);
     nextInputMode = next.length < length;
+    console.log('prev', prev, next);
   }
   cb(next, nextInputMode);
 };
