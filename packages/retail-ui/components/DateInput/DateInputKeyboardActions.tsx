@@ -1,5 +1,6 @@
 // @ts-ignore noUnusedVar
 import * as React from 'react';
+import { DateCustomSeparator } from '../../lib/date/types';
 import { KeyboardActionExctracterBuilder, isSeparator, isModified } from '../internal/extractKeyboardAction';
 
 export const Actions = {
@@ -17,15 +18,15 @@ export const Actions = {
 };
 
 const extractAction = new KeyboardActionExctracterBuilder()
+  .add(Actions.FullSelection, e => (e.ctrlKey || e.metaKey) && e.key === 'a')
+  .add(Actions.Ignore, e => isModified(e) || e.key === 'Tab')
   .add(Actions.MoveSelectionLeft, e => e.key === 'ArrowLeft')
   .add(Actions.MoveSelectionRight, e => e.key === 'ArrowRight')
-  .add(Actions.Separator, isSeparator)
+  .add(Actions.Separator, e => Object.values(DateCustomSeparator).includes(e.key))
   .add(Actions.Increment, e => e.key === 'ArrowUp')
   .add(Actions.Decrement, e => e.key === 'ArrowDown')
-  .add(Actions.FullSelection, e => (e.ctrlKey || e.metaKey) && e.key === 'a')
   .add(Actions.ClearSelection, e => e.key === 'Backspace' || e.key === 'Delete')
   .add(Actions.Digit, e => /^\d$/.test(e.key))
-  .add(Actions.Ignore, e => isModified(e) || e.key === 'Tab')
   .add(Actions.WrongInput, e => e.key === ' ' || /^[A-Za-zА-Яа-я]$/.test(e.key))
   .build(Actions.Unknown);
 

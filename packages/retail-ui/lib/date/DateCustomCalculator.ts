@@ -1,11 +1,6 @@
 import { DateCustom } from './DateCustom';
 import DateCustomGetter from './DateCustomGetter';
-import {
-  DateComponentType,
-  DateCustomComponent,
-  DateCustomComponentRaw,
-  DateCustomComponents,
-} from './types';
+import { DateComponentType, DateCustomComponent, DateCustomComponentRaw, DateCustomComponents } from './types';
 
 export default class DateCustomCalculator {
   public static calcRangeStartDateComponent(
@@ -44,6 +39,9 @@ export default class DateCustomCalculator {
     isLoop: boolean = true,
   ): DateCustomComponent {
     const value = step + Number(prevValue);
+    if (step !==0 && (start - value > Math.abs(step) || value - end > Math.abs(step))) {
+      return step < 0 ? end : start;
+    }
     if (isLoop) {
       return value < start ? end : value > end ? start : value;
     }
@@ -59,6 +57,6 @@ export default class DateCustomCalculator {
         year += 2000;
       }
     }
-    return year
+    return year;
   }
 }

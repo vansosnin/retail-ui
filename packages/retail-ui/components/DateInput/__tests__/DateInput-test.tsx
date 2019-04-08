@@ -1,5 +1,7 @@
 import * as React from 'react';
-import DateInput, { DateInputConfig, DateInputProps, DateInputState } from '../DateInput';
+import { DateCustom } from '../../../lib/date/DateCustom';
+import { DateCustomOrder } from '../../../lib/date/types';
+import DateInput, { DateInputProps, DateInputState } from '../DateInput';
 import { mount, ReactWrapper } from 'enzyme';
 import { maskChar } from '../DateInputHelpers/maskChar';
 import { HTMLAttributes } from 'react';
@@ -8,24 +10,15 @@ const render = (props: DateInputProps) => mount<DateInput>(<DateInput {...props}
 
 const setups = [
   {
-    name: 'DateInput as Input',
-    getInput: (root: ReactWrapper<DateInputProps, DateInputState, DateInput>) => root.find('input'),
-    getValue: (input: ReactWrapper<HTMLAttributes<HTMLInputElement>>) => input.prop('value'),
-    polyfillInput: false,
-  },
-  {
+    order: DateCustomOrder
     name: 'DateInput as InputlikeText',
     getInput: (root: ReactWrapper<DateInputProps, DateInputState, DateInput>) => root.find('.input'),
     getValue: (input: ReactWrapper<HTMLAttributes<HTMLInputElement>>) => input.text(),
-    polyfillInput: true,
   },
 ];
 
-setups.forEach(({ name, polyfillInput, getInput, getValue }) => {
+setups.forEach(({ name, getInput, getValue }) => {
   describe(name, () => {
-    beforeEach(() => {
-      DateInputConfig.polyfillInput = polyfillInput;
-    });
 
     describe('without min/max date', () => {
       it('renders', () => {
@@ -68,7 +61,7 @@ setups.forEach(({ name, polyfillInput, getInput, getValue }) => {
         ['10.02.2017', ['ArrowUp'], '11.02.2017'],
         ['31.02.2017', ['ArrowUp'], '01.02.2017'],
         ['10.02.2017', ['ArrowDown'], '09.02.2017'],
-        ['01.02.2017', ['ArrowDown'], '31.02.2017'],
+        ['01.02.2017', ['ArrowDown'], '28.02.2017'],
         ['01.02.2017', ['1'], '1.02.2017'],
         ['01.02.2017', ['1', '2'], '12.02.2017'],
         ['01.02.2017', ['4'], '04.02.2017'],
@@ -110,12 +103,13 @@ setups.forEach(({ name, polyfillInput, getInput, getValue }) => {
       KeyDownCases.forEach(([initDate, keys, expectedDate]) => {
         const keyString = keys.join(' > ');
         const expectedDateStr = `"${expectedDate}"`.padEnd(12, ' ');
+        const dateCustom = new DateCustom().parseValue(expectedDate);
         it(`calls onChange with ${expectedDateStr} if value is "${initDate}" and pressed "${keyString}"`, () => {
           const onChange = jest.fn();
           const input = getInput(render({ value: initDate, onChange }));
           input.simulate('focus');
           keys.forEach(key => input.simulate('keydown', { key }));
-          expect(onChange).toHaveBeenLastCalledWith({ target: { value: expectedDate } }, expectedDate);
+          expect(onChange).toHaveBeenLastCalledWith({ target: { value: expectedDate } }, expectedDate, dateCustom);
         });
       });
 

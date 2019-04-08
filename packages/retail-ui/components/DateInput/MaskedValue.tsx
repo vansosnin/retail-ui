@@ -4,12 +4,12 @@ import styles from './DateInput.less';
 import { maskChar } from './DateInputHelpers/maskChar';
 
 interface MaskedValueProps {
-  value: string | null;
+  value: number | string | null;
   length: number;
 }
 
 export const MaskedValue = ({ value, length }: MaskedValueProps) => {
-  if (!value) {
+  if (value === null || value === '') {
     return <Mask length={length} />;
   }
   const left = value.toString();

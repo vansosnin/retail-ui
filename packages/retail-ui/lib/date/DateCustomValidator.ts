@@ -1,5 +1,10 @@
 import DateCustomGetter from './DateCustomGetter';
-import { DateComponentType, DateCustomComponents, DateCustomComponentsRaw } from './types';
+import {
+  DateComponentType,
+  DateCustomComponentRaw,
+  DateCustomComponentsNumber,
+  DateCustomComponentsRaw,
+} from './types';
 
 export default class DateCustomValidator {
   public static checkForNull({ year, month, date }: DateCustomComponentsRaw, type?: DateComponentType) {
@@ -14,14 +19,11 @@ export default class DateCustomValidator {
     return !(year === null || month === null || date === null);
   }
 
-  public static checkLimits({ year, month, date }: DateCustomComponents<number>, type?: DateComponentType): boolean {
+  public static checkLimits({ year, month, date }: DateCustomComponentsNumber, type?: DateComponentType): boolean {
     if (type !== undefined) {
       const value = type === DateComponentType.Year ? year : type === DateComponentType.Month ? month : date;
 
-      return (
-        value >= DateCustomGetter.getDefaultMin(type) &&
-        value <= DateCustomGetter.getDefaultMax(type)
-      );
+      return value >= DateCustomGetter.getDefaultMin(type) && value <= DateCustomGetter.getDefaultMax(type);
     }
     return (
       year >= DateCustomGetter.getDefaultMin(DateComponentType.Year) &&
@@ -33,7 +35,7 @@ export default class DateCustomValidator {
     );
   }
 
-  public static compareWithNativeDate({ year, month, date }: DateCustomComponents<number>): boolean {
+  public static compareWithNativeDate({ year, month, date }: DateCustomComponentsNumber): boolean {
     const nativeDate: Date = new Date(Date.UTC(year, month - 1, date));
 
     return (
@@ -52,9 +54,9 @@ export default class DateCustomValidator {
 
   public static checkRangePiecemeal(
     type: DateComponentType,
-    { year, month, date }: DateCustomComponents<number>,
-    startComponents: DateCustomComponents<number> | null,
-    endComponents: DateCustomComponents<number> | null,
+    { year, month, date }: DateCustomComponentsNumber,
+    startComponents: DateCustomComponentsNumber | null,
+    endComponents: DateCustomComponentsNumber | null,
   ): boolean {
     if (startComponents === null && endComponents === null) {
       return true;
@@ -74,5 +76,9 @@ export default class DateCustomValidator {
       );
     }
     return true;
+  }
+
+  public static testParseToNumber(value: DateCustomComponentRaw): boolean {
+    return value !== null && (typeof value === 'number' || !/^0*$/.test(value) && !Number.isNaN(parseInt(value, 10)));
   }
 }

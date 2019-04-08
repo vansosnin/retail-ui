@@ -39,6 +39,17 @@ class DatePickerWithError extends React.Component<any, any> {
             onBlur={this._validate}
             enableTodayLink
           />
+          <DatePicker
+            {...this.props}
+            disabled={this.props.disabled}
+            size={this.props.size}
+            error={this.state.error}
+            value={this.state.value}
+            onChange={this._handleChange}
+            onFocus={this._unvalidate}
+            onBlur={this._validate}
+            enableTodayLink
+          />
         </Tooltip>
         <Button onClick={() => this.setState({ value: null, error: null, tooltip: false })}>Clear</Button>
         <Button onClick={() => this.setState({ value: '99.99.9999' })}>Set "99.99.9999"</Button>

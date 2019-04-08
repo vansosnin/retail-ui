@@ -1,10 +1,4 @@
 
-export interface DateCustomComponents<T = DateCustomComponent> {
-  date: T;
-  month: T;
-  year: T;
-}
-
 export enum DateCustomOrder {
   DMY = 'DMY',
   YMD = 'YMD',
@@ -26,28 +20,34 @@ export enum DateComponentType {
   Separator = 4,
 }
 
+export type DateCustomComponent = number | null;
+export type DateCustomComponentRaw = number | string | null;
+
 export interface DateCustomFragment {
   type: DateComponentType;
-  value: DateCustomComponentRaw;
+  value: DateCustomComponentRaw | DateCustomSeparator;
   length: number;
   valueWithPad?: string;
   isValid?: boolean;
 }
 
+export interface DateCustomComponents {
+  year: DateCustomComponent;
+  month: DateCustomComponent;
+  date: DateCustomComponent;
+}
+
 export interface DateCustomComponentsRaw {
-  date: DateCustomComponentRaw;
-  month: DateCustomComponentRaw;
   year: DateCustomComponentRaw;
+  month: DateCustomComponentRaw;
+  date: DateCustomComponentRaw;
 }
 
-export interface DateComponentsNumber {
-  date: number;
-  month: number;
+export interface DateCustomComponentsNumber {
   year: number;
+  month: number;
+  date: number;
 }
-
-export type DateCustomComponent = number | null;
-export type DateCustomComponentRaw = number | string | null;
 
 export interface DateCustomToFragmentsSettings {
   order?: DateCustomOrder;

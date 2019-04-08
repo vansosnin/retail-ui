@@ -9,6 +9,7 @@ export const MAX_DATE = 31;
 export const LENGTH_YEAR = 4;
 export const LENGTH_MONTH = 2;
 export const LENGTH_DATE = 2;
+export const LENGTH_SEPARATOR = 1;
 export const CHAR_PAD = '0';
 export const RE_SEPARATOR = `(?:\\.|\\/|\\-|\\s)`;
 export const RE_ORDER_MDY = new RegExp(
