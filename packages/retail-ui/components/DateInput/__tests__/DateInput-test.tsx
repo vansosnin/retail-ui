@@ -1,17 +1,24 @@
 import { mount, ReactWrapper } from 'enzyme';
 import * as React from 'react';
 import { HTMLAttributes } from 'react';
-import { DateCustom } from '../../../lib/date/DateCustom';
-import { DateCustomOrder, DateCustomSeparator } from '../../../lib/date/types';
-import DateInput, { DateInputProps, DateInputState } from '../DateInput';
-import { maskChar } from '../DateInputHelpers/maskChar';
+import { CHAR_MASK } from '../../../lib/date/constants';
+import { DateCustomOrder } from '../../../lib/date/types';
+import LocaleProvider, { LocaleProviderProps } from '../../LocaleProvider';
+import DateInput, { DateInputProps } from '../DateInput';
 
-const render = (props: DateInputProps) => mount<DateInput>(<DateInput {...props} />);
+const render = (props: DateInputProps, propsLocale: LocaleProviderProps = {}) =>
+  mount<LocaleProvider, LocaleProviderProps>(
+    <LocaleProvider {...propsLocale}>
+      <DateInput {...props} />
+    </LocaleProvider>,
+  );
 
 const setups = [
   {
     name: 'DateInput as InputlikeText',
-    getInput: (root: ReactWrapper<DateInputProps, DateInputState, DateInput>) => root.find('.input'),
+    getInput: (
+      root: ReactWrapper<LocaleProviderProps, {}, LocaleProvider>,
+    ): ReactWrapper<HTMLAttributes<HTMLInputElement>> => root.find('.input'),
     getValue: (input: ReactWrapper<HTMLAttributes<HTMLInputElement>>) => input.text(),
   },
 ];
@@ -31,14 +38,14 @@ setups.forEach(({ name, getInput, getValue }) => {
 
       it('updates when value changes', () => {
         const root = render({ value: '10.02.2017' });
-        root.setProps({ value: '11.02.2017' });
+        root.setProps({ children: <DateInput value="11.02.2017" /> });
         expect(getValue(getInput(root))).toBe('11.02.2017');
       });
 
       it('handles invalid date strings', () => {
         const root = render({ value: '10.02.2017' });
-        root.setProps({ value: '99.9' });
-        expect(getValue(getInput(root))).toBe(`99.09.${maskChar.repeat(4)}`);
+        root.setProps({ children: <DateInput value="99.9" /> });
+        expect(getValue(getInput(root))).toBe(`99.09.${CHAR_MASK.repeat(4)}`);
       });
 
       it('does not show mask if value is empty', () => {
@@ -49,7 +56,7 @@ setups.forEach(({ name, getInput, getValue }) => {
       it('shows mask if value is empty on focus', () => {
         const root = render({ value: '' });
         getInput(root).simulate('focus');
-        expect(getValue(getInput(root))).toBe(`${maskChar.repeat(2)}.${maskChar.repeat(2)}.${maskChar.repeat(4)}`);
+        expect(getValue(getInput(root))).toBe(`${CHAR_MASK.repeat(2)}.${CHAR_MASK.repeat(2)}.${CHAR_MASK.repeat(4)}`);
       });
 
       const KeyDownCases: Array<[string, string[], string]> = [
@@ -122,7 +129,7 @@ setups.forEach(({ name, getInput, getValue }) => {
       PasteCases.forEach(([order, pasted, expected]) => {
         it(`handles paste "${pasted}"`, () => {
           const onChange = jest.fn();
-          const input = getInput(render({ dateComponentsOrder: order as DateCustomOrder, onChange }));
+          const input = getInput(render({ onChange }, { locale: { DatePicker: { order: order as DateCustomOrder } } }));
           input.simulate('paste', { clipboardData: { getData: () => pasted } });
           expect(onChange).toHaveBeenCalledWith({ target: { value: expected } }, expected);
         });

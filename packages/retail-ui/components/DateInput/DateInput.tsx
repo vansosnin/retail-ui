@@ -1,32 +1,27 @@
 import CalendarIcon from '@skbkontur/react-icons/Calendar';
 import classNames from 'classnames';
 import * as React from 'react';
-import { defaultDateComponentsOrder, defaultDateComponentsSeparator } from '../../lib/date/constants';
 import { DateCustom } from '../../lib/date/DateCustom';
 import {
   DateCustomComponentType,
   DateCustomComponent,
-  DateCustomOrder,
-  DateCustomSeparator,
   DateCustomValidateCheck,
 } from '../../lib/date/types';
 import Upgrades from '../../lib/Upgrades';
 
 import { Nullable } from '../../typings/utility-types';
-import { DatePickerLocaleHelper } from '../DatePicker/locale';
+import { DatePickerLocale, DatePickerLocaleHelper } from '../DatePicker/locale';
 import { isEdge, isIE } from '../ensureOldIEClassName';
 import InputLikeText from '../internal/InputLikeText';
-import { LangCodes } from '../LocaleProvider';
 import { locale } from '../LocaleProvider/decorators';
 import styles from './DateInput.less';
-import { inputNumber } from './DateInputHelpers/inputNumber';
-import { Actions, extractAction } from './DateInputKeyboardActions';
-import { MaskedValue } from './MaskedValue';
-import { removeAllSelections, selectNodeContents } from './SelectionHelpers';
+import { FragmentDateCustom } from './FragmentDateCustom';
+import { inputNumber } from './helpers/inputNumber';
+import { Actions, extractAction } from './helpers/DateInputKeyboardActions';
+import { removeAllSelections, selectNodeContents } from './helpers/SelectionHelpers';
 
 export interface DateInputState {
   notify: boolean;
-  dateWasChanged: boolean;
   selected: DateCustomComponentType | null;
   dateValue: string;
   inputMode: boolean;
@@ -46,51 +41,38 @@ export interface DateInputProps {
   onFocus?: (x0: React.FocusEvent<HTMLElement>) => void;
   onChange?: (x0: { target: { value: string } }, x1: string) => void;
   onKeyDown?: (x0: React.KeyboardEvent<HTMLElement>) => void;
-  dateComponentsOrder?: DateCustomOrder;
-  dateComponentsSeparator?: DateCustomSeparator;
 }
-
-export type DateInputSetStateCallBack = (
-  prevState: Readonly<DateInputState>,
-  props?: DateInputProps,
-) => DateInputState | Pick<DateInputState, keyof DateInputState> | null;
 
 @locale('DatePicker', DatePickerLocaleHelper)
 export default class DateInput extends React.PureComponent<DateInputProps, DateInputState> {
   public static defaultProps = {
     size: 'small',
     width: 125,
-    dateComponentsOrder: defaultDateComponentsOrder,
-    dateComponentsSeparator: defaultDateComponentsSeparator,
   };
 
   // Костыль для возможности выделить дату целиком
   // В IE и Edge, при вызове range.selectNodeContents(node)
   // снимается фокус у текущего элемента, из-за чего вызывается handleBlur
-  // в handleBlur вызывается window.getSelection().removeAllRanges()
-  // в итоге выделение пропадает.
+  // в handleBlur вызывается window.getSelection().removeAllRanges() и выделение пропадает.
   private isFrozen: boolean = false;
 
-  private langCode!: LangCodes;
+  private locale!: DatePickerLocale;
   private inputLikeText: InputLikeText | null = null;
   private divInnerNode: HTMLElement | null = null;
   private isFocused: boolean = false;
 
   private readonly dateCustom: DateCustom;
-  private readonly dateCustomTypeOrder: DateCustomComponentType[];
+  private dateCustomTypeOrder: DateCustomComponentType[];
 
   constructor(props: DateInputProps) {
     super(props);
     this.dateCustom = new DateCustom();
-    this.updateDateCustom(props);
     this.dateCustomTypeOrder = this.dateCustom.toFragments().map(({ type }) => type);
 
     this.state = {
       notify: false,
-      dateWasChanged: false,
-
       selected: null,
-      dateValue: this.dateCustom.toString({ withPad: false, withSeparator: false }),
+      dateValue: '',
       inputMode: false,
     };
   }
@@ -104,8 +86,6 @@ export default class DateInput extends React.PureComponent<DateInputProps, DateI
 
   public componentDidUpdate(prevProps: DateInputProps, prevState: DateInputState) {
     if (prevState.dateValue !== this.state.dateValue) {
-      this.setState({ dateWasChanged: true });
-
       this.emitChange();
     }
 
@@ -118,6 +98,12 @@ export default class DateInput extends React.PureComponent<DateInputProps, DateI
     if (this.state.notify && !prevState.notify) {
       this.notify();
     }
+  }
+
+  public componentDidMount(): void {
+    this.updateDateCustom(this.props);
+    this.dateCustomTypeOrder = this.dateCustom.toFragments().map(({ type }) => type);
+    this.updateDateComponents();
   }
 
   public blur() {
@@ -163,7 +149,7 @@ export default class DateInput extends React.PureComponent<DateInputProps, DateI
         }}
         size={this.props.size}
         disabled={this.props.disabled}
-        error={(this.props.error || !isValid) && !this.isFocused}
+        error={this.props.error}
         warning={this.props.warning}
         onBlur={this.handleBlur}
         onFocus={this.handleFocus}
@@ -174,31 +160,16 @@ export default class DateInput extends React.PureComponent<DateInputProps, DateI
       >
         {
           <div ref={el => (this.divInnerNode = el)} onDoubleClick={this.onDoubleClick} className={styles.root}>
-            {fragments.map(({ type, value, length, valueWithPad, isValid: isValidFragment }, index) => {
-              if (type === DateCustomComponentType.Separator) {
-                return (
-                  <span key={type + index.toString()} className={styles.delimiter}>
-                    {value}
-                  </span>
-                );
-              } else {
-                value = value === null || (selected === type && inputMode) ? value : valueWithPad || value;
-                const classComponent = classNames(styles.component, {
-                  [styles.selected]: selected === type,
-                  [styles.invalid]: !isValid,
-                });
-                return (
-                  <span
-                    key={type}
-                    className={classComponent}
-                    onMouseDown={this.onMouseDownComponent(type)}
-                    data-isvalidfragment={isValidFragment}
-                  >
-                    <MaskedValue value={value} length={length} />
-                  </span>
-                );
-              }
-            })}
+            {fragments.map((fragment, index) => (
+              <FragmentDateCustom
+                key={index}
+                {...fragment}
+                onMouseDown={this.onMouseDownComponent}
+                isValidFully={isValid}
+                selected={selected}
+                inputMode={inputMode}
+              />
+            ))}
           </div>
         }
       </InputLikeText>
@@ -209,16 +180,20 @@ export default class DateInput extends React.PureComponent<DateInputProps, DateI
 
   private updateDateCustom(props: DateInputProps) {
     this.dateCustom
-      .setOrder(props.dateComponentsOrder)
-      .setSeparator(props.dateComponentsSeparator)
+      .setOrder(this.locale.order)
+      .setSeparator(this.locale.separator)
       .setRangeStart(
         props.minDate
-          ? new DateCustom(props.dateComponentsOrder, props.dateComponentsSeparator).parseValue(props.minDate)
+          ? new DateCustom(this.locale.order, this.locale.separator).parseValue(
+              props.minDate,
+            )
           : null,
       )
       .setRangeEnd(
         props.maxDate
-          ? new DateCustom(props.dateComponentsOrder, props.dateComponentsSeparator).parseValue(props.maxDate)
+          ? new DateCustom(this.locale.order, this.locale.separator).parseValue(
+              props.maxDate,
+            )
           : null,
       )
       .parseValue(props.value);
@@ -239,7 +214,6 @@ export default class DateInput extends React.PureComponent<DateInputProps, DateI
       return;
     }
     event.preventDefault();
-    // this.selectDateComponent(null);
 
     // Firefix prevents focus if mousedown prevented
     if (!this.isFocused) {

@@ -1,7 +1,7 @@
 // @ts-ignore noUnusedVar
 import * as React from 'react';
-import { DateCustomSeparator } from '../../lib/date/types';
-import { KeyboardActionExctracterBuilder, isModified } from '../internal/extractKeyboardAction';
+import { DateCustomSeparator } from '../../../lib/date/types';
+import { KeyboardActionExctracterBuilder, isModified } from '../../internal/extractKeyboardAction';
 
 export const Actions = {
   Unknown: 0,

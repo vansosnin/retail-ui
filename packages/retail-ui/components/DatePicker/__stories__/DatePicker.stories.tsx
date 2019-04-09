@@ -1,9 +1,6 @@
 import { action } from '@storybook/addon-actions';
 import { storiesOf } from '@storybook/react';
 import * as React from 'react';
-import { DateCustom } from '../../../lib/date/DateCustom';
-import DateCustomTransformer from '../../../lib/date/DateCustomTransformer';
-import { DateCustomOrder, DateCustomSeparator } from '../../../lib/date/types';
 // tslint:disable:jsx-no-lambda no-console
 import Button from '../../Button/index';
 import Gapped from '../../Gapped/index';
@@ -15,10 +12,12 @@ import DatePicker from '../DatePicker';
 
 class DatePickerWithError extends React.Component<any, any> {
   public state = {
-    value: null,
+    value: "08.15.2014",
     error: false,
     tooltip: false,
   };
+
+  private refDatePicker: DatePicker | null = null;
 
   public render() {
     return (
@@ -28,28 +27,22 @@ class DatePickerWithError extends React.Component<any, any> {
           render={() => 'Такой даты не существует'}
           onCloseClick={this._removeTooltip}
         >
-          <DatePicker
-            {...this.props}
-            disabled={this.props.disabled}
-            size={this.props.size}
-            error={this.state.error}
-            value={this.state.value}
-            onChange={this._handleChange}
-            onFocus={this._unvalidate}
-            onBlur={this._validate}
-            enableTodayLink
-          />
-          <DatePicker
-            {...this.props}
-            disabled={this.props.disabled}
-            size={this.props.size}
-            error={this.state.error}
-            value={this.state.value}
-            onChange={this._handleChange}
-            onFocus={this._unvalidate}
-            onBlur={this._validate}
-            enableTodayLink
-          />
+          <LocaleProvider langCode={LangCodes.en_EN}>
+            <DatePicker
+              {...this.props}
+              ref={el => { this.refDatePicker = el;}}
+              disabled={this.props.disabled}
+              size={this.props.size}
+              error={this.state.error}
+              value={this.state.value}
+              minDate="08.15.2004"
+              maxDate="10.21.2004"
+              onChange={this._handleChange}
+              onFocus={this._unvalidate}
+              onBlur={this._validate}
+              enableTodayLink
+            />
+          </LocaleProvider>
         </Tooltip>
         <Button onClick={() => this.setState({ value: null, error: null, tooltip: false })}>Clear</Button>
         <Button onClick={() => this.setState({ value: '99.99.9999' })}>Set "99.99.9999"</Button>
@@ -73,7 +66,7 @@ class DatePickerWithError extends React.Component<any, any> {
   private _validate = () => {
     const currentValue = this.state.value;
     this.setState(() => {
-      const error = !!currentValue && !DatePicker.validate(currentValue);
+      const error = !!currentValue && !(this.refDatePicker && this.refDatePicker.validate(currentValue));
       return {
         error,
         tooltip: error,
@@ -91,16 +84,17 @@ class DatePickerWithError extends React.Component<any, any> {
 const dateForMock = new Date('2017-01-02');
 
 storiesOf('DatePicker', module)
-  .addDecorator(story =>
-    process.env.NODE_ENV === 'test' ? (
-      <div>
-        <h2>Mocked date {dateForMock.toDateString()}</h2>
-        <MockDate date={dateForMock} />
-        {story()}
-      </div>
-    ) : (
-      <div>{story()}</div>
-    ),
+  .addDecorator(
+    story =>
+      process.env.NODE_ENV === 'test' ? (
+        <div>
+          <h2>Mocked date {dateForMock.toDateString()}</h2>
+          <MockDate date={dateForMock} />
+          {story()}
+        </div>
+      ) : (
+        <div>{story()}</div>
+      ),
   )
   .add('with mouseevent handlers', () => (
     <div style={{ paddingTop: 200 }}>
@@ -123,31 +117,6 @@ storiesOf('DatePicker', module)
     </div>
   ))
   .add('DatePicker LocaleProvider', () => {
-    const format = 'yyyy/mm/dd';
-    const fullDate = {
-      date: 1,
-      month: 9,
-      year: 2019,
-    };
-    const value = `2019/09/01`;
-
-    const DVF = new DateCustom(DateCustomOrder.MDY, DateCustomSeparator.Dash);
-    const DVF2 = new DateCustom(DateCustomOrder.MDY, DateCustomSeparator.Dash);
-    const DVF3 = new DateCustom(DateCustomOrder.MDY, DateCustomSeparator.Dash);
-    const DVFLEAP = new DateCustom(DateCustomOrder.YMD);
-    DVF.setComponents(DateCustomTransformer.parseValueToDate('09 02 2011'));
-    DVF2.setComponents(DateCustomTransformer.parseValueToDate('08 21 2012'));
-    DVF3.setComponents(DateCustomTransformer.parseValueToDate('09 02 2013'));
-    DVFLEAP.parseValue('2016 02 29');
-    console.log(DVF.checkRange(DVF2, DVF3));
-
-    window.DVF = DVF;
-    window.DVF2 = DVF2;
-    window.DVF3 = DVF3;
-    window.DVFLEAP = DVFLEAP;
-
-    window.DateCustomTransformer = DateCustomTransformer;
-
     return (
       <div style={{ paddingTop: 200 }}>
         <LocaleProvider langCode={LangCodes.en_EN}>

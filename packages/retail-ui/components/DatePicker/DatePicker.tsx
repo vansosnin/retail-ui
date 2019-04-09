@@ -1,19 +1,25 @@
 import * as PropTypes from 'prop-types';
 import * as React from 'react';
 import { findDOMNode } from 'react-dom';
-
-import { isLess, isGreater } from '../Calendar/CalendarDateShape';
-import filterProps from '../filterProps';
-import Picker from './Picker';
+import { DateCustom } from '../../lib/date/DateCustom';
+import {
+  DateCustomComponentsNumber,
+  DateCustomOrder,
+  DateCustomSeparator,
+  DateCustomValidateCheck,
+} from '../../lib/date/types';
+import { Nullable } from '../../typings/utility-types';
+import { CalendarDateShape } from '../Calendar';
 import DateInput from '../DateInput';
 import DropdownContainer from '../DropdownContainer/DropdownContainer';
-
-import { formatDate, parseDateString } from './DatePickerHelpers';
-import { CalendarDateShape } from '../Calendar';
-import { tryGetValidDateShape, isValidDate } from './DateShape';
+import filterProps from '../filterProps';
+import { locale } from '../LocaleProvider/decorators';
 
 import styles from './DatePicker.less';
-import { Nullable } from '../../typings/utility-types';
+
+import { formatDate } from './DatePickerHelpers';
+import { DatePickerLocale, DatePickerLocaleHelper } from './locale';
+import Picker from './Picker';
 
 const INPUT_PASS_PROPS = {
   autoFocus: true,
@@ -52,6 +58,8 @@ export interface DatePickerProps<T> {
    * @returns {boolean} `true` для выходного или `false` для рабочего дня
    */
   isHoliday: (day: T, isWeekend: boolean) => boolean;
+  dateComponentsOrder?: DateCustomOrder;
+  dateComponentsSeparator?: DateCustomSeparator;
 }
 
 export interface DatePickerState {
@@ -61,6 +69,7 @@ export interface DatePickerState {
 type DatePickerValue = string;
 
 // eslint-disable-next-line flowtype/no-weak-types
+@locale('DatePicker', DatePickerLocaleHelper)
 class DatePicker extends React.Component<DatePickerProps<DatePickerValue>, DatePickerState> {
   public static propTypes = {
     autoFocus: PropTypes.bool,
@@ -119,14 +128,6 @@ class DatePicker extends React.Component<DatePickerProps<DatePickerValue>, DateP
     isHoliday: (_day: DatePickerValue, isWeekend: boolean) => isWeekend,
   };
 
-  public static validate = (value: Nullable<string>) => {
-    if (!value) {
-      return false;
-    }
-
-    return isValidDate(parseDateString(value));
-  };
-
   public state: DatePickerState = {
     opened: false,
   };
@@ -135,12 +136,40 @@ class DatePicker extends React.Component<DatePickerProps<DatePickerValue>, DateP
 
   private focused: boolean = false;
 
+  private readonly dateCustom: DateCustom = new DateCustom();
+  private minDate: DateCustomComponentsNumber | undefined;
+  private maxDate: DateCustomComponentsNumber | undefined;
+  private locale!: DatePickerLocale;
+
   public componentWillReceiveProps(nextProps: DatePickerProps<DatePickerValue>) {
     const { disabled } = nextProps;
     const { opened } = this.state;
     if (disabled && opened) {
       this.close();
     }
+    this.dateCustom
+      .setOrder(this.locale.order)
+      .setSeparator(this.locale.separator)
+      .parseValue(this.props.value);
+    this.minDate = this.parseValueToDate(this.props.minDate);
+    this.maxDate = this.parseValueToDate(this.props.maxDate);
+  }
+
+  public validate = (value: Nullable<string>) => {
+    if (!value) {
+      return false;
+    }
+    return new DateCustom(this.locale.order, this.locale.separator).parseValue(value).validate();
+    // return this.parseValueToDate(value) !== undefined;
+  };
+
+  public componentDidMount() {
+    this.dateCustom
+      .setOrder(this.locale.order)
+      .setSeparator(this.locale.separator)
+      .parseValue(this.props.value);
+    this.minDate = this.parseValueToDate(this.props.minDate);
+    this.maxDate = this.parseValueToDate(this.props.maxDate);
   }
 
   /**
@@ -176,6 +205,9 @@ class DatePicker extends React.Component<DatePickerProps<DatePickerValue>, DateP
 
   public render(): JSX.Element {
     let picker = null;
+    const date = this.dateCustom.validate({ levels: [DateCustomValidateCheck.NotNull, DateCustomValidateCheck.Range] })
+      ? this.dateCustom.clone().shiftMonth(-1).getComponentsLikeNumber()
+      : null;
     if (this.state.opened) {
       picker = (
         <DropdownContainer
@@ -185,9 +217,9 @@ class DatePicker extends React.Component<DatePickerProps<DatePickerValue>, DateP
           align={this.props.menuAlign}
         >
           <Picker
-            value={this.getDate()}
-            minDate={this.getMinDate()}
-            maxDate={this.getMaxDate()}
+            value={date}
+            minDate={this.minDate}
+            maxDate={this.maxDate}
             onPick={this.handlePick}
             onSelect={this.handleSelect}
             enableTodayLink={this.props.enableTodayLink}
@@ -226,30 +258,16 @@ class DatePicker extends React.Component<DatePickerProps<DatePickerValue>, DateP
     this.input = ref;
   };
 
-  private getDate() {
-    const { value } = this.props;
-    let date = value ? tryGetValidDateShape(parseDateString(value)) : null;
-    if (date) {
-      const minDate = this.getMinDate();
-      const maxDate = this.getMaxDate();
-      if ((minDate && isLess(date, minDate)) || (maxDate && isGreater(date, maxDate))) {
-        date = null;
-      }
+  private parseValueToDate(value?: string): DateCustomComponentsNumber | undefined {
+    if (value === undefined) {
+      return undefined;
     }
-    return date;
+    const date = new DateCustom(this.locale.order, this.locale.separator).parseValue(value);
+    if (date.validate({ levels: [DateCustomValidateCheck.NotNull, DateCustomValidateCheck.Native] })) {
+      return date.shiftMonth(-1).getComponentsLikeNumber();
+    }
+    return undefined;
   }
-
-  private getMinDate = () => {
-    const { minDate } = this.props;
-    const date = minDate && tryGetValidDateShape(parseDateString(minDate));
-    return date || undefined;
-  };
-
-  private getMaxDate = () => {
-    const { maxDate } = this.props;
-    const date = maxDate && tryGetValidDateShape(parseDateString(maxDate));
-    return date || undefined;
-  };
 
   private handleFocus = () => {
     if (this.focused) {
@@ -284,7 +302,8 @@ class DatePicker extends React.Component<DatePickerProps<DatePickerValue>, DateP
   };
 
   private handleSelect = (dateShape: CalendarDateShape) => {
-    const date = formatDate(dateShape);
+    this.dateCustom.setComponents(dateShape).shiftMonth(1);
+    const date = this.dateCustom.toString();
     if (this.props.onChange) {
       this.props.onChange({ target: { value: date } }, date);
     }

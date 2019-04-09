@@ -22,11 +22,10 @@ export const inputNumber = (
   }
   if (!inputMode) {
     next = key;
-    nextInputMode = +key <= first;
+    nextInputMode = Number(key) <= first;
   } else {
     next = `${prev === null ? '' : prev}${key}`.slice(-length);
     nextInputMode = next.length < length;
-    console.log('prev', prev, next);
   }
   cb(next, nextInputMode);
 };

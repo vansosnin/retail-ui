@@ -1,4 +1,5 @@
 import * as React from 'react';
+import DateSelect from '../../DateSelect';
 import DatePicker, { DatePickerProps } from '../DatePicker';
 import { mount } from 'enzyme';
 import Calendar from '../../Calendar';
@@ -27,7 +28,7 @@ describe('DatePicker', () => {
       maxDate: '15.08.2020',
     });
     datePicker.setState({ opened: true });
-    const yearSelect = datePicker.findWhere(node => node.props().type === 'year');
+    const yearSelect = datePicker.find(DateSelect).findWhere(node => node.props().type === 'year');
     expect(yearSelect.prop('minValue')).toEqual(2017);
     expect(yearSelect.prop('maxValue')).toEqual(2020);
   });
@@ -41,8 +42,8 @@ describe('DatePicker', () => {
 
     const calendar = datePicker.find(Calendar);
 
-    expect(calendar.prop('initialMonth')).toBe(0);
-    expect(calendar.prop('initialYear')).toBe(2099);
+    expect(calendar.prop('initialMonth')).toBe(6);
+    expect(calendar.prop('initialYear')).toBe(2017);
   });
 
   it('correctly initial month/year with max date', () => {
@@ -54,8 +55,8 @@ describe('DatePicker', () => {
 
     const calendar = datePicker.find(Calendar);
 
-    expect(calendar.prop('initialMonth')).toBe(10);
-    expect(calendar.prop('initialYear')).toBe(1959);
+    expect(calendar.prop('initialMonth')).toBe(6);
+    expect(calendar.prop('initialYear')).toBe(2017);
   });
 
   it("doesn't open on focus if disabled", () => {

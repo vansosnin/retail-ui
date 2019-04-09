@@ -188,18 +188,21 @@ export class DateCustom {
     ) {
       return false;
     }
-    return levels.includes(DateCustomValidateCheck.Range) && type !== undefined
-      ? DateCustomValidator.checkRangePiecemeal(
+    if (levels.includes(DateCustomValidateCheck.Range)) {
+      return type !== undefined
+        ? DateCustomValidator.checkRangePiecemeal(
           type,
           self.getComponentsLikeNumber(),
           self.start && self.start.getComponentsLikeNumber(),
           self.end && self.end.getComponentsLikeNumber(),
         )
-      : DateCustomValidator.checkRangeFully(
+        : DateCustomValidator.checkRangeFully(
           self.toNumber(),
           self.start && self.start.toNumber(),
           self.end && self.end.toNumber(),
         );
+    }
+    return true;
   }
 
   public toFragments(

@@ -79,6 +79,6 @@ export default class DateCustomValidator {
   }
 
   public static testParseToNumber(value: DateCustomComponentRaw): boolean {
-    return value !== null && (typeof value === 'number' || /*!/^0*$/.test(value) && */!Number.isNaN(parseInt(value, 10)));
+    return value !== null && (typeof value === 'number' || !Number.isNaN(parseInt(value, 10)));
   }
 }

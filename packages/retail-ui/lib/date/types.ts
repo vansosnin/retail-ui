@@ -67,3 +67,9 @@ export enum DateCustomValidateCheck {
   Native,
   Range,
 }
+
+export enum DateCustomFirstDayWeek {
+  Monday = 0,
+  Sunday = 1,
+  Saturday = 2,
+}
