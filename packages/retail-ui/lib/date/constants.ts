@@ -31,8 +31,6 @@ export const emptyDateComponents = {
 export const defaultDateComponentsOrder = DateCustomOrder.DMY;
 export const defaultDateComponentsSeparator = DateCustomSeparator.Dot;
 
-// ---------
-
 const DateCustomSet_DMY_Dot_Monday = {
   order: DateCustomOrder.DMY,
   separator: DateCustomSeparator.Dot,
@@ -51,6 +49,3 @@ export const dateCustomLocale: {
   [LangCodes.ru_RU]: DateCustomSet_DMY_Dot_Monday,
   [LangCodes.en_EN]: DateCustomSet_MDY_Slash_Sunday,
 };
-
-
-// TODO добавить хелпер для мержа настроек локали

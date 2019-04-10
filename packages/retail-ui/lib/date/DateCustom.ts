@@ -135,15 +135,15 @@ export class DateCustom {
   }
 
   public get(type: DateCustomComponentType | null): DateCustomComponentRaw {
-    return (type !== null && DateCustomGetter.getValueDateComponent(type, this.getComponentsRaw())) || null;
+    return type !== null ? DateCustomGetter.getValueDateComponent(type, this.getComponentsRaw()) : null;
   }
 
   public set(type: DateCustomComponentType | null, value: DateCustomComponentRaw): DateCustom {
-    return (type !== null && DateCustomSetter.setValueDateComponent(this, type, value)) || this;
+    return type !== null ? DateCustomSetter.setValueDateComponent(this, type, value) : this;
   }
 
   public shift(type: DateCustomComponentType | null, step: number): DateCustom {
-    return (type !== null && DateCustomSetter.shiftValueDateComponent(this, type, step)) || this;
+    return type !== null ? DateCustomSetter.shiftValueDateComponent(this, type, step) : this;
   }
 
   public parseValue(value: string | null = ''): DateCustom {

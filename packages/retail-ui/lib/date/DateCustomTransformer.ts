@@ -24,21 +24,29 @@ import {
 } from './types';
 
 export default class DateCustomTransformer {
-  public static padStart = (value: DateCustomComponentRaw, length: number): string =>
-    String(value || '').padStart(length, CHAR_PAD);
+  public static padStart = (value: DateCustomComponentRaw, length: number, pad: string = CHAR_PAD): string =>
+    String(value || '').padStart(length, pad);
 
-  public static padYear = (year: DateCustomComponentRaw): string => DateCustomTransformer.padStart(year, LENGTH_YEAR);
-  public static padMonth = (month: DateCustomComponentRaw): string =>
-    DateCustomTransformer.padStart(month, LENGTH_MONTH);
-  public static padDate = (date: DateCustomComponentRaw): string => DateCustomTransformer.padStart(date, LENGTH_DATE);
+  public static padYear = (year: DateCustomComponentRaw, pad?: string): string =>
+    DateCustomTransformer.padStart(year, LENGTH_YEAR, pad);
+  public static padMonth = (month: DateCustomComponentRaw, pad?: string): string =>
+    DateCustomTransformer.padStart(month, LENGTH_MONTH, pad);
+  public static padDate = (date: DateCustomComponentRaw, pad?: string): string =>
+    DateCustomTransformer.padStart(date, LENGTH_DATE, pad);
 
-  public static padDateComponent = (type: DateCustomComponentType, value: DateCustomComponentRaw): string => {
+  public static padDateComponent = (
+    type: DateCustomComponentType | null,
+    value: DateCustomComponentRaw,
+    pad?: string,
+  ): string => {
     if (type === DateCustomComponentType.Year) {
-      return DateCustomTransformer.padYear(value);
+      return DateCustomTransformer.padYear(value, pad);
     } else if (type === DateCustomComponentType.Month) {
-      return DateCustomTransformer.padMonth(value);
+      return DateCustomTransformer.padMonth(value, pad);
+    } else if (type === DateCustomComponentType.Date) {
+      return DateCustomTransformer.padDate(value, pad);
     }
-    return DateCustomTransformer.padDate(value);
+    return '';
   };
 
   public static dateToFragments(
@@ -50,6 +58,7 @@ export default class DateCustomTransformer {
       separator = defaultDateComponentsSeparator,
       withSeparator = false,
       withPad = false,
+      pad,
     } = settings;
     const year: DateCustomFragment = {
       type: DateCustomComponentType.Year,
@@ -77,9 +86,9 @@ export default class DateCustomTransformer {
     }
 
     if (withPad) {
-      year.valueWithPad = DateCustomTransformer.padYear(year.value);
-      month.valueWithPad = DateCustomTransformer.padMonth(month.value);
-      date.valueWithPad = DateCustomTransformer.padDate(date.value);
+      year.valueWithPad = DateCustomTransformer.padYear(year.value, pad);
+      month.valueWithPad = DateCustomTransformer.padMonth(month.value, pad);
+      date.valueWithPad = DateCustomTransformer.padDate(date.value, pad);
     }
 
     year.isValid = DateCustomValidator.testParseToNumber(year.value);

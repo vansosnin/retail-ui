@@ -205,9 +205,13 @@ class DatePicker extends React.Component<DatePickerProps<DatePickerValue>, DateP
 
   public render(): JSX.Element {
     let picker = null;
-    const date = this.dateCustom.validate({ levels: [DateCustomValidateCheck.NotNull, DateCustomValidateCheck.Range] })
-      ? this.dateCustom.clone().shiftMonth(-1).getComponentsLikeNumber()
+    const date = this.dateCustom.validate({ levels: [DateCustomValidateCheck.NotNull, DateCustomValidateCheck.Native] })
+      ? this.dateCustom
+          .clone()
+          .shiftMonth(-1, { isLoop: false })
+          .getComponentsLikeNumber()
       : null;
+    // console.log('date :', date);
     if (this.state.opened) {
       picker = (
         <DropdownContainer
@@ -264,7 +268,7 @@ class DatePicker extends React.Component<DatePickerProps<DatePickerValue>, DateP
     }
     const date = new DateCustom(this.locale.order, this.locale.separator).parseValue(value);
     if (date.validate({ levels: [DateCustomValidateCheck.NotNull, DateCustomValidateCheck.Native] })) {
-      return date.shiftMonth(-1).getComponentsLikeNumber();
+      return date/*.shiftMonth(-1)*/.getComponentsLikeNumber();
     }
     return undefined;
   }

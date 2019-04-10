@@ -54,6 +54,7 @@ export interface DateCustomToFragmentsSettings {
   separator?: DateCustomSeparator;
   withSeparator?: boolean;
   withPad?: boolean;
+  pad?: string;
 }
 
 export interface DateCustomChangeValueDateComponentSettings {

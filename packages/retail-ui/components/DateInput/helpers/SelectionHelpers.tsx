@@ -1,4 +1,7 @@
-export const selectNodeContents = (node: HTMLElement) => {
+export const selectNodeContents = (node: HTMLElement | null) => {
+  if (!node) {
+    return;
+  }
   if (document.createRange) {
     const selection = window.getSelection();
     const range = window.document.createRange();
@@ -16,6 +19,19 @@ export const selectNodeContents = (node: HTMLElement) => {
     range.select();
     return;
   }
+};
+
+export const selectNode = (node: HTMLElement, start: number = 0, end: number = 0) => {
+  if (document.createRange) {
+    const selection = window.getSelection();
+    const range = window.document.createRange();
+    range.setStart(node, start);
+    range.setEnd(node, end);
+    selection.removeAllRanges();
+    selection.addRange(range);
+    return;
+  }
+
 };
 
 export const removeAllSelections = () => {

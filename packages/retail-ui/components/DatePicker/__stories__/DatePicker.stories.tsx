@@ -35,8 +35,8 @@ class DatePickerWithError extends React.Component<any, any> {
               size={this.props.size}
               error={this.state.error}
               value={this.state.value}
-              minDate="08.15.2004"
-              maxDate="10.21.2004"
+              minDate="08.15.2003"
+              maxDate="10.21.2006"
               onChange={this._handleChange}
               onFocus={this._unvalidate}
               onBlur={this._validate}
