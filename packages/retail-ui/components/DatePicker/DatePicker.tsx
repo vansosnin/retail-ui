@@ -3,7 +3,6 @@ import * as React from 'react';
 import { findDOMNode } from 'react-dom';
 import { DateCustom } from '../../lib/date/DateCustom';
 import {
-  DateCustomComponentsNumber,
   DateCustomOrder,
   DateCustomSeparator,
   DateCustomValidateCheck,
@@ -137,8 +136,8 @@ class DatePicker extends React.Component<DatePickerProps<DatePickerValue>, DateP
   private focused: boolean = false;
 
   private readonly dateCustom: DateCustom = new DateCustom();
-  private minDate: DateCustomComponentsNumber | undefined;
-  private maxDate: DateCustomComponentsNumber | undefined;
+  private minDate: DateCustom | undefined;
+  private maxDate: DateCustom | undefined;
   private locale!: DatePickerLocale;
 
   public componentWillReceiveProps(nextProps: DatePickerProps<DatePickerValue>) {
@@ -150,9 +149,9 @@ class DatePicker extends React.Component<DatePickerProps<DatePickerValue>, DateP
     this.dateCustom
       .setOrder(this.locale.order)
       .setSeparator(this.locale.separator)
-      .parseValue(this.props.value);
-    this.minDate = this.parseValueToDate(this.props.minDate);
-    this.maxDate = this.parseValueToDate(this.props.maxDate);
+      .parseValue(nextProps.value);
+    this.minDate = this.parseValueToDate(nextProps.minDate);
+    this.maxDate = this.parseValueToDate(nextProps.maxDate);
   }
 
   public validate = (value: Nullable<string>) => {
@@ -205,13 +204,7 @@ class DatePicker extends React.Component<DatePickerProps<DatePickerValue>, DateP
 
   public render(): JSX.Element {
     let picker = null;
-    const date = this.dateCustom.validate({ levels: [DateCustomValidateCheck.NotNull, DateCustomValidateCheck.Native] })
-      ? this.dateCustom
-          .clone()
-          .shiftMonth(-1, { isLoop: false })
-          .getComponentsLikeNumber()
-      : null;
-    // console.log('date :', date);
+    const date = this.dateCustom.toNativeFormat();
     if (this.state.opened) {
       picker = (
         <DropdownContainer
@@ -222,8 +215,8 @@ class DatePicker extends React.Component<DatePickerProps<DatePickerValue>, DateP
         >
           <Picker
             value={date}
-            minDate={this.minDate}
-            maxDate={this.maxDate}
+            minDate={this.minDate && this.minDate.toNativeFormat() || undefined}
+            maxDate={this.maxDate && this.maxDate.toNativeFormat() || undefined}
             onPick={this.handlePick}
             onSelect={this.handleSelect}
             enableTodayLink={this.props.enableTodayLink}
@@ -262,13 +255,13 @@ class DatePicker extends React.Component<DatePickerProps<DatePickerValue>, DateP
     this.input = ref;
   };
 
-  private parseValueToDate(value?: string): DateCustomComponentsNumber | undefined {
+  private parseValueToDate(value?: string): DateCustom | undefined {
     if (value === undefined) {
       return undefined;
     }
     const date = new DateCustom(this.locale.order, this.locale.separator).parseValue(value);
     if (date.validate({ levels: [DateCustomValidateCheck.NotNull, DateCustomValidateCheck.Native] })) {
-      return date/*.shiftMonth(-1)*/.getComponentsLikeNumber();
+      return date;
     }
     return undefined;
   }
@@ -306,7 +299,8 @@ class DatePicker extends React.Component<DatePickerProps<DatePickerValue>, DateP
   };
 
   private handleSelect = (dateShape: CalendarDateShape) => {
-    this.dateCustom.setComponents(dateShape).shiftMonth(1);
+    this.dateCustom.setComponents(dateShape);
+    this.forceUpdate();
     const date = this.dateCustom.toString();
     if (this.props.onChange) {
       this.props.onChange({ target: { value: date } }, date);

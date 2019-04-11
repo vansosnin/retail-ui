@@ -7,7 +7,6 @@ import DateCustomValidator from './DateCustomValidator';
 import {
   DateCustomComponentType,
   DateCustomChangeValueDateComponentSettings,
-  DateCustomComponent,
   DateCustomComponentRaw,
   DateCustomComponentsNumber,
   DateCustomComponentsRaw,
@@ -35,7 +34,7 @@ export class DateCustom {
   }
 
   public getComponentsRaw(): DateCustomComponentsRaw {
-    return this.components;
+    return { ...this.components };
   }
 
   public getComponentsLikeNumber(): DateCustomComponentsNumber {
@@ -142,8 +141,12 @@ export class DateCustom {
     return type !== null ? DateCustomSetter.setValueDateComponent(this, type, value) : this;
   }
 
-  public shift(type: DateCustomComponentType | null, step: number): DateCustom {
-    return type !== null ? DateCustomSetter.shiftValueDateComponent(this, type, step) : this;
+  public shift(
+    type: DateCustomComponentType | null,
+    step: number,
+    settings?: DateCustomChangeValueDateComponentSettings,
+  ): DateCustom {
+    return type !== null ? DateCustomSetter.shiftValueDateComponent(this, type, step, settings) : this;
   }
 
   public parseValue(value: string | null = ''): DateCustom {
@@ -158,7 +161,7 @@ export class DateCustom {
     levels = Object.values(DateCustomValidateCheck),
   }: {
     type?: DateCustomComponentType;
-    nextValue?: DateCustomComponent;
+    nextValue?: DateCustomComponentRaw;
     levels?: DateCustomValidateCheck[];
   } = {}): boolean {
     let self: DateCustom = this;
@@ -191,16 +194,16 @@ export class DateCustom {
     if (levels.includes(DateCustomValidateCheck.Range)) {
       return type !== undefined
         ? DateCustomValidator.checkRangePiecemeal(
-          type,
-          self.getComponentsLikeNumber(),
-          self.start && self.start.getComponentsLikeNumber(),
-          self.end && self.end.getComponentsLikeNumber(),
-        )
+            type,
+            self.getComponentsLikeNumber(),
+            self.start && self.start.getComponentsLikeNumber(),
+            self.end && self.end.getComponentsLikeNumber(),
+          )
         : DateCustomValidator.checkRangeFully(
-          self.toNumber(),
-          self.start && self.start.toNumber(),
-          self.end && self.end.toNumber(),
-        );
+            self.toNumber(),
+            self.start && self.start.toNumber(),
+            self.end && self.end.toNumber(),
+          );
     }
     return true;
   }
@@ -229,12 +232,21 @@ export class DateCustom {
   }
 
   public toString(settings: DateCustomToFragmentsSettings = {}): string {
-    return this.toFragments({ ...{ withPad: true, withSeparator: true }, ...settings })
+    return this.toFragments({ withPad: true, ...settings, withSeparator: false })
+      .filter(({ value }) => value !== null)
       .map(
         ({ type, valueWithPad, value }) =>
           settings.withPad && type !== DateCustomComponentType.Separator ? valueWithPad : value,
       )
-      .join('');
+      .join(settings.withSeparator ? this.separator : '');
+  }
+
+  public toNativeFormat(): DateCustomComponentsNumber | null {
+    const components = this.getComponentsLikeNumber();
+    if (DateCustomValidator.compareWithNativeDate(components)) {
+      return { ...components, month: components.month - 1 };
+    }
+    return null;
   }
 
   public clone(): DateCustom {
@@ -246,13 +258,27 @@ export class DateCustom {
 
   public restore(isSoft: boolean = true): DateCustom {
     const { year, month, date } = this.getComponentsRaw();
-    if (!isSoft || DateCustomValidator.testParseToNumber(year)) {
-      this.shiftYear(0, { isLoop: false, isRange: true });
+    if (year !== null && isSoft) {
+      const prevYear = this.getYear();
+      const restoreYear =
+        prevYear !== null && DateCustomValidator.testParseToNumber(prevYear)
+          ? prevYear > 50 && prevYear < 100
+            ? Number(prevYear) + 1900
+            : prevYear > 0 && prevYear < 51
+              ? Number(prevYear) + 2000
+              : prevYear
+          : prevYear;
+      this.setYear(restoreYear);
+      this.shiftYear(0, { isLoop: false, isRange: false });
+    } else if (DateCustomValidator.testParseToNumber(year)) {
+      if (year !== null) {
+        this.shiftYear(0, { isLoop: false, isRange: false });
+      }
     }
-    if (!isSoft || DateCustomValidator.testParseToNumber(month)) {
+    if ((year !== null && !isSoft) || DateCustomValidator.testParseToNumber(month)) {
       this.shiftMonth(0, { isLoop: false, isRange: false });
     }
-    if (!isSoft || DateCustomValidator.testParseToNumber(date)) {
+    if ((year !== null && !isSoft) || DateCustomValidator.testParseToNumber(date)) {
       this.shiftDate(0, { isLoop: false, isRange: false });
     }
     return this;

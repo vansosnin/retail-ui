@@ -125,7 +125,9 @@ export default class DateCustomTransformer {
     const dateComponents: DateCustomComponents = { ...emptyDateComponents };
 
     if (match) {
-      const matchFinished = match.slice(1).map(item => (item !== null && Number(item)) || null);
+      const matchFinished = match
+        .slice(1)
+        .map(item => (DateCustomValidator.testParseToNumber(item) ? Number(item) : null));
       if (order === DateCustomOrder.YMD) {
         ({ 0: dateComponents.year, 1: dateComponents.month, 2: dateComponents.date } = matchFinished);
       } else if (order === DateCustomOrder.MDY) {

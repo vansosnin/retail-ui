@@ -1,6 +1,7 @@
 import { action } from '@storybook/addon-actions';
 import { storiesOf } from '@storybook/react';
 import * as React from 'react';
+import { DateCustomComponentType, DateCustomOrder, DateCustomSeparator } from '../../../lib/date/types';
 // tslint:disable:jsx-no-lambda no-console
 import Button from '../../Button/index';
 import Gapped from '../../Gapped/index';
@@ -12,7 +13,7 @@ import DatePicker from '../DatePicker';
 
 class DatePickerWithError extends React.Component<any, any> {
   public state = {
-    value: "08.15.2014",
+    value: '08.15.2014',
     error: false,
     tooltip: false,
   };
@@ -30,7 +31,9 @@ class DatePickerWithError extends React.Component<any, any> {
           <LocaleProvider langCode={LangCodes.en_EN}>
             <DatePicker
               {...this.props}
-              ref={el => { this.refDatePicker = el;}}
+              ref={el => {
+                this.refDatePicker = el;
+              }}
               disabled={this.props.disabled}
               size={this.props.size}
               error={this.state.error}
@@ -81,6 +84,50 @@ class DatePickerWithError extends React.Component<any, any> {
   };
 }
 
+class DatePickerWithMinMax extends React.Component<any, any> {
+  public state = {
+    min: '02.07.2017',
+    max: '30.01.2020',
+    value: '30.01.2019',
+    order: DateCustomOrder.DMY,
+    separator: DateCustomSeparator.Dot,
+  };
+
+  public render(): React.ReactNode {
+    return (
+      <Gapped vertical gap={10}>
+        <label>
+          Начало периода:{' '}
+          <input
+            type="text"
+            value={this.state.min}
+            placeholder="min"
+            onChange={e => this.setState({ min: e.target.value })}
+          />
+        </label>
+        <label>
+          Окончание периода:{' '}
+          <input
+            type="text"
+            value={this.state.max}
+            placeholder="max"
+            onChange={e => this.setState({ max: e.target.value })}
+          />
+        </label>
+        <LocaleProvider locale={{ DatePicker: { order: this.state.order, separator: this.state.separator } }}>
+          <DatePicker
+            value={this.state.value}
+            minDate={this.state.min}
+            maxDate={this.state.max}
+            onChange={action('change')}
+            enableTodayLink={true}
+          />
+        </LocaleProvider>
+      </Gapped>
+    );
+  }
+}
+
 const dateForMock = new Date('2017-01-02');
 
 storiesOf('DatePicker', module)
@@ -113,7 +160,7 @@ storiesOf('DatePicker', module)
   .add('DatePicker large', () => <DatePickerWithError size="large" />)
   .add('DatePicker with min max date', () => (
     <div style={{ paddingTop: 200 }}>
-      <DatePicker value="02.07.2017" minDate="02.07.2017" maxDate="30.01.2018" onChange={action('change')} />
+      <DatePickerWithMinMax />
     </div>
   ))
   .add('DatePicker LocaleProvider', () => {

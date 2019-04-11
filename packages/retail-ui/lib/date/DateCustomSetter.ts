@@ -3,6 +3,7 @@ import {
   DateCustomComponentType,
   DateCustomComponentRaw,
   DateCustomComponentsRaw,
+  DateCustomChangeValueDateComponentSettings,
 } from './types';
 
 export default class DateCustomSetter {
@@ -25,15 +26,20 @@ export default class DateCustomSetter {
     return dateCustom;
   }
 
-  public static shiftValueDateComponent(dateCustom: DateCustom, type: DateCustomComponentType, step: number): DateCustom {
+  public static shiftValueDateComponent(
+    dateCustom: DateCustom,
+    type: DateCustomComponentType,
+    step: number,
+    settings?: DateCustomChangeValueDateComponentSettings,
+  ): DateCustom {
     if (type === DateCustomComponentType.Year) {
-      dateCustom.shiftYear(step);
+      dateCustom.shiftYear(step, settings);
     } else if (type === DateCustomComponentType.Month) {
-      dateCustom.shiftMonth(step);
+      dateCustom.shiftMonth(step, settings);
     } else if (type === DateCustomComponentType.Date) {
-      dateCustom.shiftDate(step);
+      dateCustom.shiftDate(step, settings);
     } else if (type === DateCustomComponentType.All) {
-      dateCustom.shiftDate(step);
+      dateCustom.shiftDate(step, settings);
     }
     return dateCustom;
   }
