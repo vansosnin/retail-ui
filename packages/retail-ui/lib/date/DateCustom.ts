@@ -79,7 +79,20 @@ export class DateCustom {
     return this;
   }
 
-  public setComponents(components: DateCustomComponentsRaw | null): DateCustom {
+  public setComponents(components: DateCustomComponentsRaw | null, isNative: boolean = false): DateCustom {
+    if (
+      components &&
+      isNative &&
+      DateCustomValidator.compareWithNativeDate(DateCustomTransformer.dateComponentsStringToNumber(components))
+    ) {
+      this.components = {
+        ...components,
+        month: DateCustomValidator.testParseToNumber(components.month)
+          ? Number(components.month) + 1
+          : components.month,
+      };
+      return this;
+    }
     this.components = components || { ...emptyDateComponents };
     return this;
   }

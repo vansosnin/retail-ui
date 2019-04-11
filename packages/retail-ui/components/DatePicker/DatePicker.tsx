@@ -299,9 +299,8 @@ class DatePicker extends React.Component<DatePickerProps<DatePickerValue>, DateP
   };
 
   private handleSelect = (dateShape: CalendarDateShape) => {
-    this.dateCustom.setComponents(dateShape);
-    this.forceUpdate();
-    const date = this.dateCustom.toString();
+    this.dateCustom.setComponents(dateShape, true);
+    const date = this.dateCustom.toString({withSeparator: true, withPad: true});
     if (this.props.onChange) {
       this.props.onChange({ target: { value: date } }, date);
     }

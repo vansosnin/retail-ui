@@ -1,7 +1,7 @@
 import { action } from '@storybook/addon-actions';
 import { storiesOf } from '@storybook/react';
 import * as React from 'react';
-import { DateCustomComponentType, DateCustomOrder, DateCustomSeparator } from '../../../lib/date/types';
+import { DateCustomOrder, DateCustomSeparator } from '../../../lib/date/types';
 // tslint:disable:jsx-no-lambda no-console
 import Button from '../../Button/index';
 import Gapped from '../../Gapped/index';
