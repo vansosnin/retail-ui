@@ -1,11 +1,16 @@
-export const selectNodeContents = (node: HTMLElement | null) => {
+export const selectNodeContents = (node: HTMLElement | null, start?: number, end?: number) => {
   if (!node) {
     return;
   }
   if (document.createRange) {
     const selection = window.getSelection();
     const range = window.document.createRange();
-    range.selectNodeContents(node);
+    if (start !== undefined && end !== undefined) {
+      range.setStart(node, start);
+      range.setEnd(node, end);
+    } else {
+      range.selectNodeContents(node);
+    }
     selection.removeAllRanges();
     selection.addRange(range);
     return;

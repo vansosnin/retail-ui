@@ -4,13 +4,13 @@ import { CHAR_MASK } from '../../lib/date/constants';
 import DateCustomValidator from '../../lib/date/DateCustomValidator';
 import { DateCustomComponentType, DateCustomFragment } from '../../lib/date/types';
 import styles from './DateInput.less';
-import { selectNodeContents } from './helpers/SelectionHelpers';
+import { removeAllSelections } from './helpers/SelectionHelpers';
 
 interface FragmentDateCustomProps extends DateCustomFragment {
   isValidFully: boolean;
   selected: DateCustomComponentType | null;
   inputMode: boolean;
-  onMouseUp: (type: DateCustomComponentType) => () => void;
+  onMouseUp: (type: DateCustomComponentType) => (event: React.MouseEvent<HTMLElement>) => void;
 }
 
 export const FragmentDateCustom: React.SFC<FragmentDateCustomProps> = ({
@@ -33,9 +33,8 @@ export const FragmentDateCustom: React.SFC<FragmentDateCustomProps> = ({
     if (DateCustomValidator.testParseToNumber(value)) {
       length = Math.max(length - value!.toString().length, 0);
     }
-    console.log('qwe', selected === type);
     return (
-      <span ref={selected === type ? (el) => selectNodeContents(el) : undefined} className={classComponent} onMouseUp={onMouseUp(type)}>
+      <span className={classComponent} onMouseUp={onMouseUp(type)} onMouseDown={removeAllSelections}>
         <span>
           {value}
           <span className={styles.mask}>{CHAR_MASK.repeat(length)}</span>

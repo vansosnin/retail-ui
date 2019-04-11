@@ -33,6 +33,8 @@ const move = (event: MouseEvent) => {
     isClicked = false;
     if (event.target !== null) {
       event.target.dispatchEvent(dragndropstartEvent);
+      event.preventDefault();
+      event.stopImmediatePropagation();
     }
   }
   if (isDragging) {
@@ -47,6 +49,8 @@ const end = (event: MouseEvent) => {
     isDragging = false;
     if (event.target !== null) {
       event.target.dispatchEvent(createEvent('dragndropend', event));
+      event.preventDefault();
+      event.stopImmediatePropagation();
     }
   }
 };

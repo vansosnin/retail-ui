@@ -1,12 +1,11 @@
 import CalendarIcon from '@skbkontur/react-icons/Calendar';
 import classNames from 'classnames';
 import * as React from 'react';
-import { CHAR_MASK } from '../../lib/date/constants';
 import { DateCustom } from '../../lib/date/DateCustom';
-import DateCustomTransformer from '../../lib/date/DateCustomTransformer';
 import { DateCustomComponent, DateCustomComponentType, DateCustomValidateCheck } from '../../lib/date/types';
 import dragEndDrop from '../../lib/events/dragEndDrop';
 import Upgrades from '../../lib/Upgrades';
+import { isFirefox } from '../../lib/utils';
 
 import { Nullable } from '../../typings/utility-types';
 import { DatePickerLocale, DatePickerLocaleHelper } from '../DatePicker/locale';
@@ -18,6 +17,7 @@ import { FragmentDateCustom } from './FragmentDateCustom';
 import { Actions, extractAction } from './helpers/DateInputKeyboardActions';
 import { inputNumber } from './helpers/inputNumber';
 import { removeAllSelections, selectNode, selectNodeContents } from './helpers/SelectionHelpers';
+import debounce from 'lodash.debounce';
 
 export interface DateInputState {
   selected: DateCustomComponentType | null;
@@ -64,6 +64,12 @@ export default class DateInput extends React.PureComponent<DateInputProps, DateI
   private readonly dateCustom: DateCustom;
   private dateComponentsTypesOrder: DateCustomComponentType[];
 
+  private autoFocusDebounce = debounce(() => {
+    if (this.inputLikeText && !this.isFrozen && this.state.isInFocused) {
+      this.inputLikeText.focus();
+    }
+  }, 0);
+
   constructor(props: DateInputProps) {
     super(props);
     this.dateCustom = new DateCustom();
@@ -91,10 +97,21 @@ export default class DateInput extends React.PureComponent<DateInputProps, DateI
       this.emitChange();
     }
 
-    if (this.state.selected === DateCustomComponentType.All) {
-      this.selectAll();
-    } else if (prevState.selected === DateCustomComponentType.All) {
-      removeAllSelections();
+    // if (this.state.selected === DateCustomComponentType.All) {
+    //   this.selectAll();
+    // } else if (prevState.selected === DateCustomComponentType.All) {
+    //   removeAllSelections();
+    // }
+    if (this.state.isInFocused) {
+      this.changeSelectedDateComponent(this.state.selected);
+    }
+    if (prevState.selected !== this.state.selected) {
+      // const index = this.dateComponentsTypesOrder.indexOf(this.state.selected);
+      // if (index > -1) {
+      //   this.selectNodeContents(this.divInnerNode, index * 2, index * 2 + 1);
+      // } else {
+      //   this.selectNodeContents(this.divInnerNode);
+      // }
     }
 
     if (this.state.notify && !prevState.notify) {
@@ -141,7 +158,7 @@ export default class DateInput extends React.PureComponent<DateInputProps, DateI
         disabled={this.props.disabled}
         error={this.props.error}
         warning={this.props.warning}
-        onBlur={this.handleBlur}
+        onBlurCapture={this.handleBlur}
         onFocus={this.handleFocus}
         onKeyDown={this.handleKeyDown}
         onPaste={this.handlePaste}
@@ -189,10 +206,34 @@ export default class DateInput extends React.PureComponent<DateInputProps, DateI
     }
   }
 
-  private onMouseUpComponent = (type: DateCustomComponentType) => () =>
-    setTimeout(() => this.selectDateComponent(type), 0);
+  private onMouseUpComponent = (type: DateCustomComponentType) => (event: React.MouseEvent<HTMLElement>) => {
+    this.selectDateComponent(type);
+    const index = this.dateComponentsTypesOrder.indexOf(type);
+    if (index > -1) {
+      this.selectNodeContents(this.divInnerNode, index * 2, index * 2 + 1);
+    } else {
+      this.selectNodeContents(this.divInnerNode);
+    }
+    event.preventDefault();
+    event.stopPropagation();
+  };
 
-  private onDraAndDropStart = () => this.setState({ isDragged: true });
+  private changeSelectedDateComponent = (type?: DateCustomComponentType | null): void => {
+    type = type || this.state.selected;
+    if (type === null) {
+      return;
+    }
+    if (type === DateCustomComponentType.All) {
+      this.selectNodeContents(this.divInnerNode);
+      return;
+    }
+    const index = this.dateComponentsTypesOrder.indexOf(type);
+    if (index > -1) {
+      this.selectNodeContents(this.divInnerNode, index * 2, index * 2 + 1);
+    }
+  };
+  private onDraAndDropStart = () => this.setState({ isDragged: true, selected: null });
+
   private onDraAndDropEnd = () => this.setState({ isDragged: false });
 
   private updateDateCustom(props: DateInputProps) {
@@ -219,18 +260,26 @@ export default class DateInput extends React.PureComponent<DateInputProps, DateI
   };
 
   private handleFocus = (event: React.FocusEvent<HTMLElement>) => {
-    this.setState({ isInFocused: true });
+    this.setState(prevState => {
+      return {
+        isInFocused: true,
+        selected: prevState.selected === null ? this.getFirstDateComponentType() : prevState.selected,
+      };
+    });
 
-    this.selectDateComponent(this.getFirstDateComponentType());
-    if (this.props.onFocus) {
+    if (this.props.onFocus && !this.isFrozen) {
       this.props.onFocus(event);
     }
   };
 
   private handleBlur = (event: React.FocusEvent<HTMLElement>) => {
     if (this.isFrozen) {
+      this.autoFocusDebounce();
+      event.preventDefault();
+      event.nativeEvent.stopImmediatePropagation();
       return;
     }
+    this.autoFocusDebounce.cancel();
 
     this.setState({ isInFocused: false });
 
@@ -240,7 +289,7 @@ export default class DateInput extends React.PureComponent<DateInputProps, DateI
 
     this.setState({ selected: null, isOnInputMode: false }, () => {
       removeAllSelections();
-      if (this.props.onBlur) {
+      if (this.props.onBlur && !this.isFrozen) {
         this.props.onBlur(event);
       }
     });
@@ -315,6 +364,10 @@ export default class DateInput extends React.PureComponent<DateInputProps, DateI
       this.blink();
     }
 
+    if (this.state.isInFocused) {
+      this.changeSelectedDateComponent(this.state.selected);
+    }
+
     if (action !== Actions.Ignore && action !== Actions.PasteValue && action !== Actions.CopyValue) {
       event.preventDefault();
     }
@@ -349,19 +402,22 @@ export default class DateInput extends React.PureComponent<DateInputProps, DateI
   }
 
   private clearOneChar(): void {
-    let { selected: type } = this.state;
-    if (type === DateCustomComponentType.All) {
-      type = this.getLastDateComponentType();
-    }
-    let prev = this.dateCustom.get(type);
+    const prevType = this.state.selected;
+    const nextType =
+      prevType === DateCustomComponentType.All
+        ? this.dateCustom
+            .toFragments({ withSeparator: false })
+            .reduce((_type, { value, type }) => (value !== null ? type : _type), this.getLastDateComponentType())
+        : prevType;
+    let prev = this.dateCustom.get(nextType);
     if (prev === null) {
       this.moveSelection(-1);
       return;
     }
     prev = String(prev);
     const next = prev.replace(/.$/, '') || null;
-    this.dateCustom.set(type, next);
-    this.updateDateComponents({ isOnInputMode: next !== null, selected: type });
+    this.dateCustom.set(nextType, next);
+    this.updateDateComponents({ isOnInputMode: next !== null, selected: nextType });
   }
 
   private updateDateComponentBy(step: number) {
@@ -392,18 +448,7 @@ export default class DateInput extends React.PureComponent<DateInputProps, DateI
   }
 
   private selectAll(): void {
-    if (this.state.isInFocused && this.divInnerNode) {
-      if (isIE || isEdge) {
-        this.isFrozen = true;
-        setTimeout(() => (this.isFrozen = false), 0);
-        selectNodeContents(this.divInnerNode);
-        if (this.inputLikeText) {
-          this.inputLikeText.focus();
-        }
-      } else {
-        selectNodeContents(this.divInnerNode);
-      }
-    }
+    this.selectNodeContents(this.divInnerNode);
   }
 
   private inputValue(event: React.KeyboardEvent<HTMLElement>): void {
@@ -417,6 +462,25 @@ export default class DateInput extends React.PureComponent<DateInputProps, DateI
     }
     inputNumber(type, prev, event.key, this.state.isOnInputMode, this.inputNumberCallBack);
   }
+
+  private selectNodeContents = (node: HTMLElement | null, start?: number, end?: number): void => {
+    if (this.state.isInFocused && node) {
+      if (isIE || isEdge) {
+        this.isFrozen = true;
+        setTimeout(() => (this.isFrozen = false), 0);
+        selectNodeContents(node, start, end);
+        if (this.inputLikeText) {
+          this.inputLikeText.focus();
+        }
+      } else {
+        if (isFirefox) {
+          setTimeout(() => selectNodeContents(node, start, end));
+        } else {
+          selectNodeContents(node, start, end);
+        }
+      }
+    }
+  };
 
   private inputNumberCallBack = (next: DateCustomComponent, inputMode: boolean): void => {
     let { selected: type } = this.state;
@@ -445,8 +509,10 @@ export default class DateInput extends React.PureComponent<DateInputProps, DateI
     if (this.isFrozen) {
       return;
     }
-    const selectedDateComponent = type === null ? this.getFirstDateComponentType() : type;
-    this.setState({ selected: selectedDateComponent });
+    // const selectedDateComponent = type === null ? this.getFirstDateComponentType() : type;
+    this.setState({ selected: type }, () => {
+      // this.changeSelectedDateComponent(selectedDateComponent)
+    });
   };
 
   private onDoubleClick = (): void => {
