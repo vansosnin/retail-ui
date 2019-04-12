@@ -100,9 +100,9 @@ setups.forEach(({ name, getInput, getValue }) => {
         ['', ['5', '5', '2', '0', '1', '8'], '05.05.2018'],
 
         // Separator
-        ['', ['1', '.', '1', '.', '2', '0', '1', '9'], '01.01.2019'],
-        ['21.12.2012', ['.', '1', '1', '1', '.', '2', '0', '1', '9'], '11.01.2019'],
-        ['21.12.2012', ['1', '1', '.', '6', '.', '2', '0', '1', '9'], '11.06.2019'],
+        ['', ['1', '.', '1', '/', '2', '0', '1', '9'], '01.01.2019'],
+        ['21.12.2012', ['-', '1', '.', '2', '0', '1', '9'], '21.01.2019'],
+        ['21.12.2012', ['1', ' ', '6', '2', '0', '1', '9'], '01.06.2019'],
       ];
 
       KeyDownCases.forEach(([initDate, keys, expectedDate]) => {
@@ -113,7 +113,8 @@ setups.forEach(({ name, getInput, getValue }) => {
           const input = getInput(render({ value: initDate, onChange }));
           input.simulate('focus');
           keys.forEach(key => input.simulate('keydown', { key }));
-          expect(onChange).toHaveBeenLastCalledWith({ target: { value: expectedDate } }, expectedDate);
+          // TODO: исправить сравнение тестов и добавить в onChange экземляр DateCustom
+          expect(onChange.mock.calls).toEqual( { target: { value: expectedDate } });
         });
       });
 

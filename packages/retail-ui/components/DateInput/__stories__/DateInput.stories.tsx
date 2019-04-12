@@ -23,6 +23,8 @@ storiesOf('DateInput', module)
           value="2006.10.21"
           // maxDate="2008.10.21"
           minDate="2004.08.15"
+          onFocus={() => console.log('focus 1')}
+          onBlur={() => console.log('blur 1')}
         />
       </LocaleProvider>
       <br />
@@ -39,6 +41,8 @@ storiesOf('DateInput', module)
           value=""
           // maxDate="10.03.2012"
           // minDate="15.08.2009"
+          onFocus={() => console.log('focus 2')}
+          onBlur={() => console.log('blur 2')}
         />
       </LocaleProvider>
     </div>

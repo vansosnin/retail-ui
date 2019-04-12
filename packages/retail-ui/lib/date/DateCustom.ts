@@ -245,13 +245,13 @@ export class DateCustom {
   }
 
   public toString(settings: DateCustomToFragmentsSettings = {}): string {
-    return this.toFragments({ withPad: true, ...settings, withSeparator: false })
+    return this.toFragments({ withPad: true, ...settings, withSeparator: true })
       .filter(({ value }) => value !== null)
       .map(
         ({ type, valueWithPad, value }) =>
           settings.withPad && type !== DateCustomComponentType.Separator ? valueWithPad : value,
       )
-      .join(settings.withSeparator ? this.separator : '');
+      .join('');
   }
 
   public toNativeFormat(): DateCustomComponentsNumber | null {

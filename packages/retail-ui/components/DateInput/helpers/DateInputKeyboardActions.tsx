@@ -24,7 +24,7 @@ export enum Actions {
 
 const extractAction = new KeyboardActionExctracterBuilder()
   .add(Actions.PasteValue, e => (e.ctrlKey || e.metaKey) && e.key === 'v')
-  // .add(Actions.CopyValue, e => (e.ctrlKey || e.metaKey) && e.key === 'c')
+  .add(Actions.CopyValue, e => (e.ctrlKey || e.metaKey) && e.key === 'c')
   .add(Actions.FullSelection, e => (e.ctrlKey || e.metaKey) && e.key === 'a')
   .add(Actions.Ignore, e => isModified(e) || isFkeys(e) || e.key === 'Tab')
   .add(Actions.MoveSelectionLeft, e => e.key === 'ArrowLeft')

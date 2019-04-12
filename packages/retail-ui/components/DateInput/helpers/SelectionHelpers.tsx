@@ -26,21 +26,11 @@ export const selectNodeContents = (node: HTMLElement | null, start?: number, end
   }
 };
 
-export const selectNode = (node: HTMLElement, start: number = 0, end: number = 0) => {
-  if (document.createRange) {
-    const selection = window.getSelection();
-    const range = window.document.createRange();
-    range.setStart(node, start);
-    range.setEnd(node, end);
-    selection.removeAllRanges();
-    selection.addRange(range);
-    return;
-  }
-
-};
-
 export const removeAllSelections = () => {
-  if (typeof window.getSelection === 'function') {
+  try {
     window.getSelection().removeAllRanges();
+  } catch (e) {
+    // empty block
+    // Fix IE from issue not working (https://github.com/skbkontur/retail-ui/issues/1205)
   }
 };

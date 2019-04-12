@@ -28,7 +28,7 @@ class DatePickerWithError extends React.Component<any, any> {
           render={() => 'Такой даты не существует'}
           onCloseClick={this._removeTooltip}
         >
-          <LocaleProvider langCode={LangCodes.en_EN}>
+          <LocaleProvider locale={{ DatePicker: { order: DateCustomOrder.MDY } }}>
             <DatePicker
               {...this.props}
               ref={el => {
