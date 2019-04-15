@@ -11,9 +11,13 @@ export const selectNodeContents = (node: HTMLElement | null, start?: number, end
     } else {
       range.selectNodeContents(node);
     }
-    selection.removeAllRanges();
-    selection.addRange(range);
-    return;
+    try {
+      selection.removeAllRanges();
+      selection.addRange(range);
+      return;
+    } catch (e) {
+      // empty block
+    }
   }
 
   // @ts-ignore

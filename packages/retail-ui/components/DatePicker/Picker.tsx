@@ -36,7 +36,7 @@ const getTodayCalendarDate = () => {
 
 @locale('DatePicker', DatePickerLocaleHelper)
 export default class Picker extends React.Component<Props, State> {
-  private _calendar: Calendar | null = null;
+  private calendar: Calendar | null = null;
 
   private readonly locale!: DatePickerLocale;
 
@@ -52,7 +52,7 @@ export default class Picker extends React.Component<Props, State> {
   public componentDidUpdate(prevProps: Props) {
     const { value } = this.props;
     if (value && !shallowEqual(value, prevProps.value)) {
-      this._scrollToMonth(value.month, value.year);
+      this.scrollToMonth(value.month, value.year);
     }
   }
 
@@ -62,7 +62,7 @@ export default class Picker extends React.Component<Props, State> {
       // tslint:disable-next-line:jsx-no-lambda
       <div className={styles.root} onMouseDown={e => e.preventDefault()}>
         <Calendar
-          ref={c => (this._calendar = c)}
+          ref={c => (this.calendar = c)}
           value={this.props.value}
           initialMonth={date.month}
           initialYear={date.year}
@@ -71,33 +71,33 @@ export default class Picker extends React.Component<Props, State> {
           maxDate={this.props.maxDate}
           isHoliday={this.props.isHoliday}
         />
-        {this.props.enableTodayLink && this._renderTodayLink()}
+        {this.props.enableTodayLink && this.renderTodayLink()}
       </div>
     );
   }
 
-  private _scrollToMonth = (month: number, year: number) => {
-    if (this._calendar) {
-      this._calendar.scrollToMonth(month, year);
+  private scrollToMonth = (month: number, year: number) => {
+    if (this.calendar) {
+      this.calendar.scrollToMonth(month, year);
     }
   };
 
-  private _renderTodayLink() {
+  private renderTodayLink() {
     return (
-      <button className={styles.todayWrapper} onClick={this._handleSelectToday} tabIndex={-1}>
+      <button className={styles.todayWrapper} onClick={this.handleSelectToday} tabIndex={-1}>
         {this.locale.today} {formatDate(this.state.today)}
       </button>
     );
   }
 
-  private _handleSelectToday = () => {
+  private handleSelectToday = () => {
     const { today } = this.state;
     if (this.props.onSelect) {
       this.props.onSelect(today);
     }
-    if (this._calendar) {
+    if (this.calendar) {
       const { month, year } = today;
-      this._calendar.scrollToMonth(month, year);
+      this.calendar.scrollToMonth(month, year);
     }
   };
 

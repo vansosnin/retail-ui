@@ -41,7 +41,7 @@ export interface DateInputProps {
   size?: 'small' | 'large' | 'medium';
   onBlur?: (x0: React.FocusEvent<HTMLElement>) => void;
   onFocus?: (x0: React.FocusEvent<HTMLElement>) => void;
-  onChange?: (x0: { target: { value: string } }, x1: string) => void;
+  onChange?: (x0: { target: { value: string } }, x1: string, x2: DateCustom) => void;
   onKeyDown?: (x0: React.KeyboardEvent<HTMLElement>) => void;
 }
 
@@ -114,15 +114,6 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
   }
 
   public render() {
-    const { selected, isOnInputMode, dateValue, isInFocused, isDragged } = this.state;
-    const fragments =
-      !isInFocused && dateValue === ''
-        ? []
-        : this.dateCustom.toFragments({
-            withSeparator: true,
-            withPad: true,
-          });
-
     return (
       <InputLikeText
         width={this.props.width}
@@ -136,20 +127,13 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
         onBlur={this.handleBlur}
         onFocus={this.handleFocus}
         onKeyDown={this.handleKeyDown}
+        onMouseDown={this.handleMouseDown}
         onPaste={this.handlePaste}
         rightIcon={this.renderIcon()}
       >
         {
           <div ref={el => (this.divInnerNode = el)} onDoubleClick={this.onDoubleClick} className={styles.root}>
-            {fragments.map((fragment, index) => (
-              <FragmentDateCustom
-                key={index}
-                {...fragment}
-                onMouseUp={this.onMouseUpComponent}
-                selected={isDragged ? null : selected}
-                inputMode={isOnInputMode}
-              />
-            ))}
+            {this.getFragments()}
           </div>
         }
       </InputLikeText>
@@ -179,6 +163,30 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
       }
     }
   }
+
+  private getFragments = (): JSX.Element[] => {
+    const { selected, isOnInputMode, dateValue, isInFocused, isDragged } = this.state;
+    const fragments =
+      isInFocused || dateValue !== ''
+        ? this.dateCustom.toFragments({
+            withSeparator: true,
+            withPad: true,
+          })
+        : [];
+    return fragments.map((fragment, index) => (
+      <FragmentDateCustom
+        key={index}
+        {...fragment}
+        onMouseUp={this.onMouseUpComponent}
+        selected={isDragged ? null : selected}
+        inputMode={isOnInputMode}
+      />
+    ));
+  };
+
+  private handleMouseDown = () => {
+    //  empty block
+  };
 
   private onMouseUpComponent = (type: DateCustomComponentType) => (event: React.MouseEvent<HTMLElement>) => {
     this.selectDateComponent(type);
@@ -323,7 +331,7 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
     }
 
     if (this.state.isInFocused) {
-      this.focused();
+      this.selection();
     }
 
     if (action !== Actions.Ignore && action !== Actions.PasteValue && action !== Actions.CopyValue) {
@@ -331,7 +339,7 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
     }
   };
 
-  private focused() {
+  private selection() {
     this.changeSelectedDateComponent(this.state.selected);
   }
 
@@ -349,7 +357,7 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
       return;
     }
     if (this.props.onChange) {
-      this.props.onChange({ target: { value } }, value);
+      this.props.onChange({ target: { value } }, value, this.dateCustom);
     }
   }
 
@@ -504,4 +512,4 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
   };
 }
 
-export default isIE || isEdge ? DateInputFallback(DateInput) : DateInput;
+export default (isIE || isEdge ? DateInputFallback(DateInput) : DateInput);

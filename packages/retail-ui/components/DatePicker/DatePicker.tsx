@@ -2,21 +2,18 @@ import * as PropTypes from 'prop-types';
 import * as React from 'react';
 import { findDOMNode } from 'react-dom';
 import { DateCustom } from '../../lib/date/DateCustom';
-import {
-  DateCustomOrder,
-  DateCustomSeparator,
-  DateCustomValidateCheck,
-} from '../../lib/date/types';
+import DateCustomValidator from '../../lib/date/DateCustomValidator';
+import { DateCustomOrder, DateCustomSeparator, DateCustomValidateCheck } from '../../lib/date/types';
 import { Nullable } from '../../typings/utility-types';
 import { CalendarDateShape } from '../Calendar';
 import DateInput from '../DateInput';
+import { DateInput as PureDateInput } from '../DateInput/DateInput';
 import DropdownContainer from '../DropdownContainer/DropdownContainer';
 import filterProps from '../filterProps';
 import { locale } from '../LocaleProvider/decorators';
 
 import styles from './DatePicker.less';
 
-import { formatDate } from './DatePickerHelpers';
 import { DatePickerLocale, DatePickerLocaleHelper } from './locale';
 import Picker from './Picker';
 
@@ -42,7 +39,7 @@ export interface DatePickerProps<T> {
   warning?: boolean;
   width: number | string;
   onBlur?: () => void;
-  onChange: (e: { target: { value: T } }, v: T) => void;
+  onChange: (e: { target: { value: T } }, v: T, d: DateCustom) => void;
   onFocus?: () => void;
   onKeyDown?: (e: React.KeyboardEvent<any>) => void;
   onMouseEnter?: (e: React.MouseEvent<any>) => void;
@@ -56,9 +53,7 @@ export interface DatePickerProps<T> {
    * @param {boolean} isWeekend - флаг выходного (суббота или воскресенье)
    * @returns {boolean} `true` для выходного или `false` для рабочего дня
    */
-  isHoliday: (day: T, isWeekend: boolean) => boolean;
-  dateComponentsOrder?: DateCustomOrder;
-  dateComponentsSeparator?: DateCustomSeparator;
+  isHoliday: (day: T, isWeekend: boolean, dateCustom: DateCustom) => boolean;
 }
 
 export interface DatePickerState {
@@ -127,11 +122,24 @@ class DatePicker extends React.Component<DatePickerProps<DatePickerValue>, DateP
     isHoliday: (_day: DatePickerValue, isWeekend: boolean) => isWeekend,
   };
 
+  public static validate = (value: Nullable<string>) => {
+    if (!value) {
+      return false;
+    }
+    const dc = new DateCustom(DateCustomOrder.DMY, DateCustomSeparator.Dot).parseValue(value);
+    const dcNative = dc.getComponentsLikeNumber();
+    return (
+      dc.validate({ levels: [DateCustomValidateCheck.Number] }) &&
+      dcNative &&
+      DateCustomValidator.compareWithNativeDate(dcNative)
+    );
+  };
+
   public state: DatePickerState = {
     opened: false,
   };
 
-  private input: DateInput | null = null;
+  private input: PureDateInput | null = null;
 
   private focused: boolean = false;
 
@@ -154,7 +162,7 @@ class DatePicker extends React.Component<DatePickerProps<DatePickerValue>, DateP
     this.maxDate = this.parseValueToDate(nextProps.maxDate);
   }
 
-  public validate = (value: Nullable<string>) => {
+  public validateDateCustom = (value: Nullable<string>) => {
     if (!value) {
       return false;
     }
@@ -215,8 +223,8 @@ class DatePicker extends React.Component<DatePickerProps<DatePickerValue>, DateP
         >
           <Picker
             value={date}
-            minDate={this.minDate && this.minDate.toNativeFormat() || undefined}
-            maxDate={this.maxDate && this.maxDate.toNativeFormat() || undefined}
+            minDate={(this.minDate && this.minDate.toNativeFormat()) || undefined}
+            maxDate={(this.maxDate && this.maxDate.toNativeFormat()) || undefined}
             onPick={this.handlePick}
             onSelect={this.handleSelect}
             enableTodayLink={this.props.enableTodayLink}
@@ -251,7 +259,7 @@ class DatePicker extends React.Component<DatePickerProps<DatePickerValue>, DateP
     );
   }
 
-  private getInputRef = (ref: DateInput | null) => {
+  private getInputRef = (ref: PureDateInput | null) => {
     this.input = ref;
   };
 
@@ -300,15 +308,16 @@ class DatePicker extends React.Component<DatePickerProps<DatePickerValue>, DateP
 
   private handleSelect = (dateShape: CalendarDateShape) => {
     this.dateCustom.setComponents(dateShape, true);
-    const date = this.dateCustom.toString({withSeparator: true, withPad: true});
+    const date = this.dateCustom.toString({ withSeparator: true, withPad: true });
     if (this.props.onChange) {
-      this.props.onChange({ target: { value: date } }, date);
+      this.props.onChange({ target: { value: date } }, date, this.dateCustom);
     }
   };
 
   private isHoliday = ({ date, month, year, isWeekend }: CalendarDateShape & { isWeekend: boolean }) => {
-    const dateString = formatDate({ date, month, year });
-    return this.props.isHoliday(dateString, isWeekend);
+    const dc = this.dateCustom.clone().setComponents({ date, month, year }, true);
+    const dateString = dc.toString();
+    return this.props.isHoliday(dateString, isWeekend, dc);
   };
 }
 

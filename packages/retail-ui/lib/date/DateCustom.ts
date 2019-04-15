@@ -5,11 +5,11 @@ import DateCustomSetter from './DateCustomSetter';
 import DateCustomTransformer from './DateCustomTransformer';
 import DateCustomValidator from './DateCustomValidator';
 import {
-  DateCustomComponentType,
   DateCustomChangeValueDateComponentSettings,
   DateCustomComponentRaw,
   DateCustomComponentsNumber,
   DateCustomComponentsRaw,
+  DateCustomComponentType,
   DateCustomFragment,
   DateCustomOrder,
   DateCustomSeparator,
@@ -79,18 +79,14 @@ export class DateCustom {
     return this;
   }
 
-  public setComponents(components: DateCustomComponentsRaw | null, isNative: boolean = false): DateCustom {
-    if (
-      components &&
-      isNative &&
-      DateCustomValidator.compareWithNativeDate(DateCustomTransformer.dateComponentsStringToNumber(components))
-    ) {
-      this.components = {
-        ...components,
-        month: DateCustomValidator.testParseToNumber(components.month)
-          ? Number(components.month) + 1
-          : components.month,
-      };
+  public setComponents(components: DateCustomComponentsRaw | null, isNativeMonth: boolean = false): DateCustom {
+    if (components && isNativeMonth) {
+      const clone = this.clone()
+        .setComponents(components)
+        .shiftMonth(1);
+      if (clone.validate({ levels: [DateCustomValidateCheck.Native] })) {
+        this.components = { ...clone.getComponentsLikeNumber() };
+      }
       return this;
     }
     this.components = components || { ...emptyDateComponents };
@@ -192,6 +188,12 @@ export class DateCustom {
       return false;
     }
     if (
+      levels.includes(DateCustomValidateCheck.Number) &&
+      !Object.values(self.getComponentsRaw()).every(DateCustomValidator.testParseToNumber)
+    ) {
+      return false;
+    }
+    if (
       levels.includes(DateCustomValidateCheck.Limits) &&
       !DateCustomValidator.checkLimits(self.getComponentsLikeNumber(), type)
     ) {
@@ -245,7 +247,7 @@ export class DateCustom {
   }
 
   public toString(settings: DateCustomToFragmentsSettings = {}): string {
-    return this.toFragments({ withPad: true, ...settings, withSeparator: true })
+    return this.toFragments({ withPad: true, withSeparator: true, ...settings })
       .filter(({ value }) => value !== null)
       .map(
         ({ type, valueWithPad, value }) =>

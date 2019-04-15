@@ -64,6 +64,7 @@ export interface DateCustomChangeValueDateComponentSettings {
 
 export enum DateCustomValidateCheck {
   NotNull,
+  Number,
   Limits,
   Native,
   Range,

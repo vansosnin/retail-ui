@@ -69,7 +69,7 @@ class DatePickerWithError extends React.Component<any, any> {
   private _validate = () => {
     const currentValue = this.state.value;
     this.setState(() => {
-      const error = !!currentValue && !(this.refDatePicker && this.refDatePicker.validate(currentValue));
+      const error = !!currentValue && !(this.refDatePicker && this.refDatePicker.validateDateCustom(currentValue));
       return {
         error,
         tooltip: error,

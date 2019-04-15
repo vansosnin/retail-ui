@@ -2,11 +2,18 @@ import { mount, ReactWrapper } from 'enzyme';
 import * as React from 'react';
 import { HTMLAttributes } from 'react';
 import { CHAR_MASK } from '../../../lib/date/constants';
-import { DateCustomOrder } from '../../../lib/date/types';
+import { DateCustom } from '../../../lib/date/DateCustom';
+import { DateCustomOrder, DateCustomSeparator } from '../../../lib/date/types';
 import LocaleProvider, { LocaleProviderProps } from '../../LocaleProvider';
 import DateInput, { DateInputProps } from '../DateInput';
 
-const render = (props: DateInputProps, propsLocale: LocaleProviderProps = {}) =>
+const defaultOrder: DateCustomOrder = DateCustomOrder.DMY;
+const defaultSeparator: DateCustomSeparator = DateCustomSeparator.Dot;
+
+const render = (
+  props: DateInputProps,
+  propsLocale: LocaleProviderProps = { locale: { DatePicker: { order: defaultOrder, separator: defaultSeparator } } },
+) =>
   mount<LocaleProvider, LocaleProviderProps>(
     <LocaleProvider {...propsLocale}>
       <DateInput {...props} />
@@ -105,16 +112,17 @@ setups.forEach(({ name, getInput, getValue }) => {
         ['21.12.2012', ['1', ' ', '6', '2', '0', '1', '9'], '01.06.2019'],
       ];
 
-      KeyDownCases.forEach(([initDate, keys, expectedDate]) => {
+      KeyDownCases.forEach(([initDate, keys, expected]) => {
         const keyString = keys.join(' > ');
-        const expectedDateStr = `"${expectedDate}"`.padEnd(12, ' ');
+        const expectedDateStr = `"${expected}"`.padEnd(12, ' ');
         it(`calls onChange with ${expectedDateStr} if value is "${initDate}" and pressed "${keyString}"`, () => {
           const onChange = jest.fn();
           const input = getInput(render({ value: initDate, onChange }));
           input.simulate('focus');
           keys.forEach(key => input.simulate('keydown', { key }));
-          // TODO: исправить сравнение тестов и добавить в onChange экземляр DateCustom
-          expect(onChange.mock.calls).toEqual( { target: { value: expectedDate } });
+          const args = onChange.mock.calls[onChange.mock.calls.length - 1];
+          expect(args.slice(0, 2)).toEqual([{ target: { value: expected } }, expected]);
+          expect(args[2]).toBeInstanceOf(DateCustom);
         });
       });
 
@@ -132,7 +140,8 @@ setups.forEach(({ name, getInput, getValue }) => {
           const onChange = jest.fn();
           const input = getInput(render({ onChange }, { locale: { DatePicker: { order: order as DateCustomOrder } } }));
           input.simulate('paste', { clipboardData: { getData: () => pasted } });
-          expect(onChange).toHaveBeenCalledWith({ target: { value: expected } }, expected);
+          const calls: any[] = onChange.mock.calls[onChange.mock.calls.length - 1][0];
+          expect(calls).toMatchObject({ target: { value: expected } });
         });
       });
     });
@@ -165,18 +174,19 @@ setups.forEach(({ name, getInput, getValue }) => {
         ['10.12.2018', ['ArrowRight', 'ArrowRight', 'ArrowUp'], false],
       ];
 
-      KeyDownCases.forEach(([initDate, keys, expectedDate]) => {
+      KeyDownCases.forEach(([initDate, keys, expected]) => {
         const keyString = keys.join(' > ');
-        const expectedDateStr = expectedDate
-          ? 'calls onChange with ' + `"${expectedDate}"`.padEnd(12, ' ')
+        const expectedDateStr = expected
+          ? 'calls onChange with ' + `"${expected}"`.padEnd(12, ' ')
           : 'does not call onChange          ';
         it(`${expectedDateStr} if value is "${initDate}", minDate is "${minDate}", maxDate is "${maxDate}" and pressed "${keyString}"`, () => {
           const onChange = jest.fn();
           const input = getInput(render({ value: initDate, onChange, minDate, maxDate }));
           input.simulate('focus');
           keys.forEach(key => input.simulate('keydown', { key }));
-          if (expectedDate) {
-            expect(onChange).toHaveBeenLastCalledWith({ target: { value: expectedDate } }, expectedDate);
+          if (expected) {
+            const calls: any[] = onChange.mock.calls[onChange.mock.calls.length - 1][0];
+            expect(calls).toMatchObject({ target: { value: expected } });
           } else {
             expect(onChange).not.toHaveBeenCalled();
           }
