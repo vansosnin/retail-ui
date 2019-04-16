@@ -41,8 +41,8 @@ export const DateInputFallback = <T extends { new (...args: any[]): any }>(const
     public componentDidMount(): void {
       this.updateDateCustom(this.props);
       // @ts-ignore
-      this.dateComponentsTypesOrder = this.dateCustom.toFragments().map(({ type }) => type);
-      this.updateDateComponents();
+      this.dateComponentsTypesOrder = this!.dateCustom.toFragments().map(({ type }) => type);
+      this!.updateDateComponents();
     }
 
     public handleMouseDown = (event: React.MouseEvent<HTMLElement>) => {
@@ -78,7 +78,8 @@ export const DateInputFallback = <T extends { new (...args: any[]): any }>(const
 
       this.setState({ isInFocused: false, selected: null, isOnInputMode: false }, () => {
         removeAllSelections();
-        this.selectNodeContents(this.divInnerNode, 0, 0);
+        this.dateCustom.restore();
+        this.updateDateComponents();
         if (this!.props.onBlur) {
           this!.props.onBlur(event);
         }

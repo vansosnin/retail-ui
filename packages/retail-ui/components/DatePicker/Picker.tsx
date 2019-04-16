@@ -1,4 +1,6 @@
 import * as React from 'react';
+import { DateCustom } from '../../lib/date/DateCustom';
+import DateCustomGetter from '../../lib/date/DateCustomGetter';
 import Calendar, { CalendarDateShape } from '../Calendar';
 import shallowEqual from 'fbjs/lib/shallowEqual';
 import { locale } from '../LocaleProvider/decorators';
@@ -91,12 +93,13 @@ export default class Picker extends React.Component<Props, State> {
   }
 
   private handleSelectToday = () => {
-    const { today } = this.state;
     if (this.props.onSelect) {
-      this.props.onSelect(today);
+      this.props.onSelect(
+        new DateCustom().setComponents(DateCustomGetter.getTodayComponents()).toNativeFormat()!
+      );
     }
     if (this.calendar) {
-      const { month, year } = today;
+      const { month, year } = this.state.today;
       this.calendar.scrollToMonth(month, year);
     }
   };

@@ -1,4 +1,3 @@
-import { LangCodes } from '../../components/LocaleProvider';
 import { DateCustomFirstDayWeek, DateCustomOrder, DateCustomSeparator } from './types';
 
 export const MIN_YEAR = 1900;
@@ -13,7 +12,8 @@ export const LENGTH_DATE = 2;
 export const LENGTH_SEPARATOR = 1;
 export const CHAR_PAD = '0';
 export const CHAR_MASK = '_';
-export const RE_SEPARATOR = `(?:\\.|\\/|\\-|\\s)`;
+export const RE_DELIMITERS = ['.', '-', '/', ' ', ',', '\\', 'б', 'ю'];
+export const RE_SEPARATOR = `(?:\\.|\\/|\\-|\\s|\\,)`;
 export const RE_ORDER_MDY = new RegExp(
   `^(\\d{1,${LENGTH_MONTH}})?${RE_SEPARATOR}?(\\d{1,${LENGTH_DATE}})?${RE_SEPARATOR}?(\\d{1,${LENGTH_YEAR}})?$`,
 );
@@ -30,22 +30,5 @@ export const emptyDateComponents = {
 };
 export const defaultDateComponentsOrder = DateCustomOrder.DMY;
 export const defaultDateComponentsSeparator = DateCustomSeparator.Dot;
+export const defaultFirstDayWeek = DateCustomFirstDayWeek.Monday;
 
-const DateCustomSet_DMY_Dot_Monday = {
-  order: DateCustomOrder.DMY,
-  separator: DateCustomSeparator.Dot,
-  firstDayWeek: DateCustomFirstDayWeek.Monday,
-};
-
-const DateCustomSet_MDY_Slash_Sunday = {
-  order: DateCustomOrder.MDY,
-  separator: DateCustomSeparator.Slash,
-  firstDayWeek: DateCustomFirstDayWeek.Sunday,
-};
-
-export const dateCustomLocale: {
-  [key in LangCodes]: { order: DateCustomOrder; separator: DateCustomSeparator; firstDayWeek: DateCustomFirstDayWeek }
-} = {
-  [LangCodes.ru_RU]: DateCustomSet_DMY_Dot_Monday,
-  [LangCodes.en_EN]: DateCustomSet_MDY_Slash_Sunday,
-};

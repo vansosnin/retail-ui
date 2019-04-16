@@ -57,4 +57,13 @@ export default class DateCustomGetter {
     }
     return MAX_DATE;
   }
+
+  public static getTodayComponents() {
+    const date = new Date();
+    return {
+      date: date.getDate(),
+      month: date.getMonth() + 1,
+      year: date.getFullYear(),
+    };
+  }
 }

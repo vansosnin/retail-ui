@@ -1,4 +1,4 @@
-import { dateCustomLocale } from '../../../../lib/date/constants';
+import { dateCustomLocale } from '../../../../lib/date/localeSets';
 import { LangCodes } from '../../../LocaleProvider';
 import { DatePickerLocale } from '../types';
 

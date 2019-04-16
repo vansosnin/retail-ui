@@ -27,6 +27,7 @@ export interface DateInputState {
   isInFocused: boolean;
   notify: boolean;
   isDragged: boolean;
+  isAutoMoved: boolean;
 }
 
 export interface DateInputProps {
@@ -71,14 +72,8 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
       isOnInputMode: false,
       isInFocused: false,
       isDragged: false,
+      isAutoMoved: false,
     };
-  }
-
-  public componentWillReceiveProps(nextProps: DateInputProps) {
-    if (this.props !== nextProps) {
-      this.updateDateCustom(nextProps);
-      this.updateDateComponents();
-    }
   }
 
   public componentDidUpdate(prevProps: DateInputProps, prevState: DateInputState) {
@@ -185,7 +180,7 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
   };
 
   private handleMouseDown = () => {
-    //  empty block
+    // for IE and Edge
   };
 
   private onMouseUpComponent = (type: DateCustomComponentType) => (event: React.MouseEvent<HTMLElement>) => {
@@ -253,7 +248,8 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
 
     this.setState({ isInFocused: false, selected: null, isOnInputMode: false }, () => {
       removeAllSelections();
-      this.selectNodeContents(this.divInnerNode, 0, 0);
+      this.dateCustom.restore();
+      this.updateDateComponents();
       if (this.props.onBlur) {
         this.props.onBlur(event);
       }
@@ -278,8 +274,12 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
       this.moveSelection(-1);
     }
 
-    if (action === Actions.MoveSelectionRight || action === Actions.Separator) {
+    if (action === Actions.MoveSelectionRight) {
       this.moveSelection(1);
+    }
+
+    if (action === Actions.Separator) {
+      this.pressDelimiter();
     }
 
     if (action === Actions.MoveSelectionFirst) {
@@ -342,6 +342,17 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
   private selection() {
     this.changeSelectedDateComponent(this.state.selected);
   }
+
+  private pressDelimiter = () => {
+    const value = this.dateCustom.get(this.state.selected);
+    if (value !== null && value !== '') {
+      if (this.state.isAutoMoved) {
+        this.setState({ isAutoMoved: false })
+      } else {
+        this.moveSelection(1);
+      }
+    }
+  };
 
   private handlePaste = (e?: React.ClipboardEvent<HTMLElement>, pasted?: string) => {
     pasted = pasted || (e && e.clipboardData.getData('text').trim());
@@ -419,7 +430,7 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
     });
   }
 
-  private moveSelection(step: number): void {
+  private moveSelection(step: number, isAutoMoved: boolean = false): void {
     const { selected } = this.state;
     const index = selected === null ? 0 : this.dateComponentsTypesOrder.indexOf(selected);
     let nextIndex = index + step;
@@ -427,10 +438,10 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
       nextIndex = step > 0 ? 0 : this.dateComponentsTypesOrder.length - 1;
     }
     if (nextIndex >= 0 && nextIndex < this.dateComponentsTypesOrder.length) {
-      this.dateCustom.restore();
       this.setState({
         selected: this.dateComponentsTypesOrder[nextIndex],
         isOnInputMode: false,
+        isAutoMoved,
       });
     }
   }
@@ -471,7 +482,7 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
     }
     this.dateCustom.set(type, next);
     if (!inputMode) {
-      this.moveSelection(1);
+      this.moveSelection(1, true);
     }
     this.updateDateComponents({ isOnInputMode: inputMode });
   };
@@ -490,8 +501,8 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
 
   private updateDateComponents = (state: Partial<DateInputState> = {}): void => {
     this.setState({
-      dateValue: this.dateCustom.toString({ withSeparator: false, withPad: false }),
       ...state,
+      dateValue: this.dateCustom.toString({ withSeparator: false, withPad: false }),
     } as DateInputState);
   };
 

@@ -29,7 +29,6 @@ export const DayCellView = ({ date, minDate, maxDate, today, value, isWeekend, o
     style={cellStyle}
     tabIndex={-1}
     disabled={!CDS.isBetween(date, minDate, maxDate)}
-    name={`${date.date}.${date.month}.${date.year}`}
     className={classNames({
       [styles.cell]: true,
       [styles.weekend]: isWeekend,

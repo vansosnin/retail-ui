@@ -97,7 +97,7 @@ class Calendar extends React.Component<CalendarProps, CalendarState> {
   public render() {
     const positions = this.getMonthPositions();
     return (
-      <div ref={this.refCalendar} className={styles.root}>
+      <div ref={this.calendarRef} className={styles.root}>
         <div style={wrapperStyle} className={styles.wrapper}>
           {this.state.months
             .map<[number, MonthViewModel]>((x, i) => [positions[i], x])
@@ -135,7 +135,7 @@ class Calendar extends React.Component<CalendarProps, CalendarState> {
     return positions;
   }
 
-  private refCalendar = (el: HTMLDivElement) => {
+  private calendarRef = (el: HTMLDivElement) => {
     this.calendar = el;
   };
 

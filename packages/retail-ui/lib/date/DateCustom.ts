@@ -271,30 +271,30 @@ export class DateCustom {
       .setRangeEnd(this.end && this.end.clone());
   }
 
-  public restore(isSoft: boolean = true): DateCustom {
-    const { year, month, date } = this.getComponentsRaw();
-    if (year !== null && isSoft) {
-      const prevYear = this.getYear();
-      const restoreYear =
-        prevYear !== null && DateCustomValidator.testParseToNumber(prevYear)
-          ? prevYear > 50 && prevYear < 100
-            ? Number(prevYear) + 1900
-            : prevYear > 0 && prevYear < 51
-              ? Number(prevYear) + 2000
-              : prevYear
-          : prevYear;
+  public restore(): DateCustom {
+    const prev = this.getComponentsRaw();
+    const today = DateCustomGetter.getTodayComponents();
+
+    if (prev.year === null && prev.month === null && prev.date === null) {
+      return this;
+    }
+
+    const restoreYear =
+      prev.year !== null && DateCustomValidator.testParseToNumber(prev.year)
+        ? prev.year > 50 && prev.year < 100
+          ? Number(prev.year) + 1900
+          : prev.year > 0 && prev.year < 51
+            ? Number(prev.year) + 2000
+            : prev.year
+        : today.year;
+    if (restoreYear !== prev.year) {
       this.setYear(restoreYear);
-      this.shiftYear(0, { isLoop: false, isRange: false });
-    } else if (DateCustomValidator.testParseToNumber(year)) {
-      if (year !== null) {
-        this.shiftYear(0, { isLoop: false, isRange: false });
-      }
     }
-    if ((year !== null && !isSoft) || DateCustomValidator.testParseToNumber(month)) {
-      this.shiftMonth(0, { isLoop: false, isRange: false });
+    if (prev.month === null) {
+      this.setMonth(today.month);
     }
-    if ((year !== null && !isSoft) || DateCustomValidator.testParseToNumber(date)) {
-      this.shiftDate(0, { isLoop: false, isRange: false });
+    if (prev.date === null) {
+      this.setDate(today.date);
     }
     return this;
   }

@@ -1,6 +1,6 @@
 // @ts-ignore noUnusedVar
 import * as React from 'react';
-import { DateCustomSeparator } from '../../../lib/date/types';
+import { RE_DELIMITERS } from '../../../lib/date/constants';
 import { KeyboardActionExctracterBuilder, isModified, isFkeys } from '../../internal/extractKeyboardAction';
 
 export enum Actions {
@@ -31,7 +31,7 @@ const extractAction = new KeyboardActionExctracterBuilder()
   .add(Actions.MoveSelectionRight, e => e.key === 'ArrowRight')
   .add(Actions.MoveSelectionFirst, e => e.key === 'Home')
   .add(Actions.MoveSelectionLast, e => e.key === 'End')
-  .add(Actions.Separator, e => Object.values(DateCustomSeparator).includes(e.key))
+  .add(Actions.Separator, e => RE_DELIMITERS.includes(e.key))
   .add(Actions.Increment, e => e.key === 'ArrowUp')
   .add(Actions.Decrement, e => e.key === 'ArrowDown')
   .add(Actions.ClearSelection, e => e.key === 'Delete')
