@@ -1,7 +1,7 @@
 import { DateCustomFirstDayWeek, DateCustomOrder, DateCustomSeparator } from './types';
 
 export const MIN_YEAR = 1900;
-export const MAX_YEAR = 2100;
+export const MAX_YEAR = 2099;
 export const MIN_MONTH = 1;
 export const MAX_MONTH = 12;
 export const MIN_DATE = 1;

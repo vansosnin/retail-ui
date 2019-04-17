@@ -271,7 +271,7 @@ export class DateCustom {
       .setRangeEnd(this.end && this.end.clone());
   }
 
-  public restore(): DateCustom {
+  public restore(type: DateCustomComponentType | null = null): DateCustom {
     const prev = this.getComponentsRaw();
     const today = DateCustomGetter.getTodayComponents();
 
@@ -287,14 +287,28 @@ export class DateCustom {
             ? Number(prev.year) + 2000
             : prev.year
         : today.year;
-    if (restoreYear !== prev.year) {
+    if (type === null && restoreYear !== prev.year || type === DateCustomComponentType.Year) {
       this.setYear(restoreYear);
     }
-    if (prev.month === null) {
+    if (type === null && prev.month === null || type === DateCustomComponentType.Month) {
       this.setMonth(today.month);
     }
-    if (prev.date === null) {
+    if (type === null && prev.date === null || type === DateCustomComponentType.Date) {
       this.setDate(today.date);
+    }
+    return this;
+  }
+
+  public cutOffExcess(isRange: boolean = false): DateCustom {
+    const { year, month, date } = this.components;
+    if (DateCustomValidator.testParseToNumber(year)) {
+      this.shiftYear(0, { isLoop: false, isRange });
+    }
+    if (DateCustomValidator.testParseToNumber(month)) {
+      this.shiftMonth(0, { isLoop: false, isRange });
+    }
+    if (DateCustomValidator.testParseToNumber(date)) {
+      this.shiftDate(0, { isLoop: false, isRange });
     }
     return this;
   }

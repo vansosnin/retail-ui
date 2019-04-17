@@ -29,10 +29,8 @@ export const FragmentDateCustom: React.SFC<FragmentDateCustomProps> = ({
     }
     return (
       <span onMouseUp={onMouseUp(type)} onMouseDown={removeAllSelections}>
-        <span>
           {value}
-          <span className={styles.mask}>{CHAR_MASK.repeat(length)}</span>
-        </span>
+        <span className={styles.mask}>{CHAR_MASK.repeat(length)}</span>
       </span>
     );
   }

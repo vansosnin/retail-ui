@@ -1,7 +1,8 @@
 import { action } from '@storybook/addon-actions';
 import { storiesOf } from '@storybook/react';
 import * as React from 'react';
-import { DateCustomOrder, DateCustomSeparator } from '../../../lib/date/types';
+import { DateCustom } from '../../../lib/date/DateCustom';
+import { DateCustomOrder, DateCustomSeparator, DateCustomValidateCheck } from '../../../lib/date/types';
 // tslint:disable:jsx-no-lambda no-console
 import Button from '../../Button/index';
 import Gapped from '../../Gapped/index';
@@ -18,7 +19,7 @@ class DatePickerWithError extends React.Component<any, any> {
     tooltip: false,
   };
 
-  private refDatePicker: DatePicker | null = null;
+  private dateCustom: DateCustom | null = null;
 
   public render() {
     return (
@@ -31,15 +32,33 @@ class DatePickerWithError extends React.Component<any, any> {
           <LocaleProvider locale={{ DatePicker: { order: DateCustomOrder.MDY } }}>
             <DatePicker
               {...this.props}
-              ref={el => {
-                this.refDatePicker = el;
-              }}
               disabled={this.props.disabled}
               size={this.props.size}
               error={this.state.error}
               value={this.state.value}
               minDate="08.15.2003"
               maxDate="10.21.2006"
+              onChange={this._handleChange}
+              onFocus={this._unvalidate}
+              onBlur={this._validate}
+              enableTodayLink
+            />
+          </LocaleProvider>
+        </Tooltip>
+        <Tooltip
+          trigger={this.state.tooltip ? 'opened' : 'closed'}
+          render={() => 'Такой даты не существует'}
+          onCloseClick={this._removeTooltip}
+        >
+          <LocaleProvider locale={{ DatePicker: { order: DateCustomOrder.MDY } }}>
+            <DatePicker
+              {...this.props}
+              disabled={this.props.disabled}
+              size={this.props.size}
+              error={this.state.error}
+              value={this.state.value}
+              // minDate="08.15.2003"
+              // maxDate="10.21.2006"
               onChange={this._handleChange}
               onFocus={this._unvalidate}
               onBlur={this._validate}
@@ -55,8 +74,9 @@ class DatePickerWithError extends React.Component<any, any> {
     );
   }
 
-  private _handleChange = (_: any, value: string) => {
+  private _handleChange = (_: any, value: string, dateCustom: DateCustom) => {
     action('change')(_, value);
+    this.dateCustom = dateCustom;
     this.setState({
       value,
     });
@@ -69,7 +89,7 @@ class DatePickerWithError extends React.Component<any, any> {
   private _validate = () => {
     const currentValue = this.state.value;
     this.setState(() => {
-      const error = !!currentValue && !(this.refDatePicker && this.refDatePicker.validateDateCustom(currentValue));
+      const error = !!currentValue && !(this.dateCustom && this.dateCustom.validate());
       return {
         error,
         tooltip: error,

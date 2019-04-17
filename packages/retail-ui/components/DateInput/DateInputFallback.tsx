@@ -6,9 +6,9 @@ import debounce from 'lodash.debounce';
 
 export const DateInputFallback = <T extends { new (...args: any[]): any }>(constructor: T) => {
   return class DateInput extends constructor {
-    // Костыль для возможности выделить сегменты
+    // Костыль для возможности выделить компоненты даты
     // В IE и Edge, при вызове range.selectNodeContents(node)
-    // снимается фокус у текущего элемента, из-за чего вызывается handleBlur
+    // снимается фокус у текущего элемента, т.е. вызывается handleBlur
     // в handleBlur вызывается window.getSelection().removeAllRanges() и выделение пропадает.
     // Этот флаг "замораживаниет" колбэки onBlur и onFocus, для возможности вернуть выделение сегмента.
     public isFrozen: boolean = false;
@@ -17,32 +17,33 @@ export const DateInputFallback = <T extends { new (...args: any[]): any }>(const
       const node = this.inputLikeText && this.inputLikeText.getNode();
       if (this.inputLikeText && node && node.contains(document.activeElement)) {
         this.isFrozen = true;
-        this.changeSelectedDateComponent(this!.state.selected);
+        this.changeSelectedDateComponent(this.state.selected);
         if (this.inputLikeText) {
           this.inputLikeText.focus();
         }
       }
-    }, 0);
+    }, 10);
 
     public componentDidUpdate(prevProps: DateInputProps, prevState: DateInputState) {
-      if (prevState.dateValue !== this!.state.dateValue) {
+      if (
+        prevProps.value !== this.props.value ||
+        prevProps.minDate !== this.props.minDate ||
+        prevProps.maxDate !== this.props.maxDate
+      ) {
+        this.updateDateCustom(this.props);
+        this.updateDateComponents();
+      }
+      if (prevState.dateValue !== this.state.dateValue) {
         this.emitChange();
       }
 
-      if (this!.state.isInFocused !== this!.state.selected) {
+      if (this.state.isInFocused !== prevState.selected !== this.state.selected) {
         this.selection();
       }
 
-      if (this!.state.notify && !prevState.notify) {
+      if (this.state.notify && !prevState.notify) {
         this.notify();
       }
-    }
-
-    public componentDidMount(): void {
-      this.updateDateCustom(this.props);
-      // @ts-ignore
-      this.dateComponentsTypesOrder = this!.dateCustom.toFragments().map(({ type }) => type);
-      this!.updateDateComponents();
     }
 
     public handleMouseDown = (event: React.MouseEvent<HTMLElement>) => {
@@ -55,6 +56,7 @@ export const DateInputFallback = <T extends { new (...args: any[]): any }>(const
     public handleFocus = (event: React.FocusEvent<HTMLElement>): void => {
       if (this.isFrozen) {
         this.isFrozen = false;
+        event.preventDefault();
         return;
       }
       this.setState((prevState: DateInputState) => {
@@ -64,13 +66,14 @@ export const DateInputFallback = <T extends { new (...args: any[]): any }>(const
         };
       });
 
-      if (this!.props.onFocus) {
-        this!.props.onFocus(event);
+      if (this.props.onFocus) {
+        this.props.onFocus(event);
       }
     };
 
     public handleBlur = (event: React.FocusEvent<HTMLElement>): void => {
       if (this.isFrozen) {
+        event.preventDefault();
         return;
       }
 
@@ -80,8 +83,8 @@ export const DateInputFallback = <T extends { new (...args: any[]): any }>(const
         removeAllSelections();
         this.dateCustom.restore();
         this.updateDateComponents();
-        if (this!.props.onBlur) {
-          this!.props.onBlur(event);
+        if (this.props.onBlur) {
+          this.props.onBlur(event);
         }
       });
     };

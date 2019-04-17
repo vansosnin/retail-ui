@@ -81,31 +81,31 @@ export default class DateSelect extends React.Component<DateSelectProps, DateSel
 
   private readonly locale!: DateSelectLocale;
 
-  private _node: HTMLElement | null = null;
+  private node: HTMLElement | null = null;
 
-  private _listener: Nullable<ReturnType<typeof LayoutEvents.addListener>>;
-  private _timeout: number | undefined;
+  private listener: Nullable<ReturnType<typeof LayoutEvents.addListener>>;
+  private timeout: number | undefined;
 
   private longClickTimer: number = 0;
   private setPositionRepeatTimer: number = 0;
   private yearStep: number = 3;
 
   public componentWillReceiveProps() {
-    this._setNodeTop();
+    this.setNodeTop();
   }
 
   public componentDidMount() {
-    this._listener = LayoutEvents.addListener(this._setNodeTop);
-    this._setNodeTop();
+    this.listener = LayoutEvents.addListener(this.setNodeTop);
+    this.setNodeTop();
     window.addEventListener('keydown', this.handleKey);
   }
 
   public componentWillUnmount() {
-    if (this._listener) {
-      this._listener.remove();
+    if (this.listener) {
+      this.listener.remove();
     }
-    if (this._timeout) {
-      clearTimeout(this._timeout);
+    if (this.timeout) {
+      clearTimeout(this.timeout);
     }
     if (this.longClickTimer) {
       clearTimeout(this.longClickTimer);
@@ -116,9 +116,6 @@ export default class DateSelect extends React.Component<DateSelectProps, DateSel
     window.removeEventListener('keydown', this.handleKey);
   }
 
-  /**
-   * @public
-   */
   public open = () => {
     if (this.props.disabled) {
       return;
@@ -135,9 +132,6 @@ export default class DateSelect extends React.Component<DateSelectProps, DateSel
     });
   };
 
-  /**
-   * @public
-   */
   public close = () => {
     if (!this.state.opened) {
       return;
@@ -154,7 +148,7 @@ export default class DateSelect extends React.Component<DateSelectProps, DateSel
         [styles.disabled]: disabled,
       }),
       style: { width },
-      ref: this._ref,
+      ref: this.ref,
     };
     return (
       <span {...rootProps}>
@@ -174,19 +168,19 @@ export default class DateSelect extends React.Component<DateSelectProps, DateSel
     );
   }
 
-  private _ref = (node: HTMLElement | null) => {
-    this._node = node;
+  private ref = (node: HTMLElement | null) => {
+    this.node = node;
   };
 
-  private _setNodeTop = () => {
-    const node = this._node;
+  private setNodeTop = () => {
+    const node = this.node;
     if (!node) {
       return;
     }
-    if (this._timeout) {
-      clearTimeout(this._timeout);
+    if (this.timeout) {
+      clearTimeout(this.timeout);
     }
-    this._timeout = setTimeout(() =>
+    this.timeout = setTimeout(() =>
       this.setState({
         nodeTop: node.getBoundingClientRect().top,
       }),
@@ -337,10 +331,9 @@ export default class DateSelect extends React.Component<DateSelectProps, DateSel
     clearTimeout(this.setPositionRepeatTimer);
   };
 
-  private getAnchor = () => this._node;
+  private getAnchor = () => this.node;
 
-  private handleWheel = (event: React.WheelEvent<HTMLElement>) => {
-    event.preventDefault();
+  private handleWheel = (event: React.WheelEvent<HTMLDivElement>) => {
     event.stopPropagation();
 
     let deltaY = event.deltaY;

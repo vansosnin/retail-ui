@@ -1,4 +1,3 @@
-import { DateCustom } from './DateCustom';
 import DateCustomGetter from './DateCustomGetter';
 import { DateCustomComponentType, DateCustomComponent, DateCustomComponentRaw, DateCustomComponents } from './types';
 
@@ -46,17 +45,5 @@ export default class DateCustomCalculator {
       return value < start ? end : value > end ? start : value;
     }
     return value < start ? start : value > end ? end : value;
-  }
-
-  public static restoreYear(dateCustom: DateCustom, year: DateCustomComponentRaw): number {
-    year = Number(year);
-    if (year > 0 && year < 100) {
-      if (year > 50) {
-        year += 1900;
-      } else {
-        year += 2000;
-      }
-    }
-    return year;
   }
 }

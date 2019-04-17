@@ -1,6 +1,7 @@
 import { storiesOf } from '@storybook/react';
 import React from 'react';
 import { DateCustomOrder, DateCustomSeparator } from '../../../lib/date/types';
+import Button from '../../Button';
 import LocaleProvider from '../../LocaleProvider';
 import DateInput from '../DateInput';
 import { action } from '@storybook/addon-actions';
@@ -46,5 +47,7 @@ storiesOf('DateInput', module)
           onBlur={(e) => action('blur 2')(e.nativeEvent)}
         />
       </LocaleProvider>
+      <br/>
+      <Button>123</Button>
     </div>
   ));

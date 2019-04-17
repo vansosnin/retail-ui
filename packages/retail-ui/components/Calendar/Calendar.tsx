@@ -48,11 +48,20 @@ const wrapperStyle = { height: config.WRAPPER_HEIGHT };
 class Calendar extends React.Component<CalendarProps, CalendarState> {
   public static defaultProps = {
     holidays: [],
+    minDate: {
+      year: 1900,
+      month: 1,
+      date: 1,
+    },
+    maxDate: {
+      year: 2099,
+      month: 12,
+      date: 31,
+    },
   };
 
   private wheelEndTimeout: Nullable<number>;
   private animation = Animation();
-  private calendar: HTMLDivElement | null = null;
 
   constructor(props: CalendarProps) {
     super(props);
@@ -71,18 +80,9 @@ class Calendar extends React.Component<CalendarProps, CalendarState> {
     };
   }
 
-  public componentDidMount() {
-    if (this.calendar) {
-      this.calendar.addEventListener('wheel', this.handleWheel, { passive: false });
-    }
-  }
-
   public componentWillUnmount() {
     if (this.animation.inProgress()) {
       this.animation.cancel();
-    }
-    if (this.calendar) {
-      this.calendar.removeEventListener('wheel', this.handleWheel);
     }
   }
 
@@ -97,7 +97,7 @@ class Calendar extends React.Component<CalendarProps, CalendarState> {
   public render() {
     const positions = this.getMonthPositions();
     return (
-      <div ref={this.calendarRef} className={styles.root}>
+      <div onWheel={this.handleWheel} className={styles.root}>
         <div style={wrapperStyle} className={styles.wrapper}>
           {this.state.months
             .map<[number, MonthViewModel]>((x, i) => [positions[i], x])
@@ -135,16 +135,12 @@ class Calendar extends React.Component<CalendarProps, CalendarState> {
     return positions;
   }
 
-  private calendarRef = (el: HTMLDivElement) => {
-    this.calendar = el;
-  };
-
   private handleMonthYearChange = (month: number, year: number) => {
     this.scrollToMonthInner(month, year);
   };
 
-  private handleWheel = (event: WheelEvent | Event) => {
-    event.preventDefault();
+  private handleWheel = (event: React.WheelEvent<HTMLDivElement>) => {
+    event.stopPropagation();
     const { pixelY } = normalizeWheel(event);
 
     this.setState(({ months, scrollPosition, scrollTarget }) => {
@@ -152,10 +148,7 @@ class Calendar extends React.Component<CalendarProps, CalendarState> {
       return { scrollTarget: targetPosition };
     }, this.handleWheelEnd);
 
-    this.animation.animate(pixelY, deltaY =>
-      // FIXME: Typescript not resolving setState cb type
-      this.setState(CalendarUtils.applyDelta(deltaY) as any),
-    );
+    this.animation.animate(pixelY, deltaY => this.setState(CalendarUtils.applyDelta(deltaY) as any));
 
     CalendarScrollEvents.emit();
   };
