@@ -75,3 +75,13 @@ export enum DateCustomFirstDayWeek {
   Sunday = 1,
   Saturday = 2,
 }
+
+export enum DateCustomDayWeek {
+  Monday = 1,
+  Tuesday = 2,
+  Wednesday = 3,
+  Thursday = 4,
+  Friday = 5,
+  Sunday = 6,
+  Saturday = 7,
+}

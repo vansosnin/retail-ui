@@ -1,6 +1,4 @@
 import * as React from 'react';
-import { DatePickerLocale, DatePickerLocaleHelper } from '../DatePicker/locale';
-import { locale } from '../LocaleProvider/decorators';
 
 import config from './config';
 
@@ -128,13 +126,10 @@ interface MonthDayGridProps {
   isHoliday: (day: CDS.CalendarDateShape & { isWeekend: boolean }) => boolean;
 }
 
-@locale('DatePicker', DatePickerLocaleHelper)
 class MonthDayGrid extends React.Component<MonthDayGridProps> {
   public static defaultProps = {
     isHoliday: (day: CDS.CalendarDateShape & { isWeekend: boolean }) => day.isWeekend,
   };
-
-  private locale!: DatePickerLocale;
 
   public shouldComponentUpdate(nextProps: MonthDayGridProps) {
     if (!CDS.isEqual(nextProps.value, this.props.value)) {
@@ -153,12 +148,11 @@ class MonthDayGrid extends React.Component<MonthDayGridProps> {
   }
 
   public render() {
-    const width = ((this.props.offset + this.locale.firstDayWeek) % 7) * config.DAY_HEIGHT;
     return (
       <div>
         <div
           style={{
-            width,
+            width: this.props.offset * config.DAY_HEIGHT,
             display: 'inline-block',
           }}
         />

@@ -201,7 +201,6 @@ export class DateCustom {
     }
     if (
       levels.includes(DateCustomValidateCheck.Native) &&
-      type !== undefined &&
       !DateCustomValidator.compareWithNativeDate(self.getComponentsLikeNumber())
     ) {
       return false;

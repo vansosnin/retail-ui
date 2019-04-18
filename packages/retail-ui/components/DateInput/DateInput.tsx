@@ -424,7 +424,7 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
       this.dateCustom
         .clone()
         .shift(selected, step, { isRange: false, isLoop: true })
-        .validate()
+        .validate({ levels: [DateCustomValidateCheck.Range] })
     ) {
       this.dateCustom.shift(selected, step, { isRange: true, isLoop: true });
     }
@@ -442,9 +442,11 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
     if (selected === DateCustomComponentType.All) {
       nextIndex = step < 0 ? 0 : this.dateComponentsTypesOrder.length - 1;
     }
-    if (selected === DateCustomComponentType.Year) {
+    if (selected === DateCustomComponentType.Year && this.dateCustom.getYear() !== null) {
       this.dateCustom.restore(selected);
     }
+    this.dateCustom.cutOffExcess(false);
+    this.updateDateComponents();
     if (nextIndex >= 0 && nextIndex < this.dateComponentsTypesOrder.length) {
       this.setState({
         selected: this.dateComponentsTypesOrder[nextIndex],

@@ -37,7 +37,6 @@ export default class DateCustomValidator {
 
   public static compareWithNativeDate({ year, month, date }: DateCustomComponentsNumber): boolean {
     const nativeDate: Date = new Date(Date.UTC(year, month - 1, date));
-
     return (
       nativeDate.getUTCFullYear() === year && nativeDate.getUTCMonth() + 1 === month && nativeDate.getUTCDate() === date
     );
