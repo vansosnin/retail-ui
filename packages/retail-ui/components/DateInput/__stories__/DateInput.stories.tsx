@@ -1,3 +1,4 @@
+import { action } from '@storybook/addon-actions';
 import { storiesOf } from '@storybook/react';
 import React from 'react';
 import { MAX_DATE, MAX_MONTH, MAX_YEAR, MIN_DATE, MIN_MONTH, MIN_YEAR } from '../../../lib/date/constants';
@@ -7,8 +8,8 @@ import Button from '../../Button';
 import Checkbox from '../../Checkbox';
 import Gapped from '../../Gapped';
 import LocaleProvider from '../../LocaleProvider';
+import Select from '../../Select';
 import DateInput from '../DateInput';
-import { action } from '@storybook/addon-actions';
 
 class DateInputValidations extends React.Component<any, any> {
   public state = {
@@ -49,9 +50,7 @@ class DateInputValidations extends React.Component<any, any> {
         </Checkbox>
         <Checkbox disabled checked={this.state.isValidNative}>
           <tt>DateCustomValidateCheck.Native</tt>
-          <div>
-            Из компонентов даты можно создать валидный экземпляр нативного объекта Date()
-          </div>
+          <div>Из компонентов даты можно создать валидный экземпляр нативного объекта Date()</div>
         </Checkbox>
         <Checkbox disabled checked={this.state.isValidRange}>
           <tt>DateCustomValidateCheck.Range</tt>
@@ -62,7 +61,7 @@ class DateInputValidations extends React.Component<any, any> {
         <div>
           <pre>
             minDate="23.09.2000"
-            <br/>
+            <br />
             maxDate="03.03.2010"
           </pre>
         </div>
@@ -82,17 +81,57 @@ class DateInputValidations extends React.Component<any, any> {
     if (dateCustom === null) {
       return;
     }
-    this.setState({ isValidNotNull: dateCustom.validate({ levels: [DateCustomValidateCheck.NotNull] }) });
-    this.setState({ isValidLimits: dateCustom.validate({ levels: [DateCustomValidateCheck.Limits] }) });
-    this.setState({ isValidNative: dateCustom.validate({ levels: [DateCustomValidateCheck.Native] }) });
-    this.setState({ isValidRange: dateCustom.validate({ levels: [DateCustomValidateCheck.Range] }) });
+    this.setState({ isValidNotNull: dateCustom.validate({ checks: [DateCustomValidateCheck.NotNull] }) });
+    this.setState({ isValidLimits: dateCustom.validate({ checks: [DateCustomValidateCheck.Limits] }) });
+    this.setState({ isValidNative: dateCustom.validate({ checks: [DateCustomValidateCheck.Native] }) });
+    this.setState({ isValidRange: dateCustom.validate({ checks: [DateCustomValidateCheck.Range] }) });
     this.setState({ isValid: dateCustom.validate() });
+  }
+}
+
+class DateInputFormatting extends React.Component<any, any> {
+  public state = {
+    order: DateCustomOrder.YMD,
+    separator: 'Dot',
+    dateCustom: new DateCustom().parseValue('23.12.2012'),
+  };
+
+  public render() {
+    return <Gapped vertical gap={10}>
+        <div>
+          <span style={{ width: '300px', display: 'inline-block' }}>
+            Порядок компонентов <tt>DateCustomOrder</tt>
+          </span>
+          <Select value={this.state.order} items={Object.keys(DateCustomOrder)} onChange={(_, order) => this.setState(
+                { order },
+              )} />
+        </div>
+        <div>
+          <span style={{ width: '300px', display: 'inline-block' }}>
+            Разделитель <tt>DateCustomSeparator</tt>
+          </span>
+          <Select value={this.state.separator} items={Object.keys(DateCustomSeparator)} onChange={(_, separator) => this.setState(
+                { separator },
+              )} />
+        </div>
+        <LocaleProvider locale={{ DatePicker: { separator: DateCustomSeparator[this.state.separator], order: this.state.order } }}>
+          <DateInput onChange={(a, b, dateCustom) => this.setState({
+                dateCustom,
+              })} value={this.state.dateCustom.toString({
+              withSeparator: true,
+              withPad: true,
+              order: this.state.order,
+              separator: DateCustomSeparator[this.state.separator],
+            })} />
+        </LocaleProvider>
+      </Gapped>;
   }
 }
 
 storiesOf('DateInput', module)
   .add('simple', () => <DateInput value="01.02.2017" />)
   .add('date input validations', () => <DateInputValidations />)
+  .add('date input formatting', () => <DateInputFormatting />)
   .add('disabled', () => <DateInput disabled value="01.02.2017" />)
   .add('with width', () => <DateInput width="50px" value="01.02.2017" />)
   .add('YMD - Slash', () => (

@@ -3,9 +3,14 @@ import { defaultLangCode } from './constants';
 import { LocaleConsumer, LocaleProviderProps } from './LocaleProvider';
 import { LocaleHelper } from './LocaleHelper';
 import { LangCodes, LocaleControls } from './types';
+import isEqual from 'lodash.isequal'
+
+interface LocaleInstance {
+  updateLocaleContext?: () => void;
+}
 
 export function locale<C>(controlName: keyof LocaleControls, localeHelper: LocaleHelper<C>) {
-  return <T extends { new (...args: any[]): React.Component }>(constructor: T) => {
+  return <T extends { new (...args: any[]): React.Component & LocaleInstance }>(constructor: T) => {
     const LocaleDecorator = class extends constructor {
       public controlName: keyof LocaleControls = controlName;
       public localeHelper: LocaleHelper<C> = localeHelper;
@@ -16,7 +21,11 @@ export function locale<C>(controlName: keyof LocaleControls, localeHelper: Local
         return (
           <LocaleConsumer>
             {localeContext => {
+              const prev = this._localeContext;
               this._localeContext = localeContext;
+              if (!isEqual({}, prev) && !isEqual(prev, localeContext) && this.updateLocaleContext) {
+                setTimeout(() => this.updateLocaleContext && this.updateLocaleContext(), 0);
+              }
               return super.render();
             }}
           </LocaleConsumer>

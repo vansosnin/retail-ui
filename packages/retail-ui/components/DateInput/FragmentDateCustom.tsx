@@ -8,7 +8,7 @@ import { removeAllSelections } from './helpers/SelectionHelpers';
 interface FragmentDateCustomProps extends DateCustomFragment {
   selected: DateCustomComponentType | null;
   inputMode: boolean;
-  onMouseUp: (type: DateCustomComponentType) => (event: React.MouseEvent<HTMLElement>) => void;
+  onChange: (type: DateCustomComponentType) => (event: React.MouseEvent<HTMLElement>) => void;
 }
 
 export const FragmentDateCustom: React.SFC<FragmentDateCustomProps> = ({
@@ -18,7 +18,7 @@ export const FragmentDateCustom: React.SFC<FragmentDateCustomProps> = ({
   valueWithPad,
   inputMode,
   selected,
-  onMouseUp,
+  onChange,
 }) => {
   if (type === DateCustomComponentType.Separator) {
     return <span className={styles.delimiter}>{value}</span>;
@@ -28,8 +28,8 @@ export const FragmentDateCustom: React.SFC<FragmentDateCustomProps> = ({
       length = Math.max(length - value!.toString().length, 0);
     }
     return (
-      <span onMouseUp={onMouseUp(type)} onMouseDown={removeAllSelections}>
-          {value}
+      <span onMouseUp={onChange(type)} onMouseDown={removeAllSelections}>
+        {value}
         <span className={styles.mask}>{CHAR_MASK.repeat(length)}</span>
       </span>
     );

@@ -129,7 +129,7 @@ class DatePicker extends React.Component<DatePickerProps<DatePickerValue>, DateP
     const dc = new DateCustom(DateCustomOrder.DMY, DateCustomSeparator.Dot).parseValue(value);
     const dcNative = dc.getComponentsLikeNumber();
     return (
-      dc.validate({ levels: [DateCustomValidateCheck.Number] }) &&
+      dc.validate({ checks: [DateCustomValidateCheck.Number] }) &&
       dcNative &&
       DateCustomValidator.compareWithNativeDate(dcNative)
     );
@@ -268,7 +268,7 @@ class DatePicker extends React.Component<DatePickerProps<DatePickerValue>, DateP
       return undefined;
     }
     const date = new DateCustom(this.locale.order, this.locale.separator).parseValue(value);
-    if (date.validate({ levels: [DateCustomValidateCheck.NotNull, DateCustomValidateCheck.Native] })) {
+    if (date.validate({ checks: [DateCustomValidateCheck.NotNull, DateCustomValidateCheck.Native] })) {
       return date;
     }
     return undefined;

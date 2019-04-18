@@ -84,7 +84,7 @@ export class DateCustom {
       const clone = this.clone()
         .setComponents(components)
         .shiftMonth(1);
-      if (clone.validate({ levels: [DateCustomValidateCheck.Native] })) {
+      if (clone.validate({ checks: [DateCustomValidateCheck.Native] })) {
         this.components = { ...clone.getComponentsLikeNumber() };
       }
       return this;
@@ -167,11 +167,11 @@ export class DateCustom {
   public validate({
     type,
     nextValue,
-    levels = Object.values(DateCustomValidateCheck),
+    checks = Object.values(DateCustomValidateCheck),
   }: {
     type?: DateCustomComponentType;
     nextValue?: DateCustomComponentRaw;
-    levels?: DateCustomValidateCheck[];
+    checks?: DateCustomValidateCheck[];
   } = {}): boolean {
     let self: DateCustom = this;
     if (type !== undefined) {
@@ -182,30 +182,30 @@ export class DateCustom {
       self = clone;
     }
     if (
-      levels.includes(DateCustomValidateCheck.NotNull) &&
+      checks.includes(DateCustomValidateCheck.NotNull) &&
       !DateCustomValidator.checkForNull(self.getComponentsRaw(), type)
     ) {
       return false;
     }
     if (
-      levels.includes(DateCustomValidateCheck.Number) &&
+      checks.includes(DateCustomValidateCheck.Number) &&
       !Object.values(self.getComponentsRaw()).every(DateCustomValidator.testParseToNumber)
     ) {
       return false;
     }
     if (
-      levels.includes(DateCustomValidateCheck.Limits) &&
+      checks.includes(DateCustomValidateCheck.Limits) &&
       !DateCustomValidator.checkLimits(self.getComponentsLikeNumber(), type)
     ) {
       return false;
     }
     if (
-      levels.includes(DateCustomValidateCheck.Native) &&
+      checks.includes(DateCustomValidateCheck.Native) &&
       !DateCustomValidator.compareWithNativeDate(self.getComponentsLikeNumber())
     ) {
       return false;
     }
-    if (levels.includes(DateCustomValidateCheck.Range)) {
+    if (checks.includes(DateCustomValidateCheck.Range)) {
       return type !== undefined
         ? DateCustomValidator.checkRangePiecemeal(
             type,
