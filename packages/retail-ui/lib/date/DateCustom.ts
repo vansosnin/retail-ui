@@ -312,6 +312,10 @@ export class DateCustom {
     return this;
   }
 
+  public isEmpty(): boolean {
+    return Object.values(this.components).every(component => component === null)
+  }
+
   private getMinValue(type: DateCustomComponentType, isRange?: boolean): number {
     if (isRange === true && this.start !== null) {
       return Number(

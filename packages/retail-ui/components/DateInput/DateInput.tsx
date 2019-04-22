@@ -174,9 +174,9 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
   }
 
   private getFragments = (): JSX.Element[] => {
-    const { selected, isOnInputMode, dateValue, isInFocused, isDragged } = this.state;
+    const { selected, isOnInputMode, isInFocused, isDragged } = this.state;
     const fragments =
-      isInFocused || dateValue !== ''
+      isInFocused || !this.dateCustom.isEmpty()
         ? this.dateCustom.toFragments({
             withSeparator: true,
             withPad: true,
