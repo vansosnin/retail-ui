@@ -4,11 +4,11 @@ import { Nullable } from '../../typings/utility-types';
 import Input from '../Input';
 import Menu from '../Menu/Menu';
 import InputLikeText from '../internal/InputLikeText';
-import shallow from 'fbjs/lib/shallowEqual';
 import { MenuItemState } from '../MenuItem';
 import { ComboBoxRequestStatus } from './CustomComboBoxTypes';
 import { CancelationError, taskWithDelay } from '../../lib/utils';
 import { reducer, CustomComboBoxAction, CustomComboBoxEffect } from './CustomComboBoxReducer';
+import { fixClickFocusIE } from '../../lib/events/fixClickFocusIE';
 
 export interface CustomComboBoxProps<T> {
   align?: 'left' | 'center' | 'right';
@@ -72,7 +72,7 @@ export const DefaultState = {
   requestStatus: ComboBoxRequestStatus.Unknown,
 };
 
-class CustomComboBox<T> extends React.Component<CustomComboBoxProps<T>, CustomComboBoxState<T>> {
+class CustomComboBox<T> extends React.PureComponent<CustomComboBoxProps<T>, CustomComboBoxState<T>> {
   public state: CustomComboBoxState<T> = DefaultState;
   public input: Nullable<Input>;
   public menu: Nullable<Menu>;
@@ -227,7 +227,7 @@ class CustomComboBox<T> extends React.Component<CustomComboBoxProps<T>, CustomCo
       maxMenuHeight: this.props.maxMenuHeight,
 
       onChange: this.handleChange,
-      onClickOutside: this.handleBlur,
+      onClickOutside: this.handleClickOutside,
       onFocus: this.handleFocus,
       onFocusOutside: this.handleBlur,
       onInputBlur: this.handleInputBlur,
@@ -268,10 +268,6 @@ class CustomComboBox<T> extends React.Component<CustomComboBoxProps<T>, CustomCo
     if (this.props.autoFocus) {
       this.focus();
     }
-  }
-
-  public shouldComponentUpdate(nextProps: CustomComboBoxProps<T>, nextState: CustomComboBoxState<T>) {
-    return !shallow(nextProps, this.props) || !shallow(nextState, this.state);
   }
 
   public componentDidUpdate(prevProps: CustomComboBoxProps<T>, prevState: CustomComboBoxState<T>) {
@@ -330,6 +326,11 @@ class CustomComboBox<T> extends React.Component<CustomComboBoxProps<T>, CustomCo
     }
     this.focused = true;
     this.dispatch({ type: 'Focus' });
+  };
+
+  private handleClickOutside = (e: Event) => {
+    fixClickFocusIE(e);
+    this.handleBlur();
   };
 
   private handleBlur = () => {

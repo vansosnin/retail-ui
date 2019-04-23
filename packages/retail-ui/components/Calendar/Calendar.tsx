@@ -61,6 +61,8 @@ class Calendar extends React.Component<CalendarProps, CalendarState> {
   };
 
   private wheelEndTimeout: Nullable<number>;
+  private root: Nullable<HTMLElement>;
+
   private animation = Animation();
 
   constructor(props: CalendarProps) {
@@ -86,18 +88,10 @@ class Calendar extends React.Component<CalendarProps, CalendarState> {
     }
   }
 
-  /**
-   * Scrolls calendar to given date
-   * @public
-   */
-  public scrollToMonth(month: number, year: number) {
-    this.scrollToMonthInner(month, year);
-  }
-
   public render() {
     const positions = this.getMonthPositions();
     return (
-      <div onWheel={this.handleWheel} className={styles.root}>
+      <div ref={this.refRoot} className={styles.root}>
         <div style={wrapperStyle} className={styles.wrapper}>
           {this.state.months
             .map<[number, MonthViewModel]>((x, i) => [positions[i], x])
@@ -108,80 +102,11 @@ class Calendar extends React.Component<CalendarProps, CalendarState> {
     );
   }
 
-  private renderMonth([top, month]: [number, MonthViewModel]) {
-    return (
-      <Month
-        key={month.month + '-' + month.year}
-        top={top}
-        month={month}
-        maxDate={this.props.maxDate}
-        minDate={this.props.minDate}
-        today={this.state.today}
-        value={this.props.value}
-        onDateClick={this.props.onSelect}
-        onMonthYearChange={this.handleMonthYearChange}
-        isHoliday={this.props.isHoliday}
-      />
-    );
-  }
-
-  private getMonthPositions() {
-    const { scrollPosition, months } = this.state;
-    const positions = [scrollPosition - months[0].height];
-    for (let i = 1; i < months.length; i++) {
-      const position = positions[i - 1] + months[i - 1].height;
-      positions.push(position);
-    }
-    return positions;
-  }
-
-  private handleMonthYearChange = (month: number, year: number) => {
-    this.scrollToMonthInner(month, year);
-  };
-
-  private handleWheel = (event: React.WheelEvent<HTMLDivElement>) => {
-    event.stopPropagation();
-    const { pixelY } = normalizeWheel(event);
-
-    this.setState(({ months, scrollPosition, scrollTarget }) => {
-      const targetPosition = CalendarUtils.calculateScrollPosition(months, scrollPosition, pixelY).scrollPosition;
-      return { scrollTarget: targetPosition };
-    }, this.handleWheelEnd);
-
-    this.animation.animate(pixelY, deltaY => this.setState(CalendarUtils.applyDelta(deltaY) as any));
-
-    CalendarScrollEvents.emit();
-  };
-
-  private handleWheelEnd = () => {
-    if (this.wheelEndTimeout) {
-      clearTimeout(this.wheelEndTimeout);
-    }
-    this.wheelEndTimeout = window.setTimeout(this.scrollToNearestWeek, 300);
-  };
-
-  private scrollToNearestWeek = () => {
-    const { scrollTarget, scrollDirection } = this.state;
-
-    const trasholdHeight = config.MONTH_TITLE_OFFSET_HEIGHT + config.DAY_HEIGHT;
-
-    if (scrollTarget < trasholdHeight) {
-      let targetPosition = 0;
-      if (scrollDirection < 0) {
-        targetPosition = trasholdHeight;
-      }
-
-      this.setState({ scrollTarget: targetPosition }, () => {
-        const amount = scrollTarget - targetPosition;
-        this.animation.animate(amount, deltaY =>
-          // FIXME: Typescript not resolving setState cb type
-          this.setState(CalendarUtils.applyDelta(deltaY) as any),
-        );
-      });
-    }
-  };
-
-  private scrollToMonthInner = async (month: number, year: number) => {
+  /**
+   * Scrolls calendar to given date
+   * @public
+   */
+  public scrollToMonth = async (month: number, year: number) => {
     if (this.animation.inProgress()) {
       this.animation.finish();
       // FIXME: Dirty hack to await batched updates
@@ -191,12 +116,12 @@ class Calendar extends React.Component<CalendarProps, CalendarState> {
     const { minDate, maxDate } = this.props;
 
     if (minDate && CDS.isGreater(minDate, CDS.create(32, month, year))) {
-      this.scrollToMonthInner(minDate.month, minDate.year);
+      this.scrollToMonth(minDate.month, minDate.year);
       return;
     }
 
     if (maxDate && CDS.isLess(maxDate, CDS.create(0, month, year))) {
-      this.scrollToMonthInner(maxDate.month, maxDate.year);
+      this.scrollToMonth(maxDate.month, maxDate.year);
       return;
     }
 
@@ -279,6 +204,95 @@ class Calendar extends React.Component<CalendarProps, CalendarState> {
           this.scrollTo(targetPosition, onEnd);
         },
       );
+    }
+  };
+
+  private refRoot = (element: HTMLElement | null) => {
+    if (!this.root && element) {
+      element.addEventListener('wheel', this.handleWheel, { passive: false });
+    }
+    if (this.root && !element) {
+      this.root.removeEventListener('wheel', this.handleWheel);
+    }
+    this.root = element;
+  };
+
+  private renderMonth([top, month]: [number, MonthViewModel]) {
+    return (
+      <Month
+        key={month.month + '-' + month.year}
+        top={top}
+        month={month}
+        maxDate={this.props.maxDate}
+        minDate={this.props.minDate}
+        today={this.state.today}
+        value={this.props.value}
+        onDateClick={this.props.onSelect}
+        onMonthYearChange={this.handleMonthYearChange}
+        isHoliday={this.props.isHoliday}
+      />
+    );
+  }
+
+  private getMonthPositions() {
+    const { scrollPosition, months } = this.state;
+    const positions = [scrollPosition - months[0].height];
+    for (let i = 1; i < months.length; i++) {
+      const position = positions[i - 1] + months[i - 1].height;
+      positions.push(position);
+    }
+    return positions;
+  }
+
+  private handleMonthYearChange = (month: number, year: number) => {
+    this.scrollToMonth(month, year);
+  };
+
+  private handleWheel = (event: Event) => {
+    if (!(event instanceof WheelEvent)) {
+      return;
+    }
+    event.preventDefault();
+    const { pixelY } = normalizeWheel(event);
+
+    this.setState(({ months, scrollPosition, scrollTarget }) => {
+      const targetPosition = CalendarUtils.calculateScrollPosition(months, scrollPosition, pixelY).scrollPosition;
+      return { scrollTarget: targetPosition };
+    }, this.handleWheelEnd);
+
+    this.animation.animate(pixelY, deltaY =>
+      // FIXME: Typescript not resolving setState cb type
+      this.setState(CalendarUtils.applyDelta(deltaY) as any),
+    );
+
+    CalendarScrollEvents.emit();
+  };
+
+  private handleWheelEnd = () => {
+    if (this.wheelEndTimeout) {
+      clearTimeout(this.wheelEndTimeout);
+    }
+    this.wheelEndTimeout = window.setTimeout(this.scrollToNearestWeek, 300);
+  };
+
+  private scrollToNearestWeek = () => {
+    const { scrollTarget, scrollDirection } = this.state;
+
+    const trasholdHeight = config.MONTH_TITLE_OFFSET_HEIGHT + config.DAY_HEIGHT;
+
+    if (scrollTarget < trasholdHeight) {
+      let targetPosition = 0;
+      if (scrollDirection < 0) {
+        targetPosition = trasholdHeight;
+      }
+
+      this.setState({ scrollTarget: targetPosition }, () => {
+        const amount = scrollTarget - targetPosition;
+        this.animation.animate(amount, deltaY =>
+          // FIXME: Typescript not resolving setState cb type
+          this.setState(CalendarUtils.applyDelta(deltaY) as any),
+        );
+      });
     }
   };
 

@@ -80,8 +80,8 @@ export default class DateSelect extends React.Component<DateSelectProps, DateSel
   };
 
   private readonly locale!: DateSelectLocale;
-
-  private node: HTMLElement | null = null;
+  private root: HTMLElement | null = null;
+  private itemsContainer: HTMLElement | null = null;
 
   private listener: Nullable<ReturnType<typeof LayoutEvents.addListener>>;
   private timeout: number | undefined;
@@ -116,6 +116,9 @@ export default class DateSelect extends React.Component<DateSelectProps, DateSel
     window.removeEventListener('keydown', this.handleKey);
   }
 
+  /**
+   * @public
+   */
   public open = () => {
     if (this.props.disabled) {
       return;
@@ -132,6 +135,9 @@ export default class DateSelect extends React.Component<DateSelectProps, DateSel
     });
   };
 
+  /**
+   * @public
+   */
   public close = () => {
     if (!this.state.opened) {
       return;
@@ -148,7 +154,7 @@ export default class DateSelect extends React.Component<DateSelectProps, DateSel
         [styles.disabled]: disabled,
       }),
       style: { width },
-      ref: this.ref,
+      ref: this.refRoot,
     };
     return (
       <span {...rootProps}>
@@ -168,13 +174,13 @@ export default class DateSelect extends React.Component<DateSelectProps, DateSel
     );
   }
 
-  private ref = (node: HTMLElement | null) => {
-    this.node = node;
+  private refRoot = (element: HTMLElement | null) => {
+    this.root = element;
   };
 
   private setNodeTop = () => {
-    const node = this.node;
-    if (!node) {
+    const root = this.root;
+    if (!root) {
       return;
     }
     if (this.timeout) {
@@ -182,7 +188,7 @@ export default class DateSelect extends React.Component<DateSelectProps, DateSel
     }
     this.timeout = setTimeout(() =>
       this.setState({
-        nodeTop: node.getBoundingClientRect().top,
+        nodeTop: root.getBoundingClientRect().top,
       }),
     );
   };
@@ -286,7 +292,7 @@ export default class DateSelect extends React.Component<DateSelectProps, DateSel
                 </div>
               )}
               <div className={styles.itemsHolder} style={{ height }}>
-                <div style={shiftStyle} onWheel={this.handleWheel}>
+                <div ref={this.refItemsContainer} style={shiftStyle}>
                   {items}
                 </div>
               </div>
@@ -312,6 +318,16 @@ export default class DateSelect extends React.Component<DateSelectProps, DateSel
     );
   }
 
+  private refItemsContainer = (element: HTMLElement | null) => {
+    if (!this.itemsContainer && element) {
+      element.addEventListener('wheel', this.handleWheel, { passive: false });
+    }
+    if (this.itemsContainer && !element) {
+      this.itemsContainer.removeEventListener('wheel', this.handleWheel);
+    }
+    this.itemsContainer = element;
+  };
+
   private handleLongClickUp = (event: React.MouseEvent | React.TouchEvent) => {
     event.preventDefault();
     this.longClickTimer = window.setTimeout(() => {
@@ -331,9 +347,13 @@ export default class DateSelect extends React.Component<DateSelectProps, DateSel
     clearTimeout(this.setPositionRepeatTimer);
   };
 
-  private getAnchor = () => this.node;
+  private getAnchor = () => this.root;
 
-  private handleWheel = (event: React.WheelEvent<HTMLDivElement>) => {
+  private handleWheel = (event: Event) => {
+    if (!(event instanceof WheelEvent)) {
+      return;
+    }
+    event.preventDefault();
     event.stopPropagation();
 
     let deltaY = event.deltaY;
