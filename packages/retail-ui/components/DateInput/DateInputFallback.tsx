@@ -30,14 +30,14 @@ export const DateInputFallback = <T extends { new (...args: any[]): any }>(const
         prevProps.minDate !== this.props.minDate ||
         prevProps.maxDate !== this.props.maxDate
       ) {
-        this.updateDateCustom(this.props);
-        this.updateDateComponents();
+        this.updateDateCustom(this.props.dateCustom, {}, this.updateDateCustomFromProps);
       }
-      if (prevState.dateValue !== this.state.dateValue) {
+
+      if (prevState.dateCustom !== this.state.dateCustom) {
         this.emitChange();
       }
 
-      if (this.state.isInFocused !== prevState.selected !== this.state.selected) {
+      if (this.state.isInFocused && prevState.selected !== this.state.selected) {
         this.selection();
       }
 
@@ -81,8 +81,9 @@ export const DateInputFallback = <T extends { new (...args: any[]): any }>(const
 
       this.setState({ isInFocused: false, selected: null, isOnInputMode: false }, () => {
         removeAllSelections();
-        this.dateCustom.restore();
-        this.updateDateComponents();
+        if (this.state.dateCustom !== null) {
+          this.updateDateCustom(this.state.dateCustom.restore());
+        }
         if (this.props.onBlur) {
           this.props.onBlur(event);
         }

@@ -39,7 +39,14 @@ export interface DatePickerProps<T> {
   warning?: boolean;
   width: number | string;
   onBlur?: () => void;
-  onChange: (e: { target: { value: T } }, v: T, d: DateCustom) => void;
+  /**
+   * @param fakeEvent - объект, частично имитирующий объект `Event`.
+   * @param value - значение выбранной даты в виде строки.
+   * @param dateCustom - экземпляр класса `DateCustom`, для работы датой. Доступен метод `dateCustom.validate()`
+   *
+   * @see <a href="/#/DateInput">Подробнее о `dateCustom.validate()` см. `DateInput`</a>
+   */
+  onChange: (fakeEvent: { target: { value: T } }, value: T, dateCustom: DateCustom) => void;
   onFocus?: () => void;
   onKeyDown?: (e: React.KeyboardEvent<any>) => void;
   onMouseEnter?: (e: React.MouseEvent<any>) => void;
@@ -51,6 +58,8 @@ export interface DatePickerProps<T> {
    * @default (_day, isWeekend) => isWeekend
    * @param {T} day - строка в формате `dd.mm.yyyy`
    * @param {boolean} isWeekend - флаг выходного (суббота или воскресенье)
+   * @param dateCustom - экземпляр класса `DateCustom`, для работы датой
+   *
    * @returns {boolean} `true` для выходного или `false` для рабочего дня
    */
   isHoliday: (day: T, isWeekend: boolean, dateCustom: DateCustom) => boolean;

@@ -5,8 +5,6 @@ import Calendar, { CalendarDateShape } from '../Calendar';
 import shallowEqual from 'fbjs/lib/shallowEqual';
 import { locale } from '../LocaleProvider/decorators';
 
-import { formatDate } from './DatePickerHelpers';
-
 import styles from './Picker.less';
 import { Nullable } from '../../typings/utility-types';
 import { isLess, isGreater } from '../Calendar/CalendarDateShape';
@@ -85,18 +83,19 @@ export default class Picker extends React.Component<Props, State> {
   };
 
   private renderTodayLink() {
+    const today = new DateCustom(this.locale.order, this.locale.separator)
+      .setComponents(DateCustomGetter.getTodayComponents())
+      .toString({ withPad: true, withSeparator: true });
     return (
       <button className={styles.todayWrapper} onClick={this.handleSelectToday} tabIndex={-1}>
-        {this.locale.today} {formatDate(this.state.today)}
+        {`${this.locale.today} ${today}`}
       </button>
     );
   }
 
   private handleSelectToday = () => {
     if (this.props.onSelect) {
-      this.props.onSelect(
-        new DateCustom().setComponents(DateCustomGetter.getTodayComponents()).toNativeFormat()!
-      );
+      this.props.onSelect(new DateCustom().setComponents(DateCustomGetter.getTodayComponents()).toNativeFormat()!);
     }
     if (this.calendar) {
       const { month, year } = this.state.today;

@@ -6,8 +6,9 @@ import { DateCustom } from '../../../lib/date/DateCustom';
 import { DateCustomOrder, DateCustomSeparator, DateCustomValidateCheck } from '../../../lib/date/types';
 import Button from '../../Button';
 import Checkbox from '../../Checkbox';
+import DatePicker from '../../DatePicker';
 import Gapped from '../../Gapped';
-import LocaleProvider from '../../LocaleProvider';
+import LocaleProvider, { LangCodes } from '../../LocaleProvider';
 import Select from '../../Select';
 import DateInput from '../DateInput';
 
@@ -93,45 +94,120 @@ class DateInputFormatting extends React.Component<any, any> {
   public state = {
     order: DateCustomOrder.YMD,
     separator: 'Dot',
-    dateCustom: new DateCustom().parseValue('23.12.2012'),
+    value: '2012.12.30',
+    dateCustom: new DateCustom(DateCustomOrder.YMD, DateCustomSeparator.Dot).setComponents({
+      year: 2012,
+      month: 12,
+      date: 30,
+    }),
   };
 
   public render() {
-    return <Gapped vertical gap={10}>
+    return (
+      <Gapped vertical gap={10}>
         <div>
           <span style={{ width: '300px', display: 'inline-block' }}>
             Порядок компонентов <tt>DateCustomOrder</tt>
           </span>
-          <Select value={this.state.order} items={Object.keys(DateCustomOrder)} onChange={(_, order) => this.setState(
-                { order },
-              )} />
+          <Select
+            value={this.state.order}
+            items={Object.keys(DateCustomOrder)}
+            onChange={(_, order) => this.setState({ order })}
+          />
         </div>
         <div>
           <span style={{ width: '300px', display: 'inline-block' }}>
             Разделитель <tt>DateCustomSeparator</tt>
           </span>
-          <Select value={this.state.separator} items={Object.keys(DateCustomSeparator)} onChange={(_, separator) => this.setState(
-                { separator },
-              )} />
+          <Select
+            value={this.state.separator}
+            items={Object.keys(DateCustomSeparator)}
+            onChange={(_, separator) => this.setState({ separator })}
+          />
         </div>
-        <LocaleProvider locale={{ DatePicker: { separator: DateCustomSeparator[this.state.separator], order: this.state.order } }}>
-          <DateInput onChange={(a, b, dateCustom) => this.setState({
+        <LocaleProvider
+          locale={{ DatePicker: { separator: DateCustomSeparator[this.state.separator], order: this.state.order } }}
+        >
+          <DateInput
+            onChange={(a, value, dateCustom) =>
+              this.setState({
                 dateCustom,
-              })} value={this.state.dateCustom.toString({
+                value,
+              })
+            }
+            value={this.state.dateCustom.toString({
               withSeparator: true,
               withPad: true,
               order: this.state.order,
               separator: DateCustomSeparator[this.state.separator],
-            })} />
+            })}
+          />
+          <br/>
+          <br/>
+          <DatePicker
+            onChange={(a, value, dateCustom) =>
+              this.setState({
+                dateCustom,
+                value,
+              })
+            }
+            value={this.state.dateCustom.toString({
+              withSeparator: true,
+              withPad: true,
+              order: this.state.order,
+              separator: DateCustomSeparator[this.state.separator],
+            })}
+            enableTodayLink
+          />
         </LocaleProvider>
-      </Gapped>;
+      </Gapped>
+    );
+  }
+}
+
+class DateInputFormatting2 extends React.Component<any, any> {
+  public state = {
+    langCode: LangCodes.en_EN,
+    dateCustom: new DateCustom().setComponents({ year: 2012, month: 12, date: 30 }),
+  };
+
+  public render() {
+    return (
+      <Gapped vertical gap={10}>
+        <div>
+          <span style={{ width: '300px', display: 'inline-block' }}>
+            Локаль (<tt>LangCodes</tt>)
+          </span>
+          <Select
+            value={this.state.langCode}
+            placeholder="Выбрать язык"
+            items={Object.values(LangCodes)}
+            onChange={(_, langCode) => this.setState({ langCode })}
+          />
+        </div>
+        <LocaleProvider langCode={this.state.langCode}>
+          <DateInput
+            onChange={(a, b, dateCustom) =>
+              this.setState({
+                dateCustom,
+              })
+            }
+            value={this.state.dateCustom.toString({
+              withSeparator: true,
+              withPad: true,
+            })}
+          />
+        </LocaleProvider>
+      </Gapped>
+    );
   }
 }
 
 storiesOf('DateInput', module)
   .add('simple', () => <DateInput value="01.02.2017" />)
-  .add('date input validations', () => <DateInputValidations />)
-  .add('date input formatting', () => <DateInputFormatting />)
+  .add('validations', () => <DateInputValidations />)
+  .add('formatting', () => <DateInputFormatting />)
+  .add('formatting 2', () => <DateInputFormatting2 />)
   .add('disabled', () => <DateInput disabled value="01.02.2017" />)
   .add('with width', () => <DateInput width="50px" value="01.02.2017" />)
   .add('YMD - Slash', () => (

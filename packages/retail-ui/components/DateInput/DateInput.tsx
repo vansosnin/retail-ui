@@ -22,7 +22,8 @@ import { removeAllSelections, selectNodeContents } from './helpers/SelectionHelp
 
 export interface DateInputState {
   selected: DateCustomComponentType | null;
-  dateValue: string;
+  dateCustom: DateCustom | null;
+  typesOrder: DateCustomComponentType[];
   isOnInputMode: boolean;
   isInFocused: boolean;
   notify: boolean;
@@ -31,6 +32,7 @@ export interface DateInputState {
 }
 
 export interface DateInputProps {
+  dateCustom?: DateCustom;
   value?: string;
   error?: boolean;
   warning?: boolean;
@@ -42,6 +44,11 @@ export interface DateInputProps {
   size?: 'small' | 'large' | 'medium';
   onBlur?: (x0: React.FocusEvent<HTMLElement>) => void;
   onFocus?: (x0: React.FocusEvent<HTMLElement>) => void;
+  /**
+   * @param fakeEvent - объект, частично имитирующий объект `Event`.
+   * @param value - значение выбранной даты в виде строки.
+   * @param dateCustom - экземпляр класса `DateCustom`, для работы датой. Доступен метод `dateCustom.validate()`
+   */
   onChange?: (fakeEvent: { target: { value: string } }, value: string, dateCustom: DateCustom) => void;
   onKeyDown?: (x0: React.KeyboardEvent<HTMLElement>) => void;
 }
@@ -57,18 +64,14 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
   private inputLikeText: InputLikeText | null = null;
   private divInnerNode: HTMLElement | null = null;
 
-  private readonly dateCustom: DateCustom;
-  private dateComponentsTypesOrder: DateCustomComponentType[];
-
   constructor(props: DateInputProps) {
     super(props);
-    this.dateCustom = new DateCustom();
-    this.dateComponentsTypesOrder = this.dateCustom.toFragments().map(({ type }) => type);
 
     this.state = {
       notify: false,
       selected: null,
-      dateValue: '',
+      dateCustom: null,
+      typesOrder: [],
       isOnInputMode: false,
       isInFocused: false,
       isDragged: false,
@@ -78,8 +81,6 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
 
   public updateLocaleContext(): void {
     this.updateDateCustom();
-    this.dateComponentsTypesOrder = this.dateCustom.toFragments().map(({ type }) => type);
-    this.updateDateComponents();
   }
 
   public componentDidUpdate(prevProps: DateInputProps, prevState: DateInputState) {
@@ -88,10 +89,10 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
       prevProps.minDate !== this.props.minDate ||
       prevProps.maxDate !== this.props.maxDate
     ) {
-      this.updateDateCustom();
-      this.updateDateComponents();
+      this.updateDateCustom(this.props.dateCustom, {}, this.updateDateCustomFromProps);
     }
-    if (prevState.dateValue !== this.state.dateValue) {
+
+    if (prevState.dateCustom !== this.state.dateCustom) {
       this.emitChange();
     }
 
@@ -105,9 +106,7 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
   }
 
   public componentDidMount(): void {
-    this.updateDateCustom();
-    this.dateComponentsTypesOrder = this.dateCustom.toFragments().map(({ type }) => type);
-    this.updateDateComponents();
+    this.updateDateCustom(this.props.dateCustom, {}, this.updateDateCustomFromProps);
     if (this.divInnerNode) {
       dragEndDrop(this.divInnerNode);
       this.divInnerNode.addEventListener('dragndropstart', this.onDraAndDropStart);
@@ -176,8 +175,8 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
   private getFragments = (): JSX.Element[] => {
     const { selected, isOnInputMode, isInFocused, isDragged } = this.state;
     const fragments =
-      isInFocused || !this.dateCustom.isEmpty()
-        ? this.dateCustom.toFragments({
+      this.state.dateCustom && (isInFocused || !this.state.dateCustom.isEmpty())
+        ? this.state.dateCustom.toFragments({
             withSeparator: true,
             withPad: true,
           })
@@ -214,7 +213,7 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
       this.selectNodeContents(this.divInnerNode);
       return;
     }
-    const index = this.dateComponentsTypesOrder.indexOf(type);
+    const index = this.state.typesOrder.indexOf(type);
     if (index > -1) {
       this.selectNodeContents(this.divInnerNode, index * 2, index * 2 + 1);
     }
@@ -223,18 +222,54 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
 
   private onDraAndDropEnd = () => this.setState({ isDragged: false });
 
-  private updateDateCustom(props: DateInputProps = this.props) {
-    this.dateCustom
-      .setOrder(this.locale.order)
-      .setSeparator(this.locale.separator)
-      .setRangeStart(
-        props.minDate ? new DateCustom(this.locale.order, this.locale.separator).parseValue(props.minDate) : null,
-      )
-      .setRangeEnd(
-        props.maxDate ? new DateCustom(this.locale.order, this.locale.separator).parseValue(props.maxDate) : null,
-      )
-      .parseValue(props.value);
-  }
+  private updateDateCustom = (
+    _dateCustom?: DateCustom,
+    state: Partial<DateInputState> = {},
+    callback?: (...any: any[]) => void,
+  ): void => {
+    const dateCustom = (_dateCustom || this.props.dateCustom || this.state.dateCustom || new DateCustom()).clone();
+    dateCustom.setOrder(this.locale.order).setSeparator(this.locale.separator);
+    const typesOrder = dateCustom.toFragments().map(({ type }) => type);
+    this.setState({ ...state, typesOrder, dateCustom } as DateInputState, callback);
+  };
+
+  private updateDateCustomFromProps = (): void => {
+    if (this.state.dateCustom === null) {
+      return;
+    }
+    let isMod: boolean = false;
+    const dateCustom = this.state.dateCustom.clone();
+    const start = dateCustom.getRangeStart();
+    const min = start && start.toString({ withPad: true, withSeparator: true });
+    const end = dateCustom.getRangeEnd();
+    const max = end && end.toString({ withPad: true, withSeparator: true });
+    if (this.props.minDate !== min) {
+      isMod = true;
+      dateCustom.setRangeStart(
+        this.props.minDate
+          ? new DateCustom(this.locale.order, this.locale.separator).parseValue(this.props.minDate)
+          : null,
+      );
+    }
+    if (this.props.maxDate !== max) {
+      isMod = true;
+      dateCustom.setRangeEnd(
+        this.props.maxDate
+          ? new DateCustom(this.locale.order, this.locale.separator).parseValue(this.props.maxDate)
+          : null,
+      );
+    }
+    if (
+      !this.props.value ||
+      this.props.value !== dateCustom.toString({ withPad: true, withSeparator: !dateCustom.isEmpty() })
+    ) {
+      isMod = true;
+      dateCustom.parseValue(this.props.value);
+    }
+    if (isMod) {
+      this.setState({ dateCustom });
+    }
+  };
 
   private getIconSize = () => {
     // FIXME: вынести значения в пиксилях
@@ -265,8 +300,9 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
 
     this.setState({ isInFocused: false, selected: null, isOnInputMode: false }, () => {
       removeAllSelections();
-      this.dateCustom.restore();
-      this.updateDateComponents();
+      if (this.state.dateCustom !== null) {
+        this.updateDateCustom(this.state.dateCustom.restore());
+      }
       if (this.props.onBlur) {
         this.props.onBlur(event);
       }
@@ -361,7 +397,10 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
   }
 
   private pressDelimiter = () => {
-    const value = this.dateCustom.get(this.state.selected);
+    if (this.state.dateCustom === null) {
+      return;
+    }
+    const value = this.state.dateCustom.get(this.state.selected);
     if (value !== null && value !== '') {
       if (this.state.isAutoMoved) {
         this.setState({ isAutoMoved: false });
@@ -371,101 +410,118 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
     }
   };
 
-  private handlePaste = (e?: React.ClipboardEvent<HTMLElement>, pasted?: string) => {
+  private handlePaste = (e?: React.ClipboardEvent<HTMLElement>, pasted?: string): void => {
     pasted = pasted || (e && e.clipboardData.getData('text').trim());
-    if (pasted) {
-      this.dateCustom.parseValue(pasted).restore();
-      this.updateDateComponents();
+    if (pasted && this.state.dateCustom !== null) {
+      this.updateDateCustom(this.state.dateCustom.parseValue(pasted).restore().cutOffExcess());
     }
   };
 
-  private emitChange() {
-    const value = this.dateCustom.toString({ withPad: true, withSeparator: true });
+  private emitChange(): void {
+    if (this.state.dateCustom === null || this.state.dateCustom.isEmpty()) {
+      return;
+    }
+    const value = this.state.dateCustom.toString({ withPad: true, withSeparator: true });
     if (this.props.value === value) {
       return;
     }
     if (this.props.onChange) {
-      this.props.onChange({ target: { value } }, value, this.dateCustom);
+      this.props.onChange({ target: { value } }, value, this.state.dateCustom);
     }
   }
 
   private clearSelected(): void {
+    if (this.state.dateCustom === null) {
+      return;
+    }
     const selected = this.state.selected === null ? this.getFirstDateComponentType() : this.state.selected;
-    this.dateCustom.set(selected, null);
-    this.updateDateComponents({ isOnInputMode: false, selected });
+    this.updateDateCustom(this.state.dateCustom.set(selected, null), { isOnInputMode: false, selected });
+    // this.setState({ isOnInputMode: false, selected });
     if (selected === DateCustomComponentType.All) {
       this.selectDateComponent(this.getFirstDateComponentType());
     }
   }
 
   private clearOneChar(): void {
+    if (this.state.dateCustom === null) {
+      return;
+    }
     const prevType = this.state.selected === null ? this.getLastDateComponentType() : this.state.selected;
     const nextType =
       prevType === DateCustomComponentType.All
-        ? this.dateCustom
+        ? this.state.dateCustom
             .toFragments({ withSeparator: false })
             .reduce((_type, { value, type }) => (value !== null ? type : _type), this.getLastDateComponentType())
         : prevType;
-    let prev = this.dateCustom.get(nextType);
+    let prev = this.state.dateCustom.get(nextType);
     if (prev === null) {
       this.moveSelection(-1);
       return;
     }
     prev = String(prev);
     const next = prev.replace(/.$/, '') || null;
-    this.dateCustom.set(nextType, next);
-    this.updateDateComponents({ isOnInputMode: next !== null, selected: nextType });
+    this.updateDateCustom(this.state.dateCustom.set(nextType, next), {
+      isOnInputMode: next !== null,
+      selected: nextType,
+    });
   }
 
   private updateDateComponentBy(step: number) {
+    if (this.state.dateCustom === null) {
+      return;
+    }
     let { selected } = this.state;
     selected = selected === null ? this.getFirstDateComponentType() : selected;
-    const clone = this.dateCustom.clone();
-    const isValidRange = this.dateCustom.validate({ checks: [DateCustomValidateCheck.Range] });
+    const { dateCustom } = this.state;
+    const clone = dateCustom.clone();
+    const isValidRange = this.state.dateCustom.validate({ checks: [DateCustomValidateCheck.Range] });
     if (!isValidRange) {
-      const start = this.dateCustom.getRangeStart();
-      const end = this.dateCustom.getRangeEnd();
-      if (start && DateCustomGetter.max([this.dateCustom, start]) === start) {
-        this.dateCustom.setComponents(start.getComponentsRaw());
-      } else if (end && DateCustomGetter.min([this.dateCustom, end]) === end) {
-        this.dateCustom.setComponents(end.getComponentsRaw());
+      const start = dateCustom.getRangeStart();
+      const end = dateCustom.getRangeEnd();
+      if (start && DateCustomGetter.max([dateCustom, start]) === start) {
+        dateCustom.setComponents(start.getComponentsRaw());
+      } else if (end && DateCustomGetter.min([dateCustom, end]) === end) {
+        dateCustom.setComponents(end.getComponentsRaw());
       }
     } else if (
-      this.dateCustom
+      dateCustom
         .clone()
         .shift(selected, step, { isRange: false, isLoop: true })
         .validate({ checks: [DateCustomValidateCheck.Range] })
     ) {
-      this.dateCustom.shift(selected, step, { isRange: true, isLoop: true });
+      dateCustom.shift(selected, step, { isRange: true, isLoop: true });
     }
-    this.updateDateComponents({
+    this.updateDateCustom(dateCustom, {
       isOnInputMode: false,
       selected: selected === DateCustomComponentType.All ? this.getFirstDateComponentType() : selected,
-      notify: clone.get(selected) === this.dateCustom.get(selected),
+      notify: clone.get(selected) === this.state.dateCustom.get(selected),
     });
   }
 
   private moveSelection(step: number, isAutoMoved: boolean = false): void {
+    if (this.state.dateCustom === null) {
+      return;
+    }
     const { selected } = this.state;
-    const index = selected === null ? 0 : this.dateComponentsTypesOrder.indexOf(selected);
+    const index = selected === null ? 0 : this.state.typesOrder.indexOf(selected);
     if (
-      (this.dateComponentsTypesOrder[index] === this.getLastDateComponentType() && step > 0) ||
-      (this.dateComponentsTypesOrder[index] === this.getFirstDateComponentType() && step < 0)
+      (this.state.typesOrder[index] === this.getLastDateComponentType() && step > 0) ||
+      (this.state.typesOrder[index] === this.getFirstDateComponentType() && step < 0)
     ) {
       return;
     }
     let nextIndex = index + step;
     if (selected === DateCustomComponentType.All) {
-      nextIndex = step < 0 ? 0 : this.dateComponentsTypesOrder.length - 1;
+      nextIndex = step < 0 ? 0 : this.state.typesOrder.length - 1;
     }
-    if (selected === DateCustomComponentType.Year && this.dateCustom.getYear() !== null) {
-      this.dateCustom.restore(selected);
+    if (selected === DateCustomComponentType.Year && this.state.dateCustom.getYear() !== null) {
+      this.state.dateCustom.restore(selected);
     }
-    this.dateCustom.cutOffExcess();
-    this.updateDateComponents();
-    if (nextIndex >= 0 && nextIndex < this.dateComponentsTypesOrder.length) {
+    this.state.dateCustom.cutOffExcess();
+    this.updateDateCustom(this.state.dateCustom);
+    if (nextIndex >= 0 && nextIndex < this.state.typesOrder.length) {
       this.setState({
-        selected: this.dateComponentsTypesOrder[nextIndex],
+        selected: this.state.typesOrder[nextIndex],
         isOnInputMode: false,
         isAutoMoved,
       });
@@ -478,18 +534,21 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
   }
 
   private inputValue(event: React.KeyboardEvent<HTMLElement>): void {
+    if (this.state.dateCustom === null) {
+      return;
+    }
     event.persist();
     let { selected: type } = this.state;
-    let prev = this.dateCustom.get(type);
+    let prev = this.state.dateCustom.get(type);
     if (type === null) {
       type = this.getFirstDateComponentType();
       prev = null;
-      this.dateCustom.set(type, null);
+      this.state.dateCustom.set(type, null);
     }
     if (type === DateCustomComponentType.All) {
       type = this.getFirstDateComponentType();
       prev = null;
-      this.dateCustom.set(DateCustomComponentType.All, null);
+      this.state.dateCustom.set(DateCustomComponentType.All, null);
     }
     this.setState({ selected: type }, () => {
       inputNumber(type, prev, event.key, this.state.isOnInputMode, this.inputNumberCallBack);
@@ -497,22 +556,26 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
   }
 
   private inputNumberCallBack = (next: DateCustomComponent, inputMode: boolean): void => {
+    if (this.state.dateCustom === null) {
+      return;
+    }
     let { selected: type } = this.state;
+    const { dateCustom } = this.state;
     if (type === null || type === DateCustomComponentType.All) {
       type = this.getFirstDateComponentType();
       inputMode = false;
       this.selectDateComponent(type);
     }
-    this.dateCustom.set(type, next);
+    dateCustom.set(type, next);
     if (!inputMode) {
       if (type !== DateCustomComponentType.Year) {
-        this.dateCustom.cutOffExcess();
+        dateCustom.cutOffExcess();
       }
-      if (this.dateCustom.validate({checks: [DateCustomValidateCheck.Limits], type})) {
+      if (dateCustom.validate({ checks: [DateCustomValidateCheck.Limits], type })) {
         this.moveSelection(1, true);
       }
     }
-    this.updateDateComponents({ isOnInputMode: inputMode });
+    this.updateDateCustom(dateCustom, { isOnInputMode: inputMode });
   };
 
   private selectNodeContents = (node: HTMLElement | null, start?: number, end?: number): void => {
@@ -534,16 +597,9 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
     this.selectDateComponent(DateCustomComponentType.All);
   };
 
-  private getFirstDateComponentType = (): DateCustomComponentType => this.dateComponentsTypesOrder[0];
+  private getFirstDateComponentType = (): DateCustomComponentType => this.state.typesOrder[0];
   private getLastDateComponentType = (): DateCustomComponentType =>
-    this.dateComponentsTypesOrder[this.dateComponentsTypesOrder.length - 1];
-
-  private updateDateComponents = (state: Partial<DateInputState> = {}): void => {
-    this.setState({
-      ...state,
-      dateValue: this.dateCustom.toString({ withSeparator: true, withPad: false }),
-    } as DateInputState);
-  };
+    this.state.typesOrder[this.state.typesOrder.length - 1];
 
   private renderIcon = (): (() => JSX.Element | null) => {
     const iconStyles = classNames({
