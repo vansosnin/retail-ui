@@ -1,0 +1,5 @@
+--require source-map-support/register
+--require creevey/lib/mocha-ui
+--ui creevey
+--timeout 30000
+./tests/*
