@@ -83,7 +83,8 @@ export default class Picker extends React.Component<Props, State> {
   };
 
   private renderTodayLink() {
-    const today = new DateCustom(this.locale.order, this.locale.separator)
+    const { order, separator } = this.locale;
+    const today = new DateCustom({ order, separator })
       .setComponents(DateCustomGetter.getTodayComponents())
       .toString({ withPad: true, withSeparator: true });
     return (

@@ -24,7 +24,7 @@ export const DateInputFallback = <T extends { new (...args: any[]): any }>(const
       }
     }, 10);
 
-    public componentDidUpdate(prevProps: DateInputProps, prevState: DateInputState) {
+    public componentDidUpdate = (prevProps: DateInputProps, prevState: DateInputState) => {
       if (
         prevProps.value !== this.props.value ||
         prevProps.minDate !== this.props.minDate ||
@@ -44,9 +44,10 @@ export const DateInputFallback = <T extends { new (...args: any[]): any }>(const
       if (this.state.notify && !prevState.notify) {
         this.notify();
       }
-    }
+    };
 
     public handleMouseDown = (event: React.MouseEvent<HTMLElement>) => {
+      this.isMouseDown = true;
       if (this.state.isInFocused && !this.isFrozen) {
         event.preventDefault();
         event.stopPropagation();
@@ -62,7 +63,8 @@ export const DateInputFallback = <T extends { new (...args: any[]): any }>(const
       this.setState((prevState: DateInputState) => {
         return {
           isInFocused: true,
-          selected: prevState.selected === null ? this.getFirstDateComponentType() : prevState.selected,
+          selected:
+            prevState.selected === null && !this.isMouseDown ? this.getFirstDateComponentType() : prevState.selected,
         };
       });
 
@@ -82,7 +84,7 @@ export const DateInputFallback = <T extends { new (...args: any[]): any }>(const
       this.setState({ isInFocused: false, selected: null, isOnInputMode: false }, () => {
         removeAllSelections();
         if (this.state.dateCustom !== null) {
-          this.updateDateCustom(this.state.dateCustom.restore());
+          this.updateDateCustom(this.state.dateCustom.restore().cutOffExcess({ isCutFeb: true }));
         }
         if (this.props.onBlur) {
           this.props.onBlur(event);

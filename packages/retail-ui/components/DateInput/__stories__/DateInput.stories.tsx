@@ -8,7 +8,7 @@ import Button from '../../Button';
 import Checkbox from '../../Checkbox';
 import DatePicker from '../../DatePicker';
 import Gapped from '../../Gapped';
-import LocaleProvider, { LangCodes } from '../../LocaleProvider';
+import LocaleProvider from '../../LocaleProvider';
 import Select from '../../Select';
 import DateInput from '../DateInput';
 
@@ -95,7 +95,10 @@ class DateInputFormatting extends React.Component<any, any> {
     order: DateCustomOrder.YMD,
     separator: 'Dot',
     value: '2012.12.30',
-    dateCustom: new DateCustom(DateCustomOrder.YMD, DateCustomSeparator.Dot).setComponents({
+    dateCustom: new DateCustom({
+      order: DateCustomOrder.YMD,
+      separator: DateCustomSeparator.Dot,
+    }).setComponents({
       year: 2012,
       month: 12,
       date: 30,
@@ -129,12 +132,13 @@ class DateInputFormatting extends React.Component<any, any> {
           locale={{ DatePicker: { separator: DateCustomSeparator[this.state.separator], order: this.state.order } }}
         >
           <DateInput
-            onChange={(a, value, dateCustom) =>
+            onChange={(a, value, dateCustom) => {
+              action('DateInput.onChange')(dateCustom.toString());
               this.setState({
                 dateCustom,
                 value,
               })
-            }
+            }}
             value={this.state.dateCustom.toString({
               withSeparator: true,
               withPad: true,
@@ -145,12 +149,13 @@ class DateInputFormatting extends React.Component<any, any> {
           <br/>
           <br/>
           <DatePicker
-            onChange={(a, value, dateCustom) =>
+            onChange={(a, value, dateCustom) => {
+              action('DatePicker.onChange')(dateCustom.toString());
               this.setState({
                 dateCustom,
                 value,
               })
-            }
+            }}
             value={this.state.dateCustom.toString({
               withSeparator: true,
               withPad: true,
@@ -165,40 +170,141 @@ class DateInputFormatting extends React.Component<any, any> {
   }
 }
 
-class DateInputFormatting2 extends React.Component<any, any> {
-  public state = {
-    langCode: LangCodes.en_EN,
-    dateCustom: new DateCustom().setComponents({ year: 2012, month: 12, date: 30 }),
-  };
-
+class DateInputDifferentFormatting extends React.Component<any, any> {
   public render() {
     return (
-      <Gapped vertical gap={10}>
-        <div>
-          <span style={{ width: '300px', display: 'inline-block' }}>
-            Локаль (<tt>LangCodes</tt>)
-          </span>
-          <Select
-            value={this.state.langCode}
-            placeholder="Выбрать язык"
-            items={Object.values(LangCodes)}
-            onChange={(_, langCode) => this.setState({ langCode })}
-          />
-        </div>
-        <LocaleProvider langCode={this.state.langCode}>
-          <DateInput
-            onChange={(a, b, dateCustom) =>
-              this.setState({
-                dateCustom,
-              })
-            }
-            value={this.state.dateCustom.toString({
-              withSeparator: true,
-              withPad: true,
-            })}
-          />
-        </LocaleProvider>
-      </Gapped>
+      <table>
+        <thead>
+        <tr>
+          <td> </td>
+          <td>YMD</td>
+          <td>MDY</td>
+          <td>DMY</td>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+          <td>Dot</td>
+          <td>
+            <LocaleProvider
+              locale={{ DatePicker: { separator: DateCustomSeparator.Dot, order: DateCustomOrder.YMD } }}
+            >
+              <DateInput
+                value="2012.12.21"
+              />
+            </LocaleProvider>
+          </td>
+          <td>
+            <LocaleProvider
+              locale={{ DatePicker: { separator: DateCustomSeparator.Dot, order: DateCustomOrder.MDY } }}
+            >
+              <DateInput
+                value="12.21.2012"
+              />
+            </LocaleProvider>
+          </td>
+          <td>
+            <LocaleProvider
+              locale={{ DatePicker: { separator: DateCustomSeparator.Dot, order: DateCustomOrder.DMY } }}
+            >
+              <DateInput
+                value="21.12.2012"
+              />
+            </LocaleProvider>
+          </td>
+        </tr>
+        <tr>
+          <td>Dash</td>
+          <td>
+            <LocaleProvider
+              locale={{ DatePicker: { separator: DateCustomSeparator.Dash, order: DateCustomOrder.YMD } }}
+            >
+              <DateInput
+                value="2012-12-21"
+              />
+            </LocaleProvider>
+          </td>
+          <td>
+            <LocaleProvider
+              locale={{ DatePicker: { separator: DateCustomSeparator.Dash, order: DateCustomOrder.MDY } }}
+            >
+              <DateInput
+                value="12-21-2012"
+              />
+            </LocaleProvider>
+          </td>
+          <td>
+            <LocaleProvider
+              locale={{ DatePicker: { separator: DateCustomSeparator.Dash, order: DateCustomOrder.DMY } }}
+            >
+              <DateInput
+                value="21-12-2012"
+              />
+            </LocaleProvider>
+          </td>
+        </tr>
+        <tr>
+          <td>Slash</td>
+          <td>
+            <LocaleProvider
+              locale={{ DatePicker: { separator: DateCustomSeparator.Slash, order: DateCustomOrder.YMD } }}
+            >
+              <DateInput
+                value="2012/12/21"
+              />
+            </LocaleProvider>
+          </td>
+          <td>
+            <LocaleProvider
+              locale={{ DatePicker: { separator: DateCustomSeparator.Slash, order: DateCustomOrder.MDY } }}
+            >
+              <DateInput
+                value="12/21/2012"
+              />
+            </LocaleProvider>
+          </td>
+          <td>
+            <LocaleProvider
+              locale={{ DatePicker: { separator: DateCustomSeparator.Slash, order: DateCustomOrder.DMY } }}
+            >
+              <DateInput
+                value="21/12/2012"
+              />
+            </LocaleProvider>
+          </td>
+        </tr>
+        <tr>
+          <td>Space</td>
+          <td>
+            <LocaleProvider
+              locale={{ DatePicker: { separator: DateCustomSeparator.Space, order: DateCustomOrder.YMD } }}
+            >
+              <DateInput
+                value="2012 12 21"
+              />
+            </LocaleProvider>
+          </td>
+          <td>
+            <LocaleProvider
+              locale={{ DatePicker: { separator: DateCustomSeparator.Space, order: DateCustomOrder.MDY } }}
+            >
+              <DateInput
+                value="12 21 2012"
+              />
+            </LocaleProvider>
+          </td>
+          <td>
+            <LocaleProvider
+              locale={{ DatePicker: { separator: DateCustomSeparator.Space, order: DateCustomOrder.DMY } }}
+            >
+              <DateInput
+                value="21 12 2012"
+              />
+            </LocaleProvider>
+          </td>
+        </tr>
+        </tbody>
+      </table>
     );
   }
 }
@@ -207,7 +313,7 @@ storiesOf('DateInput', module)
   .add('simple', () => <DateInput value="01.02.2017" />)
   .add('validations', () => <DateInputValidations />)
   .add('formatting', () => <DateInputFormatting />)
-  .add('formatting 2', () => <DateInputFormatting2 />)
+  .add('different formatting', () => <DateInputDifferentFormatting />)
   .add('disabled', () => <DateInput disabled value="01.02.2017" />)
   .add('with width', () => <DateInput width="50px" value="01.02.2017" />)
   .add('YMD - Slash', () => (

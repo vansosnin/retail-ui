@@ -60,6 +60,7 @@ export interface DateCustomToFragmentsSettings {
 export interface DateCustomChangeValueDateComponentSettings {
   isLoop?: boolean;
   isRange?: boolean;
+  isCutFeb?: boolean;
 }
 
 export enum DateCustomValidateCheck {

@@ -135,7 +135,10 @@ class DatePicker extends React.Component<DatePickerProps<DatePickerValue>, DateP
     if (!value) {
       return false;
     }
-    const dc = new DateCustom(DateCustomOrder.DMY, DateCustomSeparator.Dot).parseValue(value);
+    const dc = new DateCustom({
+      order: DateCustomOrder.DMY,
+      separator: DateCustomSeparator.Dot,
+    }).parseValue(value);
     const dcNative = dc.getComponentsLikeNumber();
     return (
       dc.validate({ checks: [DateCustomValidateCheck.Number] }) &&
@@ -175,8 +178,10 @@ class DatePicker extends React.Component<DatePickerProps<DatePickerValue>, DateP
     if (!value) {
       return false;
     }
-    return new DateCustom(this.locale.order, this.locale.separator).parseValue(value).validate();
-    // return this.parseValueToDate(value) !== undefined;
+    return new DateCustom({
+      order: this.locale.order,
+      separator: this.locale.separator,
+    }).parseValue(value).validate();
   };
 
   public componentDidMount() {
@@ -276,7 +281,10 @@ class DatePicker extends React.Component<DatePickerProps<DatePickerValue>, DateP
     if (value === undefined) {
       return undefined;
     }
-    const date = new DateCustom(this.locale.order, this.locale.separator).parseValue(value);
+    const date = new DateCustom({
+      order: this.locale.order,
+      separator: this.locale.separator,
+    }).parseValue(value);
     if (date.validate({ checks: [DateCustomValidateCheck.NotNull, DateCustomValidateCheck.Native] })) {
       return date;
     }

@@ -118,7 +118,7 @@ class DateInputFormatting2 extends React.Component {
   constructor() {
     this.state = {
       langCode: LangCodes.en_EN,
-      dateCustom: new DateCustom().setComponents({ year: 2012, month: 12, date: 30 }),
+      dateCustom: new DateCustom({langCode: LangCodes.en_EN}).setComponents({ year: 2012, month: 12, date: 30 }),
     };
   }
 

@@ -20,18 +20,14 @@ export const FragmentDateCustom: React.SFC<FragmentDateCustomProps> = ({
   selected,
   onChange,
 }) => {
-  if (type === DateCustomComponentType.Separator) {
-    return <span className={styles.delimiter}>{value}</span>;
-  } else {
-    value = value === null || (selected === type && inputMode) ? value : valueWithPad || value;
-    if (DateCustomValidator.testParseToNumber(value)) {
-      length = Math.max(length - value!.toString().length, 0);
-    }
-    return (
-      <span onMouseUp={onChange(type)} onMouseDown={removeAllSelections}>
-        {value}
-        <span className={styles.mask}>{CHAR_MASK.repeat(length)}</span>
-      </span>
-    );
+  value = value === null || (selected === type && inputMode) ? value : valueWithPad || value;
+  if (DateCustomValidator.testParseToNumber(value)) {
+    length = Math.max(length - value!.toString().length, 0);
   }
+  return (
+    <span onMouseUp={onChange(type)} onMouseDown={removeAllSelections}>
+      {value}
+      <span className={styles.mask}>{CHAR_MASK.repeat(length)}</span>
+    </span>
+  );
 };

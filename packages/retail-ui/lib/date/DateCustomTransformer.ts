@@ -13,11 +13,11 @@ import {
 } from './constants';
 import DateCustomValidator from './DateCustomValidator';
 import {
-  DateCustomComponentType,
   DateCustomComponentRaw,
   DateCustomComponents,
   DateCustomComponentsNumber,
   DateCustomComponentsRaw,
+  DateCustomComponentType,
   DateCustomFragment,
   DateCustomOrder,
   DateCustomToFragmentsSettings,
