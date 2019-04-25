@@ -61,6 +61,7 @@ export const DateInputFallback = <T extends { new (...args: any[]): any }>(const
         return;
       }
       this.setState((prevState: DateInputState) => {
+        this.isFirstFocus = !prevState.isInFocused;
         return {
           isInFocused: true,
           selected:
