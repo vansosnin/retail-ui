@@ -87,7 +87,7 @@ class DatePickerWithMinMax extends React.Component<any, any> {
   public state = {
     min: '02.07.2017',
     max: '30.01.2020',
-    value: '30.01.2019',
+    value: '02.07.2017',
     order: DateCustomOrder.DMY,
     separator: DateCustomSeparator.Dot,
   };
@@ -119,7 +119,6 @@ class DatePickerWithMinMax extends React.Component<any, any> {
             minDate={this.state.min}
             maxDate={this.state.max}
             onChange={action('change')}
-            enableTodayLink={true}
           />
         </LocaleProvider>
       </Gapped>
