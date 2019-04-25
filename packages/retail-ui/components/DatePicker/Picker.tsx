@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { DateCustom } from '../../lib/date/DateCustom';
-import DateCustomGetter from '../../lib/date/DateCustomGetter';
+import { InternalDate } from '../../lib/date/InternalDate';
+import InternalDateGetter from '../../lib/date/InternalDateGetter';
 import Calendar, { CalendarDateShape } from '../Calendar';
 import shallowEqual from 'fbjs/lib/shallowEqual';
 import { locale } from '../LocaleProvider/decorators';
@@ -84,8 +84,8 @@ export default class Picker extends React.Component<Props, State> {
 
   private renderTodayLink() {
     const { order, separator } = this.locale;
-    const today = new DateCustom({ order, separator })
-      .setComponents(DateCustomGetter.getTodayComponents())
+    const today = new InternalDate({ order, separator })
+      .setComponents(InternalDateGetter.getTodayComponents())
       .toString({ withPad: true, withSeparator: true });
     return (
       <button className={styles.todayWrapper} onClick={this.handleSelectToday} tabIndex={-1}>
@@ -96,7 +96,7 @@ export default class Picker extends React.Component<Props, State> {
 
   private handleSelectToday = () => {
     if (this.props.onSelect) {
-      this.props.onSelect(new DateCustom().setComponents(DateCustomGetter.getTodayComponents()).toNativeFormat()!);
+      this.props.onSelect(new InternalDate().setComponents(InternalDateGetter.getTodayComponents()).toNativeFormat()!);
     }
     if (this.calendar) {
       const { month, year } = this.state.today;

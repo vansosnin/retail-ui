@@ -1,8 +1,8 @@
 import {
-  DateCustomDayWeek,
-  DateCustomFirstDayWeek,
-  DateCustomOrder,
-  DateCustomSeparator
+  InternalDateDayWeek,
+  InternalDateFirstDayWeek,
+  InternalDateOrder,
+  InternalDateSeparator
 } from '../../../lib/date/types';
 
 export interface DatePickerLocale extends DatePickerLocaleSet {
@@ -10,8 +10,8 @@ export interface DatePickerLocale extends DatePickerLocaleSet {
 }
 
 export interface DatePickerLocaleSet {
-  order: DateCustomOrder;
-  separator: DateCustomSeparator;
-  firstDayWeek: DateCustomFirstDayWeek;
-  notWorkingDays: DateCustomDayWeek[];
+  order: InternalDateOrder;
+  separator: InternalDateSeparator;
+  firstDayWeek: InternalDateFirstDayWeek;
+  notWorkingDays: InternalDateDayWeek[];
 }

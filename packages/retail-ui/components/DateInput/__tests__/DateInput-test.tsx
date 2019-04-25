@@ -2,13 +2,13 @@ import { mount, ReactWrapper } from 'enzyme';
 import * as React from 'react';
 import { HTMLAttributes } from 'react';
 import { CHAR_MASK } from '../../../lib/date/constants';
-import { DateCustom } from '../../../lib/date/DateCustom';
-import { DateCustomOrder, DateCustomSeparator } from '../../../lib/date/types';
+import { InternalDate } from '../../../lib/date/InternalDate';
+import { InternalDateOrder, InternalDateSeparator } from '../../../lib/date/types';
 import LocaleProvider, { LocaleProviderProps } from '../../LocaleProvider';
 import DateInput, { DateInputProps } from '../DateInput';
 
-const defaultOrder: DateCustomOrder = DateCustomOrder.DMY;
-const defaultSeparator: DateCustomSeparator = DateCustomSeparator.Dot;
+const defaultOrder: InternalDateOrder = InternalDateOrder.DMY;
+const defaultSeparator: InternalDateSeparator = InternalDateSeparator.Dot;
 
 const render = (
   props: DateInputProps,
@@ -122,23 +122,23 @@ setups.forEach(({ name, getInput, getValue }) => {
           keys.forEach(key => input.simulate('keydown', { key }));
           const args = onChange.mock.calls[onChange.mock.calls.length - 1];
           expect(args.slice(0, 2)).toEqual([{ target: { value: expected } }, expected]);
-          expect(args[2]).toBeInstanceOf(DateCustom);
+          expect(args[2]).toBeInstanceOf(InternalDate);
         });
       });
 
       const PasteCases = [
-        [DateCustomOrder.DMY, '10.02.2017', '10.02.2017'],
-        [DateCustomOrder.DMY, '10/02/2017', '10.02.2017'],
-        [DateCustomOrder.DMY, '10-02-2017', '10.02.2017'],
-        [DateCustomOrder.YMD, '2017.02.10', '2017.02.10'],
-        [DateCustomOrder.YMD, '2017/02/10', '2017.02.10'],
-        [DateCustomOrder.YMD, '2017-02-10', '2017.02.10'],
+        [InternalDateOrder.DMY, '10.02.2017', '10.02.2017'],
+        [InternalDateOrder.DMY, '10/02/2017', '10.02.2017'],
+        [InternalDateOrder.DMY, '10-02-2017', '10.02.2017'],
+        [InternalDateOrder.YMD, '2017.02.10', '2017.02.10'],
+        [InternalDateOrder.YMD, '2017/02/10', '2017.02.10'],
+        [InternalDateOrder.YMD, '2017-02-10', '2017.02.10'],
       ];
 
       PasteCases.forEach(([order, pasted, expected]) => {
         it(`handles paste "${pasted}"`, () => {
           const onChange = jest.fn();
-          const input = getInput(render({ onChange }, { locale: { DatePicker: { order: order as DateCustomOrder } } }));
+          const input = getInput(render({ onChange }, { locale: { DatePicker: { order: order as InternalDateOrder } } }));
           input.simulate('paste', { clipboardData: { getData: () => pasted } });
           const calls: any[] = onChange.mock.calls[onChange.mock.calls.length - 1][0];
           expect(calls).toMatchObject({ target: { value: expected } });

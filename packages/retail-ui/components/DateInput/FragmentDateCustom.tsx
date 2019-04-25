@@ -1,14 +1,14 @@
 import * as React from 'react';
 import { CHAR_MASK } from '../../lib/date/constants';
-import DateCustomValidator from '../../lib/date/DateCustomValidator';
-import { DateCustomComponentType, DateCustomFragment } from '../../lib/date/types';
+import InternalDateValidator from '../../lib/date/InternalDateValidator';
+import { InternalDateComponentType, InternalDateFragment } from '../../lib/date/types';
 import styles from './DateInput.less';
 import { removeAllSelections } from './helpers/SelectionHelpers';
 
-interface FragmentDateCustomProps extends DateCustomFragment {
-  selected: DateCustomComponentType | null;
+interface FragmentDateCustomProps extends InternalDateFragment {
+  selected: InternalDateComponentType | null;
   inputMode: boolean;
-  onChange: (type: DateCustomComponentType) => (event: React.MouseEvent<HTMLElement>) => void;
+  onChange: (type: InternalDateComponentType) => (event: React.MouseEvent<HTMLElement>) => void;
 }
 
 export const FragmentDateCustom: React.SFC<FragmentDateCustomProps> = ({
@@ -21,7 +21,7 @@ export const FragmentDateCustom: React.SFC<FragmentDateCustomProps> = ({
   onChange,
 }) => {
   value = value === null || (selected === type && inputMode) ? value : valueWithPad || value;
-  if (DateCustomValidator.testParseToNumber(value)) {
+  if (InternalDateValidator.testParseToNumber(value)) {
     length = Math.max(length - value!.toString().length, 0);
   }
   return (

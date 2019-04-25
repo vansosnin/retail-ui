@@ -1,8 +1,8 @@
 import { action } from '@storybook/addon-actions';
 import { storiesOf } from '@storybook/react';
 import * as React from 'react';
-import { DateCustom } from '../../../lib/date/DateCustom';
-import { DateCustomOrder, DateCustomSeparator } from '../../../lib/date/types';
+import { InternalDate } from '../../../lib/date/InternalDate';
+import { InternalDateOrder, InternalDateSeparator } from '../../../lib/date/types';
 // tslint:disable:jsx-no-lambda no-console
 import Button from '../../Button/index';
 import Gapped from '../../Gapped/index';
@@ -19,7 +19,7 @@ class DatePickerWithError extends React.Component<any, any> {
     tooltip: false,
   };
 
-  private dateCustom: DateCustom | null = null;
+  private internalDate: InternalDate | null = null;
 
   public render() {
     return (
@@ -29,7 +29,7 @@ class DatePickerWithError extends React.Component<any, any> {
           render={() => 'Такой даты не существует'}
           onCloseClick={this._removeTooltip}
         >
-          <LocaleProvider locale={{ DatePicker: { order: DateCustomOrder.MDY } }}>
+          <LocaleProvider locale={{ DatePicker: { order: InternalDateOrder.MDY } }}>
             <DatePicker
               {...this.props}
               disabled={this.props.disabled}
@@ -53,9 +53,9 @@ class DatePickerWithError extends React.Component<any, any> {
     );
   }
 
-  private _handleChange = (_: any, value: string, dateCustom: DateCustom) => {
+  private _handleChange = (_: any, value: string, internalDate: InternalDate) => {
     action('change')(_, value);
-    this.dateCustom = dateCustom;
+    this.internalDate = internalDate;
     this.setState({
       value,
     });
@@ -68,7 +68,7 @@ class DatePickerWithError extends React.Component<any, any> {
   private _validate = () => {
     const currentValue = this.state.value;
     this.setState(() => {
-      const error = !!currentValue && !(this.dateCustom && this.dateCustom.validate());
+      const error = !!currentValue && !(this.internalDate && this.internalDate.validate());
       return {
         error,
         tooltip: error,
@@ -88,8 +88,8 @@ class DatePickerWithMinMax extends React.Component<any, any> {
     min: '02.07.2017',
     max: '30.01.2020',
     value: '02.07.2017',
-    order: DateCustomOrder.DMY,
-    separator: DateCustomSeparator.Dot,
+    order: InternalDateOrder.DMY,
+    separator: InternalDateSeparator.Dot,
   };
 
   public render(): React.ReactNode {

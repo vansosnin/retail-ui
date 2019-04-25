@@ -1,18 +1,18 @@
 
-export enum DateCustomOrder {
+export enum InternalDateOrder {
   DMY = 'DMY',
   YMD = 'YMD',
   MDY = 'MDY',
 }
 
-export enum DateCustomSeparator {
+export enum InternalDateSeparator {
   Slash = '/',
   Dot = '.',
   Dash = '-',
   Space = ' ',
 }
 
-export enum DateCustomComponentType {
+export enum InternalDateComponentType {
   Date = 0,
   Month = 1,
   Year = 2,
@@ -20,50 +20,50 @@ export enum DateCustomComponentType {
   Separator = 4,
 }
 
-export type DateCustomComponent = number | null;
-export type DateCustomComponentRaw = number | string | null;
+export type InternalDateComponent = number | null;
+export type InternalDateComponentRaw = number | string | null;
 
-export interface DateCustomFragment {
-  type: DateCustomComponentType;
-  value: DateCustomComponentRaw | DateCustomSeparator;
+export interface InternalDateFragment {
+  type: InternalDateComponentType;
+  value: InternalDateComponentRaw | InternalDateSeparator;
   length: number;
   valueWithPad?: string;
   isValid?: boolean;
 }
 
-export interface DateCustomComponents {
-  year: DateCustomComponent;
-  month: DateCustomComponent;
-  date: DateCustomComponent;
+export interface InternalDateComponents {
+  year: InternalDateComponent;
+  month: InternalDateComponent;
+  date: InternalDateComponent;
 }
 
-export interface DateCustomComponentsRaw {
-  year: DateCustomComponentRaw;
-  month: DateCustomComponentRaw;
-  date: DateCustomComponentRaw;
+export interface InternalDateComponentsRaw {
+  year: InternalDateComponentRaw;
+  month: InternalDateComponentRaw;
+  date: InternalDateComponentRaw;
 }
 
-export interface DateCustomComponentsNumber {
+export interface InternalDateComponentsNumber {
   year: number;
   month: number;
   date: number;
 }
 
-export interface DateCustomToFragmentsSettings {
-  order?: DateCustomOrder;
-  separator?: DateCustomSeparator;
+export interface InternalDateToFragmentsSettings {
+  order?: InternalDateOrder;
+  separator?: InternalDateSeparator;
   withSeparator?: boolean;
   withPad?: boolean;
   pad?: string;
 }
 
-export interface DateCustomChangeValueDateComponentSettings {
+export interface InternalDateChangeSettings {
   isLoop?: boolean;
   isRange?: boolean;
   isCutFeb?: boolean;
 }
 
-export enum DateCustomValidateCheck {
+export enum InternalDateValidateCheck {
   NotNull,
   Number,
   Limits,
@@ -71,13 +71,13 @@ export enum DateCustomValidateCheck {
   Range,
 }
 
-export enum DateCustomFirstDayWeek {
+export enum InternalDateFirstDayWeek {
   Monday = 0,
   Sunday = 1,
   Saturday = 2,
 }
 
-export enum DateCustomDayWeek {
+export enum InternalDateDayWeek {
   Monday = 1,
   Tuesday = 2,
   Wednesday = 3,

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { DateCustomComponentType } from '../../lib/date/types';
+import { InternalDateComponentType } from '../../lib/date/types';
 import { DateInputProps, DateInputState } from './DateInput';
 import { removeAllSelections } from './helpers/SelectionHelpers';
 import debounce from 'lodash.debounce';
@@ -30,10 +30,10 @@ export const DateInputFallback = <T extends { new (...args: any[]): any }>(const
         prevProps.minDate !== this.props.minDate ||
         prevProps.maxDate !== this.props.maxDate
       ) {
-        this.updateDateCustom(this.props.dateCustom, {}, this.updateDateCustomFromProps);
+        this.updateDateCustom(this.props.internalDate, {}, this.updateDateCustomFromProps);
       }
 
-      if (prevState.dateCustom !== this.state.dateCustom) {
+      if (prevState.internalDate !== this.state.internalDate) {
         this.emitChange();
       }
 
@@ -83,8 +83,8 @@ export const DateInputFallback = <T extends { new (...args: any[]): any }>(const
 
       this.setState({ isInFocused: false, selected: null, isOnInputMode: false }, () => {
         removeAllSelections();
-        if (this.state.dateCustom !== null) {
-          this.updateDateCustom(this.state.dateCustom.restore().cutOffExcess({ isCutFeb: true }));
+        if (this.state.internalDate !== null) {
+          this.updateDateCustom(this.state.internalDate.restore().cutOffExcess({ isCutFeb: true }));
         }
         if (this.props.onBlur) {
           this.props.onBlur(event);
@@ -92,7 +92,7 @@ export const DateInputFallback = <T extends { new (...args: any[]): any }>(const
       });
     };
 
-    public selectDateComponent = (selected: DateCustomComponentType | null): void => {
+    public selectDateComponent = (selected: InternalDateComponentType | null): void => {
       if (this.isFrozen) {
         return;
       }

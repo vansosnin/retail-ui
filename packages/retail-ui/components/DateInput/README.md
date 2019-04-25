@@ -13,13 +13,13 @@
 ### Валидация даты
 
 ```typescript jsx
-dateCustom.validate(): boolean
+internalDate.validate(): boolean
 ```
 
 ```jsx
 const { MAX_DATE, MAX_MONTH, MAX_YEAR, MIN_DATE, MIN_MONTH, MIN_YEAR } = require('../../lib/date/constants');
-const { DateCustomValidateCheck } = require('../../lib/date/types');
-const { DateCustom } = require('../../lib/date/DateCustom');
+const { InternalDateValidateCheck } = require('../../lib/date/types');
+const { InternalDate } = require('../../lib/date/InternalDate');
 
 class DateInputValidations extends React.Component {
   constructor() {
@@ -27,7 +27,7 @@ class DateInputValidations extends React.Component {
       value: '15.06.2005',
       minDate: '23.09.2000',
       maxDate: '03.03.2010',
-      dateCustom: new DateCustom(),
+      internalDate: new InternalDate(),
       isValidNotNull: true,
       isValidLimits: true,
       isValidNative: true,
@@ -86,22 +86,22 @@ class DateInputValidations extends React.Component {
           error={!this.state.isValid}
           minDate={this.state.minDate}
           maxDate={this.state.maxDate}
-          onChange={(x, value, dateCustom) => this.setState({ value, dateCustom }, this.validate)}
+          onChange={(x, value, internalDate) => this.setState({ value, internalDate }, this.validate)}
         />
       </Gapped>
     );
   }
 
   validate() {
-    const { dateCustom } = this.state;
-    if (dateCustom === null) {
+    const { internalDate } = this.state;
+    if (internalDate === null) {
       return;
     }
-    this.setState({ isValidNotNull: dateCustom.validate({ checks: [DateCustomValidateCheck.NotNull] }) });
-    this.setState({ isValidLimits: dateCustom.validate({ checks: [DateCustomValidateCheck.Limits] }) });
-    this.setState({ isValidNative: dateCustom.validate({ checks: [DateCustomValidateCheck.Native] }) });
-    this.setState({ isValidRange: dateCustom.validate({ checks: [DateCustomValidateCheck.Range] }) });
-    this.setState({ isValid: dateCustom.validate() });
+    this.setState({ isValidNotNull: internalDate.validate({ checks: [InternalDateValidateCheck.NotNull] }) });
+    this.setState({ isValidLimits: internalDate.validate({ checks: [InternalDateValidateCheck.Limits] }) });
+    this.setState({ isValidNative: internalDate.validate({ checks: [InternalDateValidateCheck.Native] }) });
+    this.setState({ isValidRange: internalDate.validate({ checks: [InternalDateValidateCheck.Range] }) });
+    this.setState({ isValid: internalDate.validate() });
   }
 }
 
@@ -112,13 +112,13 @@ class DateInputValidations extends React.Component {
 
 ```jsx
 const { default: LocaleProvider, LangCodes } = require('../LocaleProvider');
-const { DateCustom } = require('../../lib/date/DateCustom');
+const { InternalDate } = require('../../lib/date/InternalDate');
 
 class DateInputFormatting2 extends React.Component {
   constructor() {
     this.state = {
       langCode: LangCodes.en_EN,
-      dateCustom: new DateCustom({langCode: LangCodes.en_EN}).setComponents({ year: 2012, month: 12, date: 30 }),
+      internalDate: new InternalDate({langCode: LangCodes.en_EN}).setComponents({ year: 2012, month: 12, date: 30 }),
     };
   }
 
@@ -138,12 +138,12 @@ class DateInputFormatting2 extends React.Component {
         </div>
         <LocaleProvider langCode={this.state.langCode}>
           <DateInput
-            onChange={(a, b, dateCustom) =>
+            onChange={(a, b, internalDate) =>
               this.setState({
-                dateCustom,
+                internalDate,
               })
             }
-            value={this.state.dateCustom.toString({
+            value={this.state.internalDate.toString({
               withSeparator: true,
               withPad: true,
             })}
@@ -160,16 +160,16 @@ class DateInputFormatting2 extends React.Component {
 ### Ручное форматирование даты
 
 ```jsx
-const { DateCustomOrder, DateCustomSeparator } = require('../../lib/date/types');
-const { DateCustom } = require('../../lib/date/DateCustom');
+const { InternalDateOrder, InternalDateSeparator } = require('../../lib/date/types');
+const { InternalDate } = require('../../lib/date/InternalDate');
 const { default: LocaleProvider } = require('../LocaleProvider');
 
 class DateInputFormatting extends React.Component {
   constructor() {
     this.state = {
-      order: DateCustomOrder.YMD,
+      order: InternalDateOrder.YMD,
       separator: 'Dot',
-      dateCustom: new DateCustom().parseValue('23.12.2012'),
+      internalDate: new InternalDate().parseValue('23.12.2012'),
     };
   }
 
@@ -178,39 +178,39 @@ class DateInputFormatting extends React.Component {
       <Gapped vertical gap={10}>
         <div>
           <span style={{ width: '300px', display: 'inline-block' }}>
-            Порядок компонентов (<tt>DateCustomOrder</tt>)
+            Порядок компонентов (<tt>InternalDateOrder</tt>)
           </span>
           <Select
             value={this.state.order}
-            items={Object.keys(DateCustomOrder)}
+            items={Object.keys(InternalDateOrder)}
             onChange={(_, order) => this.setState({ order })}
           />
         </div>
         <div>
           <span style={{ width: '300px', display: 'inline-block' }}>
-            Разделитель (<tt>DateCustomSeparator</tt>)
+            Разделитель (<tt>InternalDateSeparator</tt>)
           </span>
           <Select
             value={this.state.separator}
-            items={Object.keys(DateCustomSeparator)}
+            items={Object.keys(InternalDateSeparator)}
             onChange={(_, separator) => this.setState({ separator })}
           />
         </div>
         <LocaleProvider
           locale={{
             DatePicker: {
-              separator: DateCustomSeparator[this.state.separator],
+              separator: InternalDateSeparator[this.state.separator],
               order: this.state.order,
             },
           }}
         >
           <DateInput
-            onChange={(a, b, dateCustom) => this.setState({ dateCustom })}
-            value={this.state.dateCustom.toString({
+            onChange={(a, b, internalDate) => this.setState({ internalDate })}
+            value={this.state.internalDate.toString({
               withSeparator: true,
               withPad: true,
               order: this.state.order,
-              separator: DateCustomSeparator[this.state.separator],
+              separator: InternalDateSeparator[this.state.separator],
             })}
           />
         </LocaleProvider>

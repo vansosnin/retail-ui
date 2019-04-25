@@ -2,8 +2,8 @@ import { action } from '@storybook/addon-actions';
 import { storiesOf } from '@storybook/react';
 import React from 'react';
 import { MAX_DATE, MAX_MONTH, MAX_YEAR, MIN_DATE, MIN_MONTH, MIN_YEAR } from '../../../lib/date/constants';
-import { DateCustom } from '../../../lib/date/DateCustom';
-import { DateCustomOrder, DateCustomSeparator, DateCustomValidateCheck } from '../../../lib/date/types';
+import { InternalDate } from '../../../lib/date/InternalDate';
+import { InternalDateOrder, InternalDateSeparator, InternalDateValidateCheck } from '../../../lib/date/types';
 import Button from '../../Button';
 import Checkbox from '../../Checkbox';
 import DatePicker from '../../DatePicker';
@@ -15,7 +15,7 @@ import DateInput from '../DateInput';
 class DateInputValidations extends React.Component<any, any> {
   public state = {
     value: '15.06.2005',
-    dateCustom: new DateCustom(),
+    internalDate: new InternalDate(),
     isValidNotNull: true,
     isValidLimits: true,
     isValidNative: true,
@@ -71,33 +71,33 @@ class DateInputValidations extends React.Component<any, any> {
           error={!this.state.isValid}
           minDate="23.09.2000"
           maxDate="03.03.2010"
-          onChange={(x, value, dateCustom) => this.setState({ value, dateCustom }, this.validate)}
+          onChange={(x, value, internalDate) => this.setState({ value, internalDate }, this.validate)}
         />
       </Gapped>
     );
   }
 
   private validate(): void {
-    const { dateCustom } = this.state;
-    if (dateCustom === null) {
+    const { internalDate } = this.state;
+    if (internalDate === null) {
       return;
     }
-    this.setState({ isValidNotNull: dateCustom.validate({ checks: [DateCustomValidateCheck.NotNull] }) });
-    this.setState({ isValidLimits: dateCustom.validate({ checks: [DateCustomValidateCheck.Limits] }) });
-    this.setState({ isValidNative: dateCustom.validate({ checks: [DateCustomValidateCheck.Native] }) });
-    this.setState({ isValidRange: dateCustom.validate({ checks: [DateCustomValidateCheck.Range] }) });
-    this.setState({ isValid: dateCustom.validate() });
+    this.setState({ isValidNotNull: internalDate.validate({ checks: [InternalDateValidateCheck.NotNull] }) });
+    this.setState({ isValidLimits: internalDate.validate({ checks: [InternalDateValidateCheck.Limits] }) });
+    this.setState({ isValidNative: internalDate.validate({ checks: [InternalDateValidateCheck.Native] }) });
+    this.setState({ isValidRange: internalDate.validate({ checks: [InternalDateValidateCheck.Range] }) });
+    this.setState({ isValid: internalDate.validate() });
   }
 }
 
 class DateInputFormatting extends React.Component<any, any> {
   public state = {
-    order: DateCustomOrder.YMD,
+    order: InternalDateOrder.YMD,
     separator: 'Dot',
     value: '2012.12.30',
-    dateCustom: new DateCustom({
-      order: DateCustomOrder.YMD,
-      separator: DateCustomSeparator.Dot,
+    internalDate: new InternalDate({
+      order: InternalDateOrder.YMD,
+      separator: InternalDateSeparator.Dot,
     }).setComponents({
       year: 2012,
       month: 12,
@@ -114,7 +114,7 @@ class DateInputFormatting extends React.Component<any, any> {
           </span>
           <Select
             value={this.state.order}
-            items={Object.keys(DateCustomOrder)}
+            items={Object.keys(InternalDateOrder)}
             onChange={(_, order) => this.setState({ order })}
           />
         </div>
@@ -124,43 +124,43 @@ class DateInputFormatting extends React.Component<any, any> {
           </span>
           <Select
             value={this.state.separator}
-            items={Object.keys(DateCustomSeparator)}
+            items={Object.keys(InternalDateSeparator)}
             onChange={(_, separator) => this.setState({ separator })}
           />
         </div>
         <LocaleProvider
-          locale={{ DatePicker: { separator: DateCustomSeparator[this.state.separator], order: this.state.order } }}
+          locale={{ DatePicker: { separator: InternalDateSeparator[this.state.separator], order: this.state.order } }}
         >
           <DateInput
-            onChange={(a, value, dateCustom) => {
-              action('DateInput.onChange')(dateCustom.toString());
+            onChange={(a, value, internalDate) => {
+              action('DateInput.onChange')(internalDate.toString());
               this.setState({
-                dateCustom,
+                internalDate,
                 value,
               })
             }}
-            value={this.state.dateCustom.toString({
+            value={this.state.internalDate.toString({
               withSeparator: true,
               withPad: true,
               order: this.state.order,
-              separator: DateCustomSeparator[this.state.separator],
+              separator: InternalDateSeparator[this.state.separator],
             })}
           />
           <br/>
           <br/>
           <DatePicker
-            onChange={(a, value, dateCustom) => {
-              action('DatePicker.onChange')(dateCustom.toString());
+            onChange={(a, value, internalDate) => {
+              action('DatePicker.onChange')(internalDate.toString());
               this.setState({
-                dateCustom,
+                internalDate,
                 value,
               })
             }}
-            value={this.state.dateCustom.toString({
+            value={this.state.internalDate.toString({
               withSeparator: true,
               withPad: true,
               order: this.state.order,
-              separator: DateCustomSeparator[this.state.separator],
+              separator: InternalDateSeparator[this.state.separator],
             })}
             enableTodayLink
           />
@@ -187,7 +187,7 @@ class DateInputDifferentFormatting extends React.Component<any, any> {
           <td>Dot</td>
           <td>
             <LocaleProvider
-              locale={{ DatePicker: { separator: DateCustomSeparator.Dot, order: DateCustomOrder.YMD } }}
+              locale={{ DatePicker: { separator: InternalDateSeparator.Dot, order: InternalDateOrder.YMD } }}
             >
               <DateInput
                 value="2012.12.21"
@@ -196,7 +196,7 @@ class DateInputDifferentFormatting extends React.Component<any, any> {
           </td>
           <td>
             <LocaleProvider
-              locale={{ DatePicker: { separator: DateCustomSeparator.Dot, order: DateCustomOrder.MDY } }}
+              locale={{ DatePicker: { separator: InternalDateSeparator.Dot, order: InternalDateOrder.MDY } }}
             >
               <DateInput
                 value="12.21.2012"
@@ -205,7 +205,7 @@ class DateInputDifferentFormatting extends React.Component<any, any> {
           </td>
           <td>
             <LocaleProvider
-              locale={{ DatePicker: { separator: DateCustomSeparator.Dot, order: DateCustomOrder.DMY } }}
+              locale={{ DatePicker: { separator: InternalDateSeparator.Dot, order: InternalDateOrder.DMY } }}
             >
               <DateInput
                 value="21.12.2012"
@@ -217,7 +217,7 @@ class DateInputDifferentFormatting extends React.Component<any, any> {
           <td>Dash</td>
           <td>
             <LocaleProvider
-              locale={{ DatePicker: { separator: DateCustomSeparator.Dash, order: DateCustomOrder.YMD } }}
+              locale={{ DatePicker: { separator: InternalDateSeparator.Dash, order: InternalDateOrder.YMD } }}
             >
               <DateInput
                 value="2012-12-21"
@@ -226,7 +226,7 @@ class DateInputDifferentFormatting extends React.Component<any, any> {
           </td>
           <td>
             <LocaleProvider
-              locale={{ DatePicker: { separator: DateCustomSeparator.Dash, order: DateCustomOrder.MDY } }}
+              locale={{ DatePicker: { separator: InternalDateSeparator.Dash, order: InternalDateOrder.MDY } }}
             >
               <DateInput
                 value="12-21-2012"
@@ -235,7 +235,7 @@ class DateInputDifferentFormatting extends React.Component<any, any> {
           </td>
           <td>
             <LocaleProvider
-              locale={{ DatePicker: { separator: DateCustomSeparator.Dash, order: DateCustomOrder.DMY } }}
+              locale={{ DatePicker: { separator: InternalDateSeparator.Dash, order: InternalDateOrder.DMY } }}
             >
               <DateInput
                 value="21-12-2012"
@@ -247,7 +247,7 @@ class DateInputDifferentFormatting extends React.Component<any, any> {
           <td>Slash</td>
           <td>
             <LocaleProvider
-              locale={{ DatePicker: { separator: DateCustomSeparator.Slash, order: DateCustomOrder.YMD } }}
+              locale={{ DatePicker: { separator: InternalDateSeparator.Slash, order: InternalDateOrder.YMD } }}
             >
               <DateInput
                 value="2012/12/21"
@@ -256,7 +256,7 @@ class DateInputDifferentFormatting extends React.Component<any, any> {
           </td>
           <td>
             <LocaleProvider
-              locale={{ DatePicker: { separator: DateCustomSeparator.Slash, order: DateCustomOrder.MDY } }}
+              locale={{ DatePicker: { separator: InternalDateSeparator.Slash, order: InternalDateOrder.MDY } }}
             >
               <DateInput
                 value="12/21/2012"
@@ -265,7 +265,7 @@ class DateInputDifferentFormatting extends React.Component<any, any> {
           </td>
           <td>
             <LocaleProvider
-              locale={{ DatePicker: { separator: DateCustomSeparator.Slash, order: DateCustomOrder.DMY } }}
+              locale={{ DatePicker: { separator: InternalDateSeparator.Slash, order: InternalDateOrder.DMY } }}
             >
               <DateInput
                 value="21/12/2012"
@@ -277,7 +277,7 @@ class DateInputDifferentFormatting extends React.Component<any, any> {
           <td>Space</td>
           <td>
             <LocaleProvider
-              locale={{ DatePicker: { separator: DateCustomSeparator.Space, order: DateCustomOrder.YMD } }}
+              locale={{ DatePicker: { separator: InternalDateSeparator.Space, order: InternalDateOrder.YMD } }}
             >
               <DateInput
                 value="2012 12 21"
@@ -286,7 +286,7 @@ class DateInputDifferentFormatting extends React.Component<any, any> {
           </td>
           <td>
             <LocaleProvider
-              locale={{ DatePicker: { separator: DateCustomSeparator.Space, order: DateCustomOrder.MDY } }}
+              locale={{ DatePicker: { separator: InternalDateSeparator.Space, order: InternalDateOrder.MDY } }}
             >
               <DateInput
                 value="12 21 2012"
@@ -295,7 +295,7 @@ class DateInputDifferentFormatting extends React.Component<any, any> {
           </td>
           <td>
             <LocaleProvider
-              locale={{ DatePicker: { separator: DateCustomSeparator.Space, order: DateCustomOrder.DMY } }}
+              locale={{ DatePicker: { separator: InternalDateSeparator.Space, order: InternalDateOrder.DMY } }}
             >
               <DateInput
                 value="21 12 2012"
@@ -321,8 +321,8 @@ storiesOf('DateInput', module)
       <LocaleProvider
         locale={{
           DatePicker: {
-            order: DateCustomOrder.YMD,
-            separator: DateCustomSeparator.Slash,
+            order: InternalDateOrder.YMD,
+            separator: InternalDateSeparator.Slash,
           },
         }}
       >
@@ -340,8 +340,8 @@ storiesOf('DateInput', module)
       <LocaleProvider
         locale={{
           DatePicker: {
-            order: DateCustomOrder.DMY,
-            separator: DateCustomSeparator.Dash,
+            order: InternalDateOrder.DMY,
+            separator: InternalDateSeparator.Dash,
           },
         }}
       >

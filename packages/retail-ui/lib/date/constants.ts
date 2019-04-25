@@ -1,4 +1,4 @@
-import { DateCustomFirstDayWeek, DateCustomOrder, DateCustomSeparator } from './types';
+import { InternalDateFirstDayWeek, InternalDateOrder, InternalDateSeparator } from './types';
 
 export const MIN_YEAR = 1900;
 export const MAX_YEAR = 2099;
@@ -28,7 +28,7 @@ export const emptyDateComponents = {
   month: null,
   date: null,
 };
-export const defaultDateComponentsOrder = DateCustomOrder.DMY;
-export const defaultDateComponentsSeparator = DateCustomSeparator.Dot;
-export const defaultFirstDayWeek = DateCustomFirstDayWeek.Monday;
+export const defaultDateComponentsOrder = InternalDateOrder.DMY;
+export const defaultDateComponentsSeparator = InternalDateSeparator.Dot;
+export const defaultFirstDayWeek = InternalDateFirstDayWeek.Monday;
 
