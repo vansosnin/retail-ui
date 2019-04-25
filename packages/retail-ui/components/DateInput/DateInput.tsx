@@ -439,7 +439,9 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
     if (this.state.dateCustom === null) {
       return;
     }
-    const value = this.state.dateCustom.toString({ withPad: true, withSeparator: true });
+    const value = this.state.dateCustom.isEmpty()
+      ? ''
+      : this.state.dateCustom.toString({ withPad: true, withSeparator: true });
     if (this.props.value === value) {
       return;
     }
