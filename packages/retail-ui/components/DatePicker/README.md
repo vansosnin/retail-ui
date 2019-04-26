@@ -104,7 +104,7 @@ class DatePickerFormatting extends React.Component {
     this.state = {
       order: InternalDateOrder.YMD,
       separator: 'Dot',
-      internalDate: new InternalDate().parseValue('23.12.2012'),
+      value: "21.12.2012",
     };
   }
 
@@ -140,13 +140,8 @@ class DatePickerFormatting extends React.Component {
           }}
         >
           <DatePicker
-            onChange={(a, b, internalDate) => this.setState({ internalDate })}
-            value={this.state.internalDate.toString({
-              withSeparator: true,
-              withPad: true,
-              order: this.state.order,
-              separator: InternalDateSeparator[this.state.separator],
-            })}
+            onChange={(a, value) => this.setState({ value })}
+            value={this.state.value}
           />
         </LocaleProvider>
       </Gapped>

@@ -4,10 +4,16 @@ import * as React from 'react';
 import { InternalDate } from '../../lib/date/InternalDate';
 import InternalDateGetter from '../../lib/date/InternalDateGetter';
 import InternalDateTransformer from '../../lib/date/InternalDateTransformer';
-import { InternalDateComponent, InternalDateComponentType, InternalDateValidateCheck } from '../../lib/date/types';
+import {
+  InternalDateComponent,
+  InternalDateComponentType,
+  InternalDateOrder,
+  InternalDateSeparator,
+  InternalDateValidateCheck,
+} from '../../lib/date/types';
 import dragEndDrop from '../../lib/events/dragEndDrop';
 import Upgrades from '../../lib/Upgrades';
-import { isFirefox } from '../../lib/utils';
+import { isChrome, isFirefox } from '../../lib/utils';
 
 import { Nullable } from '../../typings/utility-types';
 import { DatePickerLocale, DatePickerLocaleHelper } from '../DatePicker/locale';
@@ -33,7 +39,6 @@ export interface DateInputState {
 }
 
 export interface DateInputProps {
-  internalDate?: InternalDate;
   value?: string;
   error?: boolean;
   warning?: boolean;
@@ -83,7 +88,7 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
   }
 
   public updateLocaleContext(): void {
-    this.updateDateCustom();
+    this.updateInternalDate();
   }
 
   public componentDidUpdate(prevProps: DateInputProps, prevState: DateInputState) {
@@ -92,7 +97,7 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
       prevProps.minDate !== this.props.minDate ||
       prevProps.maxDate !== this.props.maxDate
     ) {
-      this.updateDateCustom(this.props.internalDate, {}, this.updateDateCustomFromProps);
+      this.updateInternalDate(undefined, {}, this.updateInternalDateFromProps);
     }
 
     if (this.state.isInFocused && prevState.selected !== this.state.selected) {
@@ -105,7 +110,7 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
   }
 
   public componentDidMount(): void {
-    this.updateDateCustom(this.props.internalDate, {}, this.updateDateCustomFromProps);
+    this.updateInternalDate(undefined, {}, this.updateInternalDateFromProps);
     if (this.divInnerNode) {
       dragEndDrop(this.divInnerNode);
       this.divInnerNode.addEventListener('dragndropstart', this.onDraAndDropStart);
@@ -123,6 +128,7 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
   public render() {
     return (
       <InputLikeText
+        contentEditable={isChrome && !this.props.disabled}
         width={this.props.width}
         ref={el => {
           this.inputLikeText = el;
@@ -243,18 +249,18 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
 
   private onDraAndDropEnd = () => this.setState({ isDragged: false });
 
-  private updateDateCustom = (
+  private updateInternalDate = (
     _internalDate?: InternalDate,
     state: Partial<DateInputState> = {},
     callback: (...any: any[]) => void = this.emitChange,
   ): void => {
-    const internalDate = (_internalDate || this.props.internalDate || this.state.internalDate || new InternalDate()).clone();
+    const internalDate = (_internalDate || this.state.internalDate || new InternalDate()).clone();
     internalDate.setOrder(this.locale.order).setSeparator(this.locale.separator);
     const typesOrder = internalDate.toFragments().map(({ type }) => type);
     this.setState({ ...state, typesOrder, internalDate } as DateInputState, callback);
   };
 
-  private updateDateCustomFromProps = (): void => {
+  private updateInternalDateFromProps = (): void => {
     if (this.state.internalDate === null) {
       return;
     }
@@ -268,21 +274,21 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
     if (this.props.minDate !== min) {
       isMod = true;
       internalDate.setRangeStart(
-        this.props.minDate ? new InternalDate({ order, separator }).parseValue(this.props.minDate) : null,
+        this.props.minDate ? new InternalDate({ order, separator }).parseInternalValue(this.props.minDate) : null,
       );
     }
     if (this.props.maxDate !== max) {
       isMod = true;
       internalDate.setRangeEnd(
-        this.props.maxDate ? new InternalDate({ order, separator }).parseValue(this.props.maxDate) : null,
+        this.props.maxDate ? new InternalDate({ order, separator }).parseInternalValue(this.props.maxDate) : null,
       );
     }
     if (
       !this.props.value ||
-      this.props.value !== internalDate.toString({ withPad: true, withSeparator: !internalDate.isEmpty() })
+      this.props.value !== internalDate.toInternalString({ withPad: true, withSeparator: !internalDate.isEmpty() })
     ) {
       isMod = true;
-      internalDate.parseValue(this.props.value);
+      internalDate.parseInternalValue(this.props.value);
     }
     if (isMod) {
       this.setState({ internalDate }, this.emitChange);
@@ -321,7 +327,7 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
     this.setState({ isInFocused: false, selected: null, isOnInputMode: false }, () => {
       removeAllSelections();
       if (this.state.internalDate !== null) {
-        this.updateDateCustom(this.state.internalDate.restore());
+        this.updateInternalDate(this.state.internalDate.restore());
       }
       if (this.props.onBlur) {
         this.props.onBlur(event);
@@ -433,7 +439,7 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
   private handlePaste = (e?: React.ClipboardEvent<HTMLElement>, pasted?: string): void => {
     pasted = pasted || (e && e.clipboardData.getData('text').trim());
     if (pasted && this.state.internalDate !== null) {
-      this.updateDateCustom(
+      this.updateInternalDate(
         this.state.internalDate
           .parseValue(pasted)
           .restore()
@@ -448,7 +454,11 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
     }
     const value = this.state.internalDate.isEmpty()
       ? ''
-      : this.state.internalDate.toString({ withPad: true, withSeparator: true });
+      : this.state.internalDate
+          .clone()
+          .setOrder(InternalDateOrder.DMY)
+          .setSeparator(InternalDateSeparator.Dot)
+          .toString({ withPad: true, withSeparator: true });
     if (this.props.value === value) {
       return;
     }
@@ -462,7 +472,7 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
       return;
     }
     const selected = this.state.selected === null ? this.getFirstDateComponentType() : this.state.selected;
-    this.updateDateCustom(this.state.internalDate.set(selected, null), { isOnInputMode: false, selected });
+    this.updateInternalDate(this.state.internalDate.set(selected, null), { isOnInputMode: false, selected });
     if (selected === InternalDateComponentType.All) {
       this.selectDateComponent(this.getFirstDateComponentType());
     }
@@ -487,7 +497,7 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
     }
     prev = String(isOnInputMode ? prev : InternalDateTransformer.padDateComponent(nextType, prev));
     const next = prev.replace(/.$/, '') || null;
-    this.updateDateCustom(internalDate.set(nextType, next), {
+    this.updateInternalDate(internalDate.set(nextType, next), {
       isOnInputMode: next !== null,
       selected: nextType,
     });
@@ -518,7 +528,7 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
     ) {
       internalDate.shift(selected, step, { isRange: false, isLoop: true });
     }
-    this.updateDateCustom(internalDate, {
+    this.updateInternalDate(internalDate, {
       isOnInputMode: false,
       selected: selected === InternalDateComponentType.All ? this.getFirstDateComponentType() : selected,
       notify: clone.get(selected) === internalDate.get(selected),
@@ -545,7 +555,7 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
       internalDate.restore(selected);
     }
     internalDate.cutOffExcess();
-    this.updateDateCustom(internalDate);
+    this.updateInternalDate(internalDate);
     if (nextIndex >= 0 && nextIndex < typesOrder.length) {
       this.setState({
         selected: typesOrder[nextIndex],
@@ -603,7 +613,7 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
         this.moveSelection(1, true);
       }
     }
-    this.updateDateCustom(internalDate, { isOnInputMode: inputMode });
+    this.updateInternalDate(internalDate, { isOnInputMode: inputMode });
   };
 
   private selectNodeContents = (node: HTMLElement | null, start?: number, end?: number): void => {

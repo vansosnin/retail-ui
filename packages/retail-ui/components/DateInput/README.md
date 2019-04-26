@@ -13,13 +13,14 @@
 ### Валидация даты
 
 ```typescript jsx
-internalDate.validate(): boolean
+DatePicker.validate(): boolean
 ```
 
 ```jsx
 const { MAX_DATE, MAX_MONTH, MAX_YEAR, MIN_DATE, MIN_MONTH, MIN_YEAR } = require('../../lib/date/constants');
 const { InternalDateValidateCheck } = require('../../lib/date/types');
 const { InternalDate } = require('../../lib/date/InternalDate');
+const { ViewDateInputValidateChecks } = require('./ViewDateInputValidateChecks');
 
 class DateInputValidations extends React.Component {
   constructor() {
@@ -27,11 +28,6 @@ class DateInputValidations extends React.Component {
       value: '15.06.2005',
       minDate: '23.09.2000',
       maxDate: '03.03.2010',
-      internalDate: new InternalDate(),
-      isValidNotNull: true,
-      isValidLimits: true,
-      isValidNative: true,
-      isValidRange: true,
       isValid: true,
     };
   }
@@ -39,69 +35,34 @@ class DateInputValidations extends React.Component {
   render() {
     return (
       <Gapped gap={10} vertical>
-        <h3>Внутренние проверки</h3>
-        <Checkbox disabled checked={this.state.isValidNotNull}>
-          🡓 <tt style={{ color: 'black' }}>NotNull</tt>
-          <div>
-            Все компоненты даты заполнены (не равны{' '}
-            <b>
-              <tt>null</tt>
-            </b>
-            )
-          </div>
-        </Checkbox>
-        <Checkbox disabled checked={this.state.isValidLimits}>
-          🡓 <tt style={{ color: 'black' }}>Limits</tt>
-          <div>
-            Компоненты даты не выходят за рамки предустановленных лимитов
-            <br />
-            Год: {MIN_YEAR} - {MAX_YEAR}
-            <br />
-            Месяц: {MIN_MONTH} - {MAX_MONTH}
-            <br />
-            Число: {MIN_DATE} - {MAX_DATE}
-          </div>
-        </Checkbox>
-        <Checkbox disabled checked={this.state.isValidNative}>
-          🡓 <tt style={{ color: 'black' }}>Native</tt>
-          <div>
-            Из компонентов даты можно создать валидный экземпляр нативного объекта <tt>Date()</tt>
-          </div>
-        </Checkbox>
-        <Checkbox disabled checked={this.state.isValidRange}>
-          ⭳ <tt style={{ color: 'black' }}>Range</tt>
-          <div>
-            Дата не выходит за пределы диапазонов <tt>minDate/maxDate</tt>
-          </div>
-        </Checkbox>
-        <div>
-          <pre>
-            minDate = {this.state.minDate}
-            <br />
-            maxDate = {this.state.maxDate}
-          </pre>
-        </div>
+        <ViewDateInputValidateChecks
+          value={this.state.value}
+          minDate={this.state.minDate}
+          maxDate={this.state.maxDate}
+        />
+        <pre>
+          minDate = {this.state.minDate}
+          <br />
+          maxDate = {this.state.maxDate}
+        </pre>
         <DateInput
           value={this.state.value}
           error={!this.state.isValid}
           minDate={this.state.minDate}
           maxDate={this.state.maxDate}
-          onChange={(x, value, internalDate) => this.setState({ value, internalDate }, this.validate)}
+          onChange={(x, value) => this.setState({ value }, this.validate)}
         />
       </Gapped>
     );
   }
 
   validate() {
-    const { internalDate } = this.state;
-    if (internalDate === null) {
-      return;
-    }
-    this.setState({ isValidNotNull: internalDate.validate({ checks: [InternalDateValidateCheck.NotNull] }) });
-    this.setState({ isValidLimits: internalDate.validate({ checks: [InternalDateValidateCheck.Limits] }) });
-    this.setState({ isValidNative: internalDate.validate({ checks: [InternalDateValidateCheck.Native] }) });
-    this.setState({ isValidRange: internalDate.validate({ checks: [InternalDateValidateCheck.Range] }) });
-    this.setState({ isValid: internalDate.validate() });
+    this.setState({
+      isValid: DatePicker.validate(this.state.value, {
+        minDate: this.state.minDate,
+        maxDate: this.state.maxDate,
+      }),
+    });
   }
 }
 
@@ -117,8 +78,8 @@ const { InternalDate } = require('../../lib/date/InternalDate');
 class DateInputFormatting2 extends React.Component {
   constructor() {
     this.state = {
-      langCode: LangCodes.en_EN,
-      internalDate: new InternalDate({langCode: LangCodes.en_EN}).setComponents({ year: 2012, month: 12, date: 30 }),
+      langCode: LangCodes.ru_RU,
+      value: '21.12.2012',
     };
   }
 
@@ -137,17 +98,7 @@ class DateInputFormatting2 extends React.Component {
           />
         </div>
         <LocaleProvider langCode={this.state.langCode}>
-          <DateInput
-            onChange={(a, b, internalDate) =>
-              this.setState({
-                internalDate,
-              })
-            }
-            value={this.state.internalDate.toString({
-              withSeparator: true,
-              withPad: true,
-            })}
-          />
+          <DateInput onChange={(a, value) => this.setState({ value })} value={this.state.value} />
         </LocaleProvider>
       </Gapped>
     );
@@ -169,7 +120,7 @@ class DateInputFormatting extends React.Component {
     this.state = {
       order: InternalDateOrder.YMD,
       separator: 'Dot',
-      internalDate: new InternalDate().parseValue('23.12.2012'),
+      value: '21.12.2012',
     };
   }
 
@@ -204,15 +155,7 @@ class DateInputFormatting extends React.Component {
             },
           }}
         >
-          <DateInput
-            onChange={(a, b, internalDate) => this.setState({ internalDate })}
-            value={this.state.internalDate.toString({
-              withSeparator: true,
-              withPad: true,
-              order: this.state.order,
-              separator: InternalDateSeparator[this.state.separator],
-            })}
-          />
+          <DateInput onChange={(a, value) => this.setState({ value })} value={this.state.value} />
         </LocaleProvider>
       </Gapped>
     );

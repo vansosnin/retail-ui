@@ -127,12 +127,24 @@ setups.forEach(({ name, getInput, getValue }) => {
       });
 
       const PasteCases = [
-        [InternalDateOrder.DMY, '10.02.2017', '10.02.2017'],
-        [InternalDateOrder.DMY, '10/02/2017', '10.02.2017'],
-        [InternalDateOrder.DMY, '10-02-2017', '10.02.2017'],
-        [InternalDateOrder.YMD, '2017.02.10', '2017.02.10'],
-        [InternalDateOrder.YMD, '2017/02/10', '2017.02.10'],
-        [InternalDateOrder.YMD, '2017-02-10', '2017.02.10'],
+        [InternalDateOrder.DMY, '23.02.2017', '23.02.2017'],
+        [InternalDateOrder.DMY, '23/02/2017', '23.02.2017'],
+        [InternalDateOrder.DMY, '23-02-2017', '23.02.2017'],
+        [InternalDateOrder.DMY, '23 02 2017', '23.02.2017'],
+
+        [InternalDateOrder.YMD, '2017.02.23', '23.02.2017'],
+        [InternalDateOrder.YMD, '2017/02/23', '23.02.2017'],
+        [InternalDateOrder.YMD, '2017-02-23', '23.02.2017'],
+        [InternalDateOrder.YMD, '2017 02 23', '23.02.2017'],
+
+        [InternalDateOrder.MDY, '02.23.2017', '23.02.2017'],
+        [InternalDateOrder.MDY, '02/23/2017', '23.02.2017'],
+        [InternalDateOrder.MDY, '02-23-2017', '23.02.2017'],
+        [InternalDateOrder.MDY, '02 23 2017', '23.02.2017'],
+
+        [InternalDateOrder.DMY, '23 2 17', '23.02.2017'],
+        [InternalDateOrder.MDY, '2.23 17', '23.02.2017'],
+        [InternalDateOrder.YMD, '17/2-23', '23.02.2017'],
       ];
 
       PasteCases.forEach(([order, pasted, expected]) => {

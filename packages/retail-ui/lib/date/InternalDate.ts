@@ -116,10 +116,7 @@ export class InternalDate {
     return this;
   }
 
-  public shiftYear(
-    step: number,
-    { isLoop, isRange, isCutFeb }: InternalDateChangeSettings = {},
-  ): InternalDate {
+  public shiftYear(step: number, { isLoop, isRange, isCutFeb }: InternalDateChangeSettings = {}): InternalDate {
     const min = this.getMinValue(InternalDateComponentType.Year, isRange);
     const max = this.getMaxValue(InternalDateComponentType.Year, { isRange, isCutFeb });
     const { year } = this.getComponentsLikeNumber();
@@ -127,10 +124,7 @@ export class InternalDate {
     return this;
   }
 
-  public shiftMonth(
-    step: number,
-    { isLoop, isRange, isCutFeb }: InternalDateChangeSettings = {},
-  ): InternalDate {
+  public shiftMonth(step: number, { isLoop, isRange, isCutFeb }: InternalDateChangeSettings = {}): InternalDate {
     const min = this.getMinValue(InternalDateComponentType.Month, isRange);
     const max = this.getMaxValue(InternalDateComponentType.Month, { isRange, isCutFeb });
     const { month } = this.getComponentsLikeNumber();
@@ -138,10 +132,7 @@ export class InternalDate {
     return this;
   }
 
-  public shiftDate(
-    step: number,
-    { isLoop, isRange, isCutFeb }: InternalDateChangeSettings = {},
-  ): InternalDate {
+  public shiftDate(step: number, { isLoop, isRange, isCutFeb }: InternalDateChangeSettings = {}): InternalDate {
     const min = this.getMinValue(InternalDateComponentType.Date, isRange);
     const max = this.getMaxValue(InternalDateComponentType.Date, { isRange, isCutFeb });
     const { date } = this.getComponentsLikeNumber();
@@ -177,6 +168,16 @@ export class InternalDate {
 
   public parseValue(value: string | null = ''): InternalDate {
     const components = InternalDateTransformer.parseValueToDate(value, this.order) || { ...emptyDateComponents };
+    this.setComponents(components);
+    return this;
+  }
+
+  public parseInternalValue(value: string | null = ''): InternalDate {
+    const components = this.clone()
+      .setOrder(InternalDateOrder.DMY)
+      .setSeparator(InternalDateSeparator.Dot)
+      .parseValue(value)
+      .getComponentsRaw();
     this.setComponents(components);
     return this;
   }
@@ -272,6 +273,13 @@ export class InternalDate {
       .join('');
   }
 
+  public toInternalString(settings: InternalDateToFragmentsSettings = {}): string {
+    return this.clone()
+      .setOrder(InternalDateOrder.DMY)
+      .setSeparator(InternalDateSeparator.Dot)
+      .toString(settings);
+  }
+
   public toNativeFormat(): InternalDateComponentsNumber | null {
     const components = this.getComponentsLikeNumber();
     if (InternalDateValidator.compareWithNativeDate(components)) {
@@ -315,11 +323,7 @@ export class InternalDate {
     return this;
   }
 
-  public cutOffExcess({
-    isLoop = false,
-    isRange,
-    isCutFeb = false,
-  }: InternalDateChangeSettings = {}): InternalDate {
+  public cutOffExcess({ isLoop = false, isRange, isCutFeb = false }: InternalDateChangeSettings = {}): InternalDate {
     const { year, month, date } = this.components;
     if (InternalDateValidator.testParseToNumber(year)) {
       this.shiftYear(0, { isLoop, isRange, isCutFeb });

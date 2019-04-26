@@ -84,19 +84,17 @@ export default class Picker extends React.Component<Props, State> {
 
   private renderTodayLink() {
     const { order, separator } = this.locale;
-    const today = new InternalDate({ order, separator })
-      .setComponents(InternalDateGetter.getTodayComponents())
-      .toString({ withPad: true, withSeparator: true });
+    const today = new InternalDate({ order, separator }).setComponents(InternalDateGetter.getTodayComponents());
     return (
-      <button className={styles.todayWrapper} onClick={this.handleSelectToday} tabIndex={-1}>
-        {`${this.locale.today} ${today}`}
+      <button className={styles.todayWrapper} onClick={this.handleSelectToday(today)} tabIndex={-1}>
+        {`${this.locale.today} ${today.toString({ withPad: true, withSeparator: true })}`}
       </button>
     );
   }
 
-  private handleSelectToday = () => {
+  private handleSelectToday = (today: InternalDate) => () => {
     if (this.props.onSelect) {
-      this.props.onSelect(new InternalDate().setComponents(InternalDateGetter.getTodayComponents()).toNativeFormat()!);
+      this.props.onSelect(today.toNativeFormat()!);
     }
     if (this.calendar) {
       const { month, year } = this.state.today;
