@@ -32,13 +32,18 @@ export class InternalDate {
     order,
     separator,
     langCode = defaultLangCode,
+    value,
   }: {
     order?: InternalDateOrder;
     separator?: InternalDateSeparator;
     langCode?: LangCodes;
+    value?: string;
   } = {}) {
     this.order = !order ? internalDateLocale[langCode].order : order;
     this.separator = !separator ? internalDateLocale[langCode].separator : separator;
+    if (value !== undefined) {
+      this.parseInternalValue(value);
+    }
   }
 
   public getComponentsRaw(): InternalDateComponentsRaw {
@@ -273,11 +278,12 @@ export class InternalDate {
       .join('');
   }
 
-  public toInternalString(settings: InternalDateToFragmentsSettings = {}): string {
+  public toInternalString(): string {
     return this.clone()
-      .setOrder(InternalDateOrder.DMY)
-      .setSeparator(InternalDateSeparator.Dot)
-      .toString(settings);
+      .toFragments({ withSeparator: false, withPad: true, order: InternalDateOrder.DMY })
+      .filter(({ value }) => value !== null)
+      .map(({ valueWithPad }) => valueWithPad)
+      .join(InternalDateSeparator.Dot);
   }
 
   public toNativeFormat(): InternalDateComponentsNumber | null {
@@ -323,15 +329,18 @@ export class InternalDate {
     return this;
   }
 
-  public cutOffExcess({ isLoop = false, isRange, isCutFeb = false }: InternalDateChangeSettings = {}): InternalDate {
+  public cutOffExcess(
+    type: InternalDateComponentType | null = null,
+    { isLoop = false, isRange, isCutFeb = false }: InternalDateChangeSettings = {},
+  ): InternalDate {
     const { year, month, date } = this.components;
-    if (InternalDateValidator.testParseToNumber(year)) {
+    if ((type === null || type === InternalDateComponentType.Year) && InternalDateValidator.testParseToNumber(year)) {
       this.shiftYear(0, { isLoop, isRange, isCutFeb });
     }
-    if (InternalDateValidator.testParseToNumber(month)) {
+    if ((type === null || type === InternalDateComponentType.Month) && InternalDateValidator.testParseToNumber(month)) {
       this.shiftMonth(0, { isLoop, isRange, isCutFeb });
     }
-    if (InternalDateValidator.testParseToNumber(date)) {
+    if ((type === null || type === InternalDateComponentType.Date) && InternalDateValidator.testParseToNumber(date)) {
       this.shiftDate(0, { isLoop, isRange, isCutFeb });
     }
     return this;

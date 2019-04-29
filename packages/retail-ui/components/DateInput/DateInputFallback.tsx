@@ -85,7 +85,7 @@ export const DateInputFallback = <T extends { new (...args: any[]): any }>(const
       this.setState({ isInFocused: false, selected: null, isOnInputMode: false }, () => {
         removeAllSelections();
         if (this.state.internalDate !== null) {
-          this.updateInternalDate(this.state.internalDate.restore().cutOffExcess({ isCutFeb: true }));
+          this.updateInternalDate(this.state.internalDate.restore());
         }
         if (this.props.onBlur) {
           this.props.onBlur(event);

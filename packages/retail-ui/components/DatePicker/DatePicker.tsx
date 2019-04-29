@@ -126,7 +126,7 @@ class DatePicker extends React.Component<DatePickerProps<DatePickerValue>, DateP
     isHoliday: (_day: DatePickerValue, isWeekend: boolean) => isWeekend,
   };
 
-  public static validate = (value: Nullable<string>, range: {minDate?: string, maxDate?: string}) => {
+  public static validate = (value: Nullable<string>, range: { minDate?: string; maxDate?: string }) => {
     if (!value) {
       return false;
     }
@@ -138,14 +138,12 @@ class DatePicker extends React.Component<DatePickerProps<DatePickerValue>, DateP
       InternalDateValidateCheck.NotNull,
       InternalDateValidateCheck.Number,
       InternalDateValidateCheck.Native,
+      InternalDateValidateCheck.Limits,
     ];
     if (range !== undefined) {
-      internalDate.setRangeStart(
-        range.minDate ? new InternalDate().parseInternalValue(range.minDate) : null,
-      );
-      internalDate.setRangeStart(
-        range.minDate ? new InternalDate().parseInternalValue(range.minDate) : null,
-      );
+      internalDate
+        .setRangeStart(range.minDate ? new InternalDate({ value: range.minDate }) : null)
+        .setRangeEnd(range.maxDate ? new InternalDate({ value: range.maxDate }) : null);
       checks.push(InternalDateValidateCheck.Range);
     }
     return internalDate.validate({ checks });
@@ -319,9 +317,9 @@ class DatePicker extends React.Component<DatePickerProps<DatePickerValue>, DateP
 
   private handleSelect = (dateShape: CalendarDateShape) => {
     this.internalDate.setComponents(dateShape, true);
-    const date = this.internalDate.toString({ withSeparator: true, withPad: true });
+    const value = this.internalDate.toString({ withSeparator: true, withPad: true });
     if (this.props.onChange) {
-      this.props.onChange({ target: { value: date } }, date);
+      this.props.onChange({ target: { value } }, value);
     }
   };
 

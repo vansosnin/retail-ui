@@ -4,16 +4,10 @@ import * as React from 'react';
 import { InternalDate } from '../../lib/date/InternalDate';
 import InternalDateGetter from '../../lib/date/InternalDateGetter';
 import InternalDateTransformer from '../../lib/date/InternalDateTransformer';
-import {
-  InternalDateComponent,
-  InternalDateComponentType,
-  InternalDateOrder,
-  InternalDateSeparator,
-  InternalDateValidateCheck,
-} from '../../lib/date/types';
+import { InternalDateComponent, InternalDateComponentType, InternalDateValidateCheck } from '../../lib/date/types';
 import dragEndDrop from '../../lib/events/dragEndDrop';
 import Upgrades from '../../lib/Upgrades';
-import { isChrome, isFirefox } from '../../lib/utils';
+import { isFirefox } from '../../lib/utils';
 
 import { Nullable } from '../../typings/utility-types';
 import { DatePickerLocale, DatePickerLocaleHelper } from '../DatePicker/locale';
@@ -128,7 +122,6 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
   public render() {
     return (
       <InputLikeText
-        contentEditable={isChrome && !this.props.disabled}
         width={this.props.width}
         ref={el => {
           this.inputLikeText = el;
@@ -274,19 +267,16 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
     if (this.props.minDate !== min) {
       isMod = true;
       internalDate.setRangeStart(
-        this.props.minDate ? new InternalDate({ order, separator }).parseInternalValue(this.props.minDate) : null,
+        this.props.minDate ? new InternalDate({ order, separator, value: this.props.minDate }) : null,
       );
     }
     if (this.props.maxDate !== max) {
       isMod = true;
       internalDate.setRangeEnd(
-        this.props.maxDate ? new InternalDate({ order, separator }).parseInternalValue(this.props.maxDate) : null,
+        this.props.maxDate ? new InternalDate({ order, separator, value: this.props.maxDate }) : null,
       );
     }
-    if (
-      !this.props.value ||
-      this.props.value !== internalDate.toInternalString({ withPad: true, withSeparator: !internalDate.isEmpty() })
-    ) {
+    if (!this.props.value || this.props.value !== internalDate.toInternalString()) {
       isMod = true;
       internalDate.parseInternalValue(this.props.value);
     }
@@ -452,13 +442,7 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
     if (this.state.internalDate === null) {
       return;
     }
-    const value = this.state.internalDate.isEmpty()
-      ? ''
-      : this.state.internalDate
-          .clone()
-          .setOrder(InternalDateOrder.DMY)
-          .setSeparator(InternalDateSeparator.Dot)
-          .toString({ withPad: true, withSeparator: true });
+    const value = this.state.internalDate.isEmpty() ? '' : this.state.internalDate.toInternalString();
     if (this.props.value === value) {
       return;
     }
@@ -504,34 +488,32 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
   }
 
   private updateDateComponentBy(step: number) {
-    const { internalDate } = this.state;
-    if (internalDate === null) {
+    if (this.state.internalDate === null) {
       return;
     }
+    const internalDate = this.state.internalDate.clone();
+    const initial = internalDate.clone();
     let { selected } = this.state;
     selected = selected === null ? this.getFirstDateComponentType() : selected;
-    const clone = internalDate.clone();
     const isValidRange = internalDate.validate({ checks: [InternalDateValidateCheck.Range] });
+    const start = internalDate.getRangeStart();
+    const end = internalDate.getRangeEnd();
     if (!isValidRange) {
-      const start = internalDate.getRangeStart();
-      const end = internalDate.getRangeEnd();
       if (start && InternalDateGetter.max([internalDate, start]) === start) {
         internalDate.setComponents(start.getComponentsRaw());
       } else if (end && InternalDateGetter.min([internalDate, end]) === end) {
         internalDate.setComponents(end.getComponentsRaw());
       }
-    } else if (
-      internalDate
-        .clone()
-        .shift(selected, step, { isRange: false, isLoop: true })
-        .validate({ checks: [InternalDateValidateCheck.Range] })
-    ) {
-      internalDate.shift(selected, step, { isRange: false, isLoop: true });
+    } else {
+      const clone = internalDate.clone().shift(selected, step, { isRange: false, isLoop: true });
+      if (clone.validate({ checks: [InternalDateValidateCheck.Range] })) {
+        internalDate.shift(selected, step, { isRange: false, isLoop: true });
+      }
     }
     this.updateInternalDate(internalDate, {
       isOnInputMode: false,
       selected: selected === InternalDateComponentType.All ? this.getFirstDateComponentType() : selected,
-      notify: clone.get(selected) === internalDate.get(selected),
+      notify: initial.get(selected) === internalDate.get(selected),
     });
   }
 
@@ -554,7 +536,6 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
     if (selected === InternalDateComponentType.Year && internalDate.getYear() !== null) {
       internalDate.restore(selected);
     }
-    internalDate.cutOffExcess();
     this.updateInternalDate(internalDate);
     if (nextIndex >= 0 && nextIndex < typesOrder.length) {
       this.setState({
@@ -607,11 +588,11 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
     internalDate.set(type, next);
     if (!inputMode) {
       if (type !== InternalDateComponentType.Year) {
-        internalDate.cutOffExcess();
+        internalDate.cutOffExcess(type);
+      } else {
+        internalDate.restore(type);
       }
-      if (internalDate.validate({ checks: [InternalDateValidateCheck.Limits], type })) {
-        this.moveSelection(1, true);
-      }
+      this.moveSelection(1, true);
     }
     this.updateInternalDate(internalDate, { isOnInputMode: inputMode });
   };

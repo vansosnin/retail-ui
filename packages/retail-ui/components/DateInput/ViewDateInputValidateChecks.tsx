@@ -18,8 +18,8 @@ export class ViewDateInputValidateChecks extends React.Component<DateInputValida
     internalDate.setRangeStart(
       this.props.minDate ? new InternalDate().parseInternalValue(this.props.minDate) : null,
     );
-    internalDate.setRangeStart(
-      this.props.minDate ? new InternalDate().parseInternalValue(this.props.minDate) : null,
+    internalDate.setRangeEnd(
+      this.props.maxDate ? new InternalDate().parseInternalValue(this.props.maxDate) : null,
     );
 
     return (
