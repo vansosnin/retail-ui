@@ -317,7 +317,7 @@ class DatePicker extends React.Component<DatePickerProps<DatePickerValue>, DateP
 
   private handleSelect = (dateShape: CalendarDateShape) => {
     this.internalDate.setComponents(dateShape, true);
-    const value = this.internalDate.toString({ withSeparator: true, withPad: true });
+    const value = this.internalDate.toInternalString();
     if (this.props.onChange) {
       this.props.onChange({ target: { value } }, value);
     }
@@ -327,7 +327,7 @@ class DatePicker extends React.Component<DatePickerProps<DatePickerValue>, DateP
     const dateString = this.internalDate
       .clone()
       .setComponents({ date, month, year }, true)
-      .toString({ withSeparator: true, withPad: true });
+      .toInternalString();
     return this.props.isHoliday(dateString, isWeekend);
   };
 }

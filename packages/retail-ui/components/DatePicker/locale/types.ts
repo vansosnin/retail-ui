@@ -1,17 +1,6 @@
-import {
-  InternalDateDayWeek,
-  InternalDateFirstDayWeek,
-  InternalDateOrder,
-  InternalDateSeparator
-} from '../../../lib/date/types';
+import { InternalDateLocaleSet } from '../../../lib/date/types';
 
-export interface DatePickerLocale extends DatePickerLocaleSet {
+export interface DatePickerLocale extends InternalDateLocaleSet {
   today: string;
-}
-
-export interface DatePickerLocaleSet {
-  order: InternalDateOrder;
-  separator: InternalDateSeparator;
-  firstDayWeek: InternalDateFirstDayWeek;
-  notWorkingDays: InternalDateDayWeek[];
+  months: string[];
 }

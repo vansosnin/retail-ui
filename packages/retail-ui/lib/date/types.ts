@@ -86,3 +86,10 @@ export enum InternalDateDayWeek {
   Sunday = 6,
   Saturday = 7,
 }
+
+export interface InternalDateLocaleSet {
+  order: InternalDateOrder;
+  separator: InternalDateSeparator;
+  firstDayWeek: InternalDateFirstDayWeek;
+  notWorkingDays: InternalDateDayWeek[];
+}

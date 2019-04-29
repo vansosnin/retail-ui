@@ -29,7 +29,7 @@ interface LocaleControls {
   Select?: SelectLocale;
   Paging?: PagingLocale;
   Logotype?: LogotypeLocale;
-  DateInput?: DateInputLocale;
+  DatePicker?: DatePickerLocale;
 }
 ```
 

@@ -9,3 +9,4 @@ export const DatePickerLocaleHelper = new LocaleHelper<DatePickerLocale>({
   ru_RU,
   en_EN,
 });
+export { InternalDateLocaleSet } from '../../../lib/date/types';

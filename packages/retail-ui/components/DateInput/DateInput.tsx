@@ -260,9 +260,9 @@ export class DateInput extends React.PureComponent<DateInputProps, DateInputStat
     let isMod: boolean = false;
     const internalDate = this.state.internalDate.clone();
     const start = internalDate.getRangeStart();
-    const min = start && start.toString({ withPad: true, withSeparator: true });
+    const min = start && start.toInternalString();
     const end = internalDate.getRangeEnd();
-    const max = end && end.toString({ withPad: true, withSeparator: true });
+    const max = end && end.toInternalString();
     const { order, separator } = this.locale;
     if (this.props.minDate !== min) {
       isMod = true;
