@@ -1,6 +1,14 @@
 import { MAX_DATE, MAX_MONTH, MAX_YEAR, MIN_DATE, MIN_MONTH, MIN_YEAR } from './constants';
 import { InternalDate } from './InternalDate';
-import { InternalDateComponentType, InternalDateComponentsRaw, InternalDateComponentRaw, InternalDateComponents } from './types';
+import InternalDateTransformer from './InternalDateTransformer';
+import {
+  InternalDateComponentType,
+  InternalDateComponentsRaw,
+  InternalDateComponentRaw,
+  InternalDateComponents,
+  InternalDateOrder,
+  InternalDateSeparator,
+} from './types';
 
 export default class InternalDateGetter {
   public static max = (datesCustom: InternalDate[]): InternalDate =>
@@ -22,7 +30,7 @@ export default class InternalDateGetter {
 
   public static getValueDateComponent(
     type: InternalDateComponentType | null,
-    components: InternalDateComponentsRaw
+    components: InternalDateComponentsRaw,
   ): InternalDateComponentRaw {
     if (type === InternalDateComponentType.Year) {
       return components.year;
@@ -65,5 +73,16 @@ export default class InternalDateGetter {
       month: date.getMonth() + 1,
       year: date.getFullYear(),
     };
+  }
+
+  public static toInternalString(components: InternalDateComponentsRaw): string {
+    return InternalDateTransformer.dateToFragments(components, {
+      withPad: true,
+      withSeparator: false,
+      order: InternalDateOrder.DMY,
+    })
+      .filter(({ value }) => value !== null)
+      .map(({ valueWithPad }) => valueWithPad)
+      .join(InternalDateSeparator.Dot);
   }
 }

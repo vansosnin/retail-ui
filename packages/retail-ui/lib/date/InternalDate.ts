@@ -178,11 +178,9 @@ export class InternalDate {
   }
 
   public parseInternalValue(value: string | null = ''): InternalDate {
-    const components = this.clone()
-      .setOrder(InternalDateOrder.DMY)
-      .setSeparator(InternalDateSeparator.Dot)
-      .parseValue(value)
-      .getComponentsRaw();
+    const components = InternalDateTransformer.parseValueToDate(value, InternalDateOrder.DMY) || {
+      ...emptyDateComponents,
+    };
     this.setComponents(components);
     return this;
   }
@@ -279,11 +277,7 @@ export class InternalDate {
   }
 
   public toInternalString(): string {
-    return this.clone()
-      .toFragments({ withSeparator: false, withPad: true, order: InternalDateOrder.DMY })
-      .filter(({ value }) => value !== null)
-      .map(({ valueWithPad }) => valueWithPad)
-      .join(InternalDateSeparator.Dot);
+    return InternalDateGetter.toInternalString(this.getComponentsRaw());
   }
 
   public toNativeFormat(): InternalDateComponentsNumber | null {

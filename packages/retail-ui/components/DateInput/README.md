@@ -10,65 +10,6 @@
 <DateInput disabled value="27.04.1992" />
 ```
 
-### Валидация даты
-
-```typescript jsx
-DatePicker.validate(): boolean
-```
-
-```jsx
-const { MAX_DATE, MAX_MONTH, MAX_YEAR, MIN_DATE, MIN_MONTH, MIN_YEAR } = require('../../lib/date/constants');
-const { InternalDateValidateCheck } = require('../../lib/date/types');
-const { InternalDate } = require('../../lib/date/InternalDate');
-const { ViewDateInputValidateChecks } = require('./ViewDateInputValidateChecks');
-
-class DateInputValidations extends React.Component {
-  constructor() {
-    this.state = {
-      value: '15.06.2005',
-      minDate: '23.09.2000',
-      maxDate: '03.03.2010',
-      isValid: true,
-    };
-  }
-
-  render() {
-    return (
-      <Gapped gap={10} vertical>
-        <ViewDateInputValidateChecks
-          value={this.state.value}
-          minDate={this.state.minDate}
-          maxDate={this.state.maxDate}
-        />
-        <pre>
-          minDate = {this.state.minDate}
-          <br />
-          maxDate = {this.state.maxDate}
-        </pre>
-        <DateInput
-          value={this.state.value}
-          error={!this.state.isValid}
-          minDate={this.state.minDate}
-          maxDate={this.state.maxDate}
-          onChange={(x, value) => this.setState({ value }, this.validate)}
-        />
-      </Gapped>
-    );
-  }
-
-  validate() {
-    this.setState({
-      isValid: DatePicker.validate(this.state.value, {
-        minDate: this.state.minDate,
-        maxDate: this.state.maxDate,
-      }),
-    });
-  }
-}
-
-<DateInputValidations />;
-```
-
 ### Форматирование даты при смене локали
 
 ```jsx
