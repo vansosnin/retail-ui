@@ -1,3 +1,4 @@
+import { LangCodes } from '../../components/LocaleProvider';
 
 export enum InternalDateOrder {
   DMY = 'DMY',
@@ -61,6 +62,13 @@ export interface InternalDateChangeSettings {
   isLoop?: boolean;
   isRange?: boolean;
   isCutFeb?: boolean;
+}
+
+export interface InternalDateConstructorProps {
+  order?: InternalDateOrder;
+  separator?: InternalDateSeparator;
+  langCode?: LangCodes;
+  value?: string;
 }
 
 export enum InternalDateValidateCheck {

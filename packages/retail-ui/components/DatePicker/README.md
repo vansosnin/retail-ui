@@ -89,6 +89,7 @@ const createRandomHolidays = () => {
 
   return holidays;
 };
+const holidays = createRandomHolidays();
 
 const isHoliday = (day, isWeekend) => {
   const today = new Date();
@@ -98,7 +99,7 @@ const isHoliday = (day, isWeekend) => {
     year: today.getFullYear(),
   };
 
-  if (day === DatePickerHelpers.formatDate(holiday)) {
+  if (holidays.includes(day)) {
     return !isWeekend;
   }
 
@@ -112,9 +113,12 @@ const isHoliday = (day, isWeekend) => {
 
 Пример обработки производственного календаря от `data.gov.ru`
 
-<details><summary>`I/O`</summary>
+<details><summary>`data.gov.ru`</summary>
 
-URL:
+Docs:
+https://data.gov.ru/api-portala-otkrytyh-dannyh-rf-polnoe-rukovodstvo
+
+API:
 
 ```jsx static
 https://data.gov.ru/api/json/dataset/7708660670-proizvcalendar/version/20151123T183036/content?search=2019&access_token=31de6d0b90f51a7aa3ee2d518d50f4e9
@@ -152,7 +156,7 @@ Response:
 ```jsx
 const today = new Date();
 const year = today.getFullYear();
-const source = [
+const response = [
   {
     'Год/Месяц': '2019',
     Январь: '1,2,3,4,5,6,7,8,12,13,19,20,26,27',
@@ -177,9 +181,9 @@ const source = [
 let result = [];
 let holidays = [];
 
-if (source.length !== 0) {
+if (response.length !== 0) {
   result = Object.values(
-    source.length > 1 ? source.find(data => data['Год/Месяц'] === year.toString()) || source[0] : source[0],
+    response.length > 1 ? response.find(data => data['Год/Месяц'] === year.toString()) || response[0] : response[0],
   ).slice(1, 13);
 }
 result.forEach((month, index) => {
@@ -191,7 +195,7 @@ result.forEach((month, index) => {
     });
 });
 
-const isHoliday = date => holidays.includes(date);
+const isHoliday = (date, isWeekend) => holidays.includes(date) || isWeekend;
 
 <DatePicker isHoliday={isHoliday} enableTodayLink />;
 ```
@@ -251,4 +255,55 @@ class DatePickerFormatting extends React.Component {
 }
 
 <DatePickerFormatting />;
+```
+
+#### Локали по умолчанию (см. `LocaleProvider`)
+
+```typescript
+interface DatePickerLocale {
+  today?: string;
+  months?: string[];
+  order?: InternalDateOrder;
+  separator?: InternalDateSeparator;
+}
+
+const ru_RU = {
+  today: 'Сегодня',
+  months: [
+    'Январь',
+    'Февраль',
+    'Март',
+    'Апрель',
+    'Май',
+    'Июнь',
+    'Июль',
+    'Август',
+    'Сентябрь',
+    'Октябрь',
+    'Ноябрь',
+    'Декабрь',
+  ],
+  order: InternalDateOrder.DMY,
+  separator: InternalDateSeparator.Dot,
+};
+
+const en_EN = {
+  today: 'Today',
+  months: [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ],
+  order: InternalDateOrder.MDY,
+  separator: InternalDateSeparator.Slash,
+};
 ```
