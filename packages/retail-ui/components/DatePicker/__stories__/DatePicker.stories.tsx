@@ -1,7 +1,6 @@
 import { action } from '@storybook/addon-actions';
 import { storiesOf } from '@storybook/react';
 import * as React from 'react';
-import { InternalDate } from '../../../lib/date/InternalDate';
 import { InternalDateOrder, InternalDateSeparator } from '../../../lib/date/types';
 // tslint:disable:jsx-no-lambda no-console
 import Button from '../../Button/index';
@@ -18,8 +17,6 @@ class DatePickerWithError extends React.Component<any, any> {
     error: false,
     tooltip: false,
   };
-
-  private internalDate: InternalDate | null = null;
 
   public render() {
     return (
@@ -53,12 +50,9 @@ class DatePickerWithError extends React.Component<any, any> {
     );
   }
 
-  private _handleChange = (_: any, value: string, internalDate: InternalDate) => {
+  private _handleChange = (_: any, value: any) => {
     action('change')(_, value);
-    this.internalDate = internalDate;
-    this.setState({
-      value,
-    });
+    this.setState({ value });
   };
 
   private _unvalidate = () => {
@@ -68,7 +62,8 @@ class DatePickerWithError extends React.Component<any, any> {
   private _validate = () => {
     const currentValue = this.state.value;
     this.setState(() => {
-      const error = !!currentValue && !(this.internalDate && this.internalDate.validate());
+      const error =
+        !!currentValue && !DatePicker.validate(currentValue, { minDate: '08.15.2003', maxDate: '10.21.2006' });
       return {
         error,
         tooltip: error,
