@@ -18,7 +18,7 @@ fs.readdirSync(reportDir).forEach(browserName => {
         const testDir = path.join(storyDir, test);
 
         fs.readdirSync(testDir)
-          .filter(image => image.includes('-actual.png'))
+          .filter(image => image.includes('-actual-'))
           .forEach(image => {
             const imageDir = path.join(imagesDir, browserName, kind, story, test);
             const srcPath = path.join(testDir, image);
