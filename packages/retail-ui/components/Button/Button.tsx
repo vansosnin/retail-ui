@@ -292,11 +292,17 @@ export default class Button extends React.Component<ButtonProps, ButtonState> {
       // focus event fires before keyDown eventlistener
       // so we should check tabPressed in async way
       // process.nextTick(() => {
+      //   if (tabListener.isTabPressed) {
+      //     this.setState({ focusedByTab: true });
+      //     tabListener.isTabPressed = false;
+      //   }
+      // });
+      setTimeout(() => {
         if (tabListener.isTabPressed) {
           this.setState({ focusedByTab: true });
           tabListener.isTabPressed = false;
         }
-      // });
+      }, 0);
       if (this.props.onFocus) {
         this.props.onFocus(e);
       }
