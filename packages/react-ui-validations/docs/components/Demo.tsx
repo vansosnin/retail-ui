@@ -1,10 +1,16 @@
 import * as React from 'react';
-import Code from 'react-syntax-highlighter';
+import {Prism as Code} from 'react-syntax-highlighter';
+import * as Styles from 'react-syntax-highlighter/dist/styles/prism';
 import styled from 'styled-components';
+import Button from "../../../retail-ui/components/Button";
 
 interface DemoProps {
   demo?: React.ComponentClass<any>;
   source?: string;
+}
+
+interface DemoState {
+  showCode: boolean
 }
 
 const DemoContainer = styled.div`
@@ -15,14 +21,45 @@ const DemoContainer = styled.div`
   font-size: 14px;
 `;
 
-const Demo: React.SFC<DemoProps> = ({ children, demo, source }) => {
-  const DemoComponent = demo;
-  return (
-    <div>
-      <DemoContainer>{DemoComponent ? <DemoComponent /> : children}</DemoContainer>
-      {source && <Code language="javascript">{source}</Code>}
-    </div>
-  );
-};
+export default class Demo extends React.Component<DemoProps> {
+  state: DemoState = {
+    showCode: !this.props.demo && !this.props.children,
+  };
 
-export default Demo;
+  render() {
+    const DemoComponent = this.props.demo;
+    const ui = DemoComponent ? <DemoComponent/> : this.props.children;
+    return (
+      <div>
+        {ui && <DemoContainer>{ui}</DemoContainer>}
+        {this.renderCode()}
+        <br/>
+      </div>
+    );
+  }
+
+  private renderCode = () => {
+    if (!this.props.source) {
+      return null;
+    }
+
+    if (!this.props.demo && !this.props.children) {
+      return (
+        <Code language="tsx" style={Styles.darcula}>{this.props.source}</Code>
+      );
+    }
+
+    return this.state.showCode
+      ? (
+        <div>
+          <Button width={150} onClick={() => this.setState({showCode: false})}>Скрыть код</Button>
+          <Code language="tsx" style={Styles.darcula}>{this.props.source}</Code>
+        </div>
+      )
+      : (
+        <div>
+          <Button width={150} onClick={() => this.setState({showCode: true})}>Показать код</Button>
+        </div>
+      );
+  }
+}

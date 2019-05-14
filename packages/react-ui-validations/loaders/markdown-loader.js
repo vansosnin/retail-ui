@@ -38,7 +38,7 @@ class Renderer {
           const path = './' + content[0].replace('!!Demo!!', '');
           return `<Demo demo={require('${path}').default} />`;
         }
-        return '<Code>{`' + content[0] + '`}</Code>';
+        return `<Demo source={\`${content[0]}\`}/>`;
       case 'link':
         let result = '<Link';
         if (attrs.alt) {
@@ -84,7 +84,6 @@ module.exports = function(content) {
   return `
 import * as React from 'react';
 import Helmet from 'react-helmet';
-import Code from 'react-syntax-highlighter';
 import Link from 'retail-ui/components/Link';
 import styled from 'styled-components';
 import Demo from 'Demo';

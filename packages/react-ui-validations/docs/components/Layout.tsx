@@ -4,6 +4,8 @@ import { Link } from 'react-router';
 import Logotype from 'retail-ui/components/Logotype';
 import styled from 'styled-components';
 import Concepts from './Pages/Concepts';
+import Declarations from './Pages/Docs';
+import Builder from './Pages/Builder';
 import Examples from './Pages/Examples';
 
 const Layout: React.SFC = ({ children }) => {
@@ -15,14 +17,25 @@ const Layout: React.SFC = ({ children }) => {
           <Logotype suffix="ui-validations" href="#/" color="#fff" textColor="#fff" />
         </LogoContainer>
         <div>
-          <NavigationLink activeClassName={'active'} to="/getting-started">
-            Введение
-          </NavigationLink>
           <NavigationLink activeClassName={'active'} to="/api">
             API reference
           </NavigationLink>
 
           <Divider />
+
+          <Header>Документация</Header>
+          {Declarations.map(page => (
+            <NavigationLink key={page.url} activeClassName={'active'} to={'/' + page.url}>
+              {page.caption}
+            </NavigationLink>
+          ))}
+
+          <Header>Описание валидаций</Header>
+          {Builder.map(page => (
+            <NavigationLink key={page.url} activeClassName={'active'} to={'/' + page.url}>
+              {page.caption}
+            </NavigationLink>
+          ))}
 
           <Header>Примеры</Header>
           {Examples.map(page => (
