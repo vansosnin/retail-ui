@@ -297,12 +297,13 @@ export default class Button extends React.Component<ButtonProps, ButtonState> {
       //     tabListener.isTabPressed = false;
       //   }
       // });
-      setTimeout(() => {
+      Promise.resolve().then(() => {
         if (tabListener.isTabPressed) {
           this.setState({ focusedByTab: true });
           tabListener.isTabPressed = false;
+          console.log('focus');
         }
-      }, 0);
+      });
       if (this.props.onFocus) {
         this.props.onFocus(e);
       }
