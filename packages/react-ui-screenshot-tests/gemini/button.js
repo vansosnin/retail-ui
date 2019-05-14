@@ -2,7 +2,7 @@
 
 const renderStory = require('./utils').renderStory;
 
-gemini.suite('Button', suite => {
+gemini.suite('Button', () => {
   const testScenario = suite => {
     suite
       .capture('idle')
@@ -23,6 +23,7 @@ gemini.suite('Button', suite => {
       })
       .capture('tabPress', (actions, find) => {
         actions.sendKeys(gemini.TAB);
+        actions.wait(100);
       });
   };
 
