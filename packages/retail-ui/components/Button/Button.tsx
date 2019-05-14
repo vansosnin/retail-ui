@@ -200,6 +200,7 @@ export default class Button extends React.Component<ButtonProps, ButtonState> {
       onClick: this.props.onClick,
       onFocus: this.handleFocus,
       onBlur: this.handleBlur,
+      onKeyUp: this.handleKeyUp,
       onKeyDown: this.props.onKeyDown,
       onMouseEnter: this.props.onMouseEnter,
       onMouseLeave: this.props.onMouseLeave,
@@ -290,16 +291,24 @@ export default class Button extends React.Component<ButtonProps, ButtonState> {
     if (!this.props.disabled && !this.props.disableFocus) {
       // focus event fires before keyDown eventlistener
       // so we should check tabPressed in async way
-      process.nextTick(() => {
+      // process.nextTick(() => {
         if (tabListener.isTabPressed) {
           this.setState({ focusedByTab: true });
           tabListener.isTabPressed = false;
         }
-      });
+      // });
       if (this.props.onFocus) {
         this.props.onFocus(e);
       }
     }
+  };
+
+  private handleKeyUp = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+    // if (!this.props.disabled && !this.props.disableFocus) {
+    //   if (e.key === 'Tab') {
+    //     this.setState({ focusedByTab: true });
+    //   }
+    // }
   };
 
   private handleBlur = (e: React.FocusEvent<HTMLButtonElement>) => {
